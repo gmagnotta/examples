@@ -1,47 +1,27 @@
 package com.mycompany.app;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Random;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+
+import com.model.Itemtype;
+import com.model.ObjectFactory;
+import com.model.Shipordertype;
+import com.model.Shiptotype;
+
 public class XmlGenerator {
-
-	public static final String FILE_TEMPLATE =
-
-			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-			+ "<shiporder orderid=\"%s\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"shiporder.xsd\">"
-			 + "<orderperson>%s</orderperson>" 
-			 + "<shipto>"
-			  + "<name>Ola Nordmann</name>"
-			  + "<address>Langgt 23</address>"
-			  + "<city>4000 Stavanger</city>"
-			  + "<country>Norway</country>"
-			 + "</shipto>"
-			  + "<item>"
-			   + "<title>Empire Burlesque</title>"
-			   + "<note>Special Edition</note>"
-			   + "<quantity>%d</quantity>"
-			   + "<price>10.90</price>"
-			  + "</item>"
-			 + "<item>"
-			  + "<title>Hide your heart</title>"
-			  + "<quantity>%d</quantity>"
-			  + "<price>9.90</price>"
-			 + "</item>"
-			+ "</shiporder>";
 	
+	private static String[] titles = { "Microservices Architecture", "Alice in wonderland", "Enterprise Integration Patterns" };
+	private static BigDecimal[] prices = new BigDecimal[] { new BigDecimal("10.90"), new BigDecimal("9.90"), new BigDecimal("20") };
+
 	public String outputDir;
 	
 	public XmlGenerator(String outputDir) {
 		this.outputDir = outputDir;
-	}
-
-	private static int getRandomNumberInRange(int min, int max) {
-
-		Random r = new Random();
-		return r.ints(min, (max + 1)).limit(1).findFirst().getAsInt();
-
 	}
 
 	public static String generate(int targetStringLength) {
@@ -58,15 +38,40 @@ public class XmlGenerator {
 	
 	public void generateFile(int iterations) throws Exception {
 		
+		Random r = new Random();
+		
+		JAXBContext jaxbContext = JAXBContext.newInstance(Shipordertype.class);
+		Marshaller mar= jaxbContext.createMarshaller();
+	    
 		for (int i = 0; i < iterations; i++) {
 			
 			String generatedString = generate(6);
+		    
+		    Shipordertype shipordertype = new Shipordertype();
+		    shipordertype.setOrderid(generatedString);
+		    shipordertype.setOrderperson("Unknown");
+		    
+		    Shiptotype shiptotype = new Shiptotype();
+		    shiptotype.setName("unknown");
+		    shiptotype.setAddress("unknown");
+		    shiptotype.setCity("unknown");
+		    shiptotype.setCountry("unknown");
+		    
+		    shipordertype.setShipto(shiptotype);
+		    
+		    int position = r.nextInt(titles.length);
+		    
+		    Itemtype itemtype = new Itemtype();
+		    itemtype.setTitle(titles[position]);
+		    itemtype.setNote("");
+		    itemtype.setQuantity(new BigInteger("1"));
+		    itemtype.setPrice(prices[position]);
+		    
+		    shipordertype.getItem().add(itemtype);
 			
-			PrintStream p = new PrintStream(new FileOutputStream(new File(outputDir, generatedString)));
-			p.print(String.format(FILE_TEMPLATE, generatedString, generatedString, getRandomNumberInRange(1, 10), getRandomNumberInRange(1, 10)));
-			
-			System.out.println("Generated test file " + generatedString);
-			
+			mar.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		    mar.marshal(new ObjectFactory().createShiporder(shipordertype), new File(outputDir, generatedString));
+		    
 		}
 		
 	}
