@@ -42,13 +42,14 @@ public class XmlGenerator {
             Ordertype ordertype = new Ordertype();
             ordertype.setOrderid(generatedString);
 
-            int random = r.nextInt(5);
+            int randomid = r.nextInt(5);
+            int randomqty = r.nextInt(100);
 
             Lineitemtype lineItemtype = new Lineitemtype();
-            lineItemtype.setItemid(String.valueOf(random));
+            lineItemtype.setItemid(String.valueOf(randomid));
             lineItemtype.setNote("none");
-            lineItemtype.setQuantity(new BigInteger("1"));
-            lineItemtype.setPrice(new BigDecimal(random));
+            lineItemtype.setQuantity(randomqty > 0 ? BigInteger.valueOf(randomqty) : BigInteger.ONE);
+            lineItemtype.setPrice(new BigDecimal(0));
 
             ordertype.getLineitem().add(lineItemtype);
 

@@ -26,7 +26,7 @@ public class XmlFileRoute extends RouteBuilder {
         jaxbDataFormat.setSchema("classpath:shiporder.xsd");
 
         from("file:" + ordersDirectory + "?moveFailed=.error").routeId("fileRoute").unmarshal(jaxbDataFormat)
-                .to("bean://orderprocessor");
+                .to("bean://orderprocessor").to("activemq:queue:ordercreated");
 
     }
 

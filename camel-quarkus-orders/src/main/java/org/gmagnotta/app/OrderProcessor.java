@@ -38,18 +38,18 @@ public class OrderProcessor implements Processor {
 
         for (Lineitemtype xmlLineItem : xmlOrder.getLineitem()) {
 
+            Item i = getItemById(Integer.valueOf(xmlLineItem.getItemid()));
+
             LineItem jpaLineItem = new LineItem();
             jpaOrder.addLineItem(jpaLineItem);
             jpaLineItem.setOrder(jpaOrder);
 
-            jpaLineItem.setQuantity(xmlLineItem.getQuantity().intValue());
-            jpaLineItem.setPrice(xmlLineItem.getPrice());
-
-            Item i = getItemById(Integer.valueOf(xmlLineItem.getItemid()));
-
             jpaLineItem.setItem(i);
 
-            sum += xmlLineItem.getPrice().longValue();
+            jpaLineItem.setQuantity(xmlLineItem.getQuantity().intValue());
+            jpaLineItem.setPrice(i.getPrice());
+
+            sum += i.getPrice().multiply(BigDecimal.valueOf(jpaLineItem.getQuantity())).longValue();
 
         }
 
@@ -61,6 +61,7 @@ public class OrderProcessor implements Processor {
             entityManager.persist(l);
         }
 
+        exchange.getIn().setBody(jpaOrder.getId() + "");
     }
 
     private Item getItemById(int id) {
