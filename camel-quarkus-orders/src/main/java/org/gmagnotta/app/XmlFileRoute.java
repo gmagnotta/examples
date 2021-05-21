@@ -23,7 +23,7 @@ public class XmlFileRoute extends RouteBuilder {
 
         JAXBContext jaxbContext = JAXBContext.newInstance("org.gmagnotta.jaxb");
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
-        jaxbDataFormat.setSchema("classpath:shiporder.xsd");
+        jaxbDataFormat.setSchema("classpath:order.xsd");
 
         from("file:" + ordersDirectory + "?moveFailed=.error").routeId("fileRoute").unmarshal(jaxbDataFormat)
                 .to("bean://orderprocessor").to("activemq:queue:ordercreated");

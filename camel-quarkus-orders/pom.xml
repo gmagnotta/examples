@@ -274,6 +274,9 @@
 				<configuration>
 					<!-- The package of your generated sources -->
 					<packageName>org.gmagnotta.jaxb</packageName>
+					<sources>
+					  <source>src/main/resources/order.xsd</source>
+					</sources>
 				</configuration>
 			</plugin>
 		</plugins>
