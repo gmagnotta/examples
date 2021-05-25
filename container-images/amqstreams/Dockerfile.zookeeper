@@ -1,0 +1,8 @@
+#FROM localhost/amqstreams:1.0
+FROM localhost/amqstreams
+
+EXPOSE 2181/tcp
+
+USER kafka
+
+ENTRYPOINT /opt/kafka/bin/zookeeper-server-start.sh /opt/kafka/config/zookeeper.properties
