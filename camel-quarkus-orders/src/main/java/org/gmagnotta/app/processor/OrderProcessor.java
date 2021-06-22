@@ -1,4 +1,4 @@
-package org.gmagnotta.app;
+package org.gmagnotta.app.processor;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -9,7 +9,6 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -18,15 +17,23 @@ import org.gmagnotta.jaxb.Ordertype;
 import org.gmagnotta.model.Item;
 import org.gmagnotta.model.LineItem;
 import org.gmagnotta.model.Order;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 @Named("orderprocessor")
+/**
+ * This class is a Camel Processor used to perse incoming xml files and transform as Order objects.
+ * 
+ * The resulting Order object is saved as OrderEntity header in the message.
+ */
 public class OrderProcessor implements Processor {
+	
+	private static final Logger LOG = Logger.getLogger(OrderProcessor.class);
 
     @Inject
     EntityManager entityManager;
-
-    @Transactional(TxType.REQUIRES_NEW)
+    
+    @Transactional
     public void process(Exchange exchange) throws Exception {
 
         // extract unmarshaled xml
@@ -34,12 +41,14 @@ public class OrderProcessor implements Processor {
 
         // create new entity
         Order jpaOrder = new Order();
+        jpaOrder.setExternalOrderId(xmlOrder.getOrderid());
+        
         long sum = 0;
 
         for (Lineitemtype xmlLineItem : xmlOrder.getLineitem()) {
 
-            Item i = getItemById(Integer.valueOf(xmlLineItem.getItemid()));
-
+    		Item i = getItemById(Integer.valueOf(xmlLineItem.getItemid()));
+        		
             LineItem jpaLineItem = new LineItem();
             jpaOrder.addLineItem(jpaLineItem);
             jpaLineItem.setOrder(jpaOrder);
@@ -60,8 +69,8 @@ public class OrderProcessor implements Processor {
         for (LineItem l : jpaOrder.getLineItems()) {
             entityManager.persist(l);
         }
-
-        exchange.getIn().setBody(jpaOrder.getId() + "");
+        
+        exchange.getIn().setHeader("OrderEntity", jpaOrder);
     }
 
     private Item getItemById(int id) {

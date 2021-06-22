@@ -74,5 +74,9 @@ public class LineItem implements Serializable {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+    
+    public String toString() {
+    	return "LineItem id: " + id + "; price " + price + "; item " + Item + "; qty " + quantity;
+    }
 
 }

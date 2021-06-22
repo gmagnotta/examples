@@ -22,7 +22,7 @@ import javax.persistence.TemporalType;
 @Table(name = "orders")
 @NamedQueries({
         @NamedQuery(name = "getAllOrders", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems"),
-        @NamedQuery(name = "getOrderById", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems") })
+        @NamedQuery(name = "getOrderById", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems where o.id = :id") })
 public class Order implements Serializable {
 
     /**
@@ -43,6 +43,8 @@ public class Order implements Serializable {
     private Date orderWithdrawal;
 
     private BigDecimal amount;
+    
+    private String externalOrderId;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
     private Set<LineItem> lineItems;
@@ -90,8 +92,16 @@ public class Order implements Serializable {
     public void addLineItem(LineItem lineItem) {
         lineItems.add(lineItem);
     }
+    
+    public String getExternalOrderId() {
+		return externalOrderId;
+	}
 
-    @Override
+	public void setExternalOrderId(String externalOrderId) {
+		this.externalOrderId = externalOrderId;
+	}
+
+	@Override
     public int hashCode() {
         return java.util.Objects.hashCode(id);
     }
@@ -113,6 +123,11 @@ public class Order implements Serializable {
         }
 
         return false;
+    }
+    
+    @Override
+    public String toString() {
+    	return "Order id: " + id + "; creationDate " + creationDate + "; amount " + amount;
     }
 
 }

@@ -9,14 +9,8 @@
   <xs:restriction base="xs:positiveInteger"/>
 </xs:simpleType>
 
-<xs:simpleType name="dectype">
-  <xs:restriction base="xs:decimal"/>
-</xs:simpleType>
-
 <xs:simpleType name="orderidtype">
-  <xs:restriction base="xs:string">
-    <xs:pattern value="[0-9]{6}"/>
-  </xs:restriction>
+  <xs:restriction base="xs:string" />
 </xs:simpleType>
 
 <xs:complexType name="lineitemtype">
@@ -24,7 +18,6 @@
     <xs:element name="itemid" type="stringtype" minOccurs="1"/>
     <xs:element name="note" type="stringtype" minOccurs="0"/>
     <xs:element name="quantity" type="inttype" minOccurs="1"/>
-    <xs:element name="price" type="dectype" minOccurs="1"/>
   </xs:sequence>
 </xs:complexType>
 

@@ -16,30 +16,18 @@
  */
 package org.gmagnotta.app;
 
+import org.apache.camel.quarkus.main.CamelMainApplication;
+
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.annotations.QuarkusMain;
-import org.apache.camel.quarkus.main.CamelMainApplication;
-import org.jboss.logging.Logger;
 
 @QuarkusMain
 public class Main {
 
-    private static final Logger LOG = Logger.getLogger(Main.class);
-
     public static void main(String... args) throws Exception {
 
-        if (args.length == 3 && args[0].equals("generate")) {
+        Quarkus.run(CamelMainApplication.class, args);
 
-            int iterations = Integer.valueOf(args[1]);
-
-            XmlGenerator xmlGenerator = new XmlGenerator();
-
-            xmlGenerator.generateFile(iterations, args[2]);
-
-        } else {
-
-            Quarkus.run(CamelMainApplication.class, args);
-
-        }
     }
+
 }
