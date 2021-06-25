@@ -1,0 +1,44 @@
+syntax = "proto2";
+
+package tutorial;
+
+option java_package = "org.gmagnotta.protobuf";
+
+/* @Indexed */
+message Order {
+
+  required int32 id = 1;
+  
+  /* @Field(store = Store.YES, analyze = Analyze.YES) */
+  required int64 creationDate = 2;
+
+  /* @Field(store = Store.YES, analyze = Analyze.YES) */
+  required int64 amount = 3;
+
+  repeated LineItem lineItems = 4;
+  
+  /* @Field(store = Store.YES, analyze = Analyze.YES) */
+  optional string externalOrderId = 5;
+}
+
+/* @Indexed */
+message LineItem {
+
+  required int32 id = 1;
+  required int64 price = 2;
+  required int32 quantity = 3;
+  
+  /* @Field(store = Store.YES, analyze = Analyze.YES) */
+  required Item item = 4;
+  required int32 orderid = 5;
+
+}
+
+message Item {
+
+  /* @Field(store = Store.YES, analyze = Analyze.YES) */
+  required int32 id = 1;
+  required string description = 2;
+  required int64 price = 3;
+
+}
