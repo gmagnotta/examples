@@ -36,7 +36,7 @@ public class QueryUtils {
 	 */
     public void getTopOrders(Exchange exchange) throws Exception {
     	
-    	Query query = entityManager.createNativeQuery("select sum(quantity) as items, orders from line_item group by orders order by items desc");
+    	Query query = entityManager.createNativeQuery("select sum(quantity) as items, orders from line_item group by orders order by items desc, orders asc");
     	
     	List queryResult = query.setMaxResults(10).getResultList();
     	

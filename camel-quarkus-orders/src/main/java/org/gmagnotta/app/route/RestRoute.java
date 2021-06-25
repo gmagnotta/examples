@@ -19,31 +19,44 @@ public class RestRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-    	
-        restConfiguration()
-         .component("platform-http")
-         .bindingMode(RestBindingMode.auto)
-         .contextPath("/api");
-    	
-        rest("/topOrders")
-         .get().outType(Aggregationtype.class)
-         .to("bean://queryutils?method=getTopOrders");
-        
-        rest("/topItems")
-        .get().outType(Aggregationtype.class)
-        .to("bean://queryutils?method=getTopItems");
-        
-        rest("/order")
-         .post("/generate")
-          .param().name("amount").type(RestParamType.query).defaultValue("1").endParam()
-          .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
-          .to("bean://generateprocessor");
-        
-        rest("/reset")
-        .post()
-         .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
-         .to("bean://resetprocessor");
 
+    	restConfiguration()
+        .component("platform-http")
+        .bindingMode(RestBindingMode.auto)
+        .contextPath("/api");
+   	
+       rest("/topOrders")
+        .get().outType(Aggregationtype.class)
+        .to("bean://queryutils?method=getTopOrders");
+       
+       rest("/topItems")
+       .get().outType(Aggregationtype.class)
+       .to("bean://queryutils?method=getTopItems");
+       
+       rest("/order")
+        .post("/generate")
+         .param().name("amount").type(RestParamType.query).defaultValue("1").endParam()
+         .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
+         .to("bean://generateprocessor");
+       
+       rest("/reset")
+       .post()
+        .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
+        .to("bean://resetprocessor");
+       
+       rest("/rebuild")
+       .post()
+        .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
+        .transacted()
+         .to("jpa://org.gmagnotta.model.Order?namedQuery=getAllOrders&consumeDelete=false")
+         .split(body()).parallelProcessing()
+           .setBody(simple("${body.id}", String.class))
+          	.to("activemq:queue:ordercreated")
+          	.log("Sent order ${body} on activemq")
+         .end()
+        .end()
+        .setBody(constant("done"));
+    	
     }
 
 }
