@@ -33,6 +33,19 @@ public class RestRoute extends RouteBuilder {
         .post()
          .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
          .to("bean://cacheprocessor?method=resetCache");
+        
+        rest("/rebuild")
+        .post()
+         .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
+         .transacted()
+          .to("jpa://org.gmagnotta.model.Order?namedQuery=getAllOrders&consumeDelete=false")
+          .split(body()).parallelProcessing()
+            .setBody(simple("${body.id}", String.class))
+           	.to("bean://aggregateprocessor")
+           	.log("Sent order ${body} to aggregateprocessor")
+          .end()
+         .end()
+         .setBody(constant("done"));
 
     }
 

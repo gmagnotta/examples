@@ -19,6 +19,7 @@ package org.gmagnotta.app;
 import javax.enterprise.inject.Produces;
 
 import org.apache.camel.quarkus.main.CamelMainApplication;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gmagnotta.protobuf.OrderInitializerImpl;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -33,14 +34,24 @@ public class Main extends CamelMainApplication {
 	@Produces
 	RemoteCacheManager remoteCacheManager;
 
+	@ConfigProperty(name = "infinispan.uri")
+    String infinispanUri;
+
+	@ConfigProperty(name = "infinispan.username")
+    String infinispanUsername;
+
+	@ConfigProperty(name = "infinispan.password")
+    String infinispanPassword;
+
 	@Override
 	public int run(String... args) throws Exception {
 
 		ConfigurationBuilder clientBuilder = new ConfigurationBuilder();
 		
 		clientBuilder.transaction().transactionManagerLookup(new JBossStandaloneJTAManagerLookup());
-		clientBuilder.addServer().host("127.0.0.1").port(36371).security().authentication().username("admin")
-				.password("admin").addContextInitializer(new OrderInitializerImpl());
+		clientBuilder.uri(infinispanUri);
+		clientBuilder.security().authentication().username(infinispanUsername)
+				.password(infinispanPassword).addContextInitializer(new OrderInitializerImpl());
 
 		remoteCacheManager = new RemoteCacheManager(clientBuilder.build());
 

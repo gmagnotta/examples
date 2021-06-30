@@ -38,6 +38,7 @@ public class AggregateProcessor implements Processor {
     
 	@PostConstruct
 	private void init() {
+		
 		orderCache = remoteCacheManager.getCache("orders");
 		
 		lineItemsCache = remoteCacheManager.getCache("lineitems");
@@ -56,11 +57,11 @@ public class AggregateProcessor implements Processor {
     		
     		DenormalizedLineItem d = DenormalizedLineItem.fromLineItem(l);
     		
-    		lineItemsCache.put(String.valueOf(l.getId()), d);
+    		lineItemsCache.putAsync(String.valueOf(l.getId()), d);
     		
     	}
 
-    	orderCache.put(orderId, order);
+    	orderCache.putAsync(orderId, order);
     	
     	LOG.info("Order id " + orderId + " saved in Data Grid");
     	
