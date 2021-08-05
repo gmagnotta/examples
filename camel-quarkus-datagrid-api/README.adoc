@@ -1,0 +1,3 @@
+Example Camel Quarkus application
+
+For PostgreSQL set POSTGRESQL_MAX_PREPARED_TRANSACTIONS=63 in order to use XA transaction
