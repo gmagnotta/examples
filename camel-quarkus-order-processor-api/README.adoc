@@ -1,0 +1,1 @@
+Example Camel Quarkus application
