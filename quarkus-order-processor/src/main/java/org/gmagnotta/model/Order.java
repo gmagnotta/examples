@@ -3,6 +3,7 @@ package org.gmagnotta.model;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -127,7 +128,7 @@ public class Order implements Serializable {
     
     @Override
     public String toString() {
-    	return "Order id: " + id + "; creationDate " + creationDate + "; amount " + amount;
+    	return "Order id: " + id + "; creationDate " + creationDate + "; amount " + amount + " items:" + Arrays.toString(lineItems.toArray());
     }
 
 }

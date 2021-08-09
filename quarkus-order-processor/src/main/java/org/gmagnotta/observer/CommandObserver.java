@@ -4,7 +4,6 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,6 +11,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.jms.BytesMessage;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSConsumer;
@@ -24,21 +24,15 @@ import javax.jms.TextMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
 import org.gmagnotta.jaxb.ObjectFactory;
-import org.gmagnotta.jaxb.OrderChangeEvent;
-import org.gmagnotta.jaxb.OrderChangeEventEnum;
 import org.gmagnotta.jaxb.OrderCommandRequest;
 import org.gmagnotta.jaxb.OrderCommandRequestEnum;
 import org.gmagnotta.jaxb.OrderCommandResponse;
-import org.gmagnotta.jaxb.PersistedItem;
-import org.gmagnotta.jaxb.PersistedLineItem;
-import org.gmagnotta.jaxb.PersistedOrder;
 import org.gmagnotta.jaxb.TopValue;
+import org.gmagnotta.model.event.Orderchangeevent.OrderChangeEvent;
 import org.gmagnotta.utils.Utils;
 import org.jboss.logging.Logger;
 
@@ -52,7 +46,7 @@ public class CommandObserver implements MessageListener {
 	
 	private static final String COMMAND_QUEUE = "orderCommand";
 	
-	private static final String ORDER_CREATED_QUEUE = "orderCreated";
+	private static final String ORDER_CHANGED_QUEUE = "orderChanged";
 	
 	private static final String INVALID_MESSAGE_QUEUE = "invalidMessage";
 
@@ -132,20 +126,20 @@ public class CommandObserver implements MessageListener {
 	                    entityManager.persist(l);
 	                }
 	                
-	                LOGGER.info("Persisted order " + jpaOrder);
+	                LOGGER.info("Persisted order id " + jpaOrder.getId());
 	                
-	                OrderChangeEvent event = new OrderChangeEvent();
-	                event.setOrder(convertoToJaxbOrder(jpaOrder));
-	                event.setOrderChangeEventEnum(OrderChangeEventEnum.ORDER_CREATED);
+	                OrderChangeEvent event = OrderChangeEvent.newBuilder()
+	                		.setType(OrderChangeEvent.EventType.ORDER_CREATED)
+	                		.setOrder(Utils.convertToProtobuf(jpaOrder))
+	                        .build();
 	                
-	                StringWriter s = Utils.marshall(new ObjectFactory().createOrderChangeEvent(event));
+	                BytesMessage bmessage = context.createBytesMessage();
+	                bmessage.writeBytes(event.toByteArray());
 	                
-	                TextMessage response = context.createTextMessage(s.toString());
+	            	Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
+	            	context.createProducer().send(orderChangedQueue, bmessage);
 	            	
-	            	Queue orderCreatedQueue = context.createQueue(ORDER_CREATED_QUEUE);
-	            	context.createProducer().send(orderCreatedQueue, response);
-	            	
-	            	LOGGER.info("Sent response message");
+	            	LOGGER.info("Sent event message");
 		    	
 	            } else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.GET_TOP_ORDERS)) {
 	            	
@@ -301,45 +295,5 @@ public class CommandObserver implements MessageListener {
 		
 	}
 	
-	private static org.gmagnotta.jaxb.PersistedOrder convertoToJaxbOrder(org.gmagnotta.model.Order order) throws Exception {
-		
-		org.gmagnotta.jaxb.PersistedOrder persistedOrder = new PersistedOrder();
-		
-		persistedOrder.setId(order.getId());
-		persistedOrder.setAmount(order.getAmount());
-		
-		GregorianCalendar c = new GregorianCalendar();
-        c.setTime(order.getCreationDate());
-        XMLGregorianCalendar date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-		persistedOrder.setCreationDate(date2);
-		
-		persistedOrder.setExternalOrderId(order.getExternalOrderId());
-		
-		List<org.gmagnotta.model.LineItem> lineItems = order.getLineItems();
-		
-		for (org.gmagnotta.model.LineItem l : lineItems) {
-			
-			PersistedLineItem persistedLineItem = new PersistedLineItem();
-			
-			persistedLineItem.setId(l.getId());
-			persistedLineItem.setPrice(l.getPrice());
-			persistedLineItem.setQuantity(l.getQuantity());
-			
-			org.gmagnotta.model.Item item = l.getItem();
-			
-			PersistedItem persistedItem = new PersistedItem();
-			persistedItem.setId(item.getId());
-			persistedItem.setDescription(item.getDescription());
-			persistedItem.setPrice(item.getPrice());
-			
-			persistedLineItem.setItem(persistedItem);
-			
-			persistedOrder.getLineItem().add(persistedLineItem);
-			
-		}
-		
-		return persistedOrder;
-		
-	}
 	
 }
