@@ -69,4 +69,8 @@ public class Item implements Serializable {
 
         return false;
     }
+    
+    public String toString() {
+    	return "Item id: " + id + "; price " + price + "; description " + description;
+    }
 }

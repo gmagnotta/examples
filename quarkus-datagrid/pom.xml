@@ -96,6 +96,10 @@
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-jaxb</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+		</dependency>
 
 	</dependencies>
 	<build>
@@ -144,7 +148,6 @@
 					<!-- The package of your generated sources -->
 					<packageName>org.gmagnotta.jaxb</packageName>
 					<sources>
-						<source>src/main/resources/orderchangeevent.xsd</source>
 						<source>src/main/resources/ordercommandrequest.xsd</source>
 						<source>src/main/resources/ordercommandresponse.xsd</source>
 					</sources>

@@ -1,13 +1,11 @@
 package org.gmagnotta.observer;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.jms.BytesMessage;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSConsumer;
 import javax.jms.JMSContext;
@@ -15,17 +13,12 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Queue;
-import javax.jms.TextMessage;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.gmagnotta.jaxb.OrderChangeEvent;
-import org.gmagnotta.jaxb.OrderChangeEventEnum;
-import org.gmagnotta.jaxb.PersistedItem;
-import org.gmagnotta.jaxb.PersistedLineItem;
-import org.gmagnotta.jaxb.PersistedOrder;
 import org.gmagnotta.model.DenormalizedLineItem;
 import org.gmagnotta.model.LineItem;
 import org.gmagnotta.model.Order;
+import org.gmagnotta.model.event.Orderchangeevent.OrderChangeEvent;
 import org.gmagnotta.protobuf.OrderInitializerImpl;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -41,7 +34,7 @@ public class OrderCreatedEventObserver implements MessageListener {
 	
 	private static final Logger LOGGER = Logger.getLogger(OrderCreatedEventObserver.class);
 
-	private static final String ORDER_CREATED_QUEUE = "orderCreated";
+	private static final String ORDER_CHANGED_QUEUE = "orderChanged";
 	
 	private static final String INVALID_MESSAGE_QUEUE = "invalidMessage";
 	
@@ -88,9 +81,9 @@ public class OrderCreatedEventObserver implements MessageListener {
 		
 		context = connectionFactory.createContext();
     	
-     	Queue orderCreatedTopic = context.createQueue(ORDER_CREATED_QUEUE);
+     	Queue orderChangedTopic = context.createQueue(ORDER_CHANGED_QUEUE);
      	
-     	consumer = context.createConsumer(orderCreatedTopic);
+     	consumer = context.createConsumer(orderChangedTopic);
      	
      	invalidMessageQueue = context.createQueue(INVALID_MESSAGE_QUEUE);
 
@@ -119,7 +112,7 @@ public class OrderCreatedEventObserver implements MessageListener {
 		
 		try {
 			
-            if (message == null || !(message instanceof TextMessage)) {
+            if (message == null || !(message instanceof BytesMessage)) {
             	
             	LOGGER.warn("Received unexpected message");
             	
@@ -127,24 +120,22 @@ public class OrderCreatedEventObserver implements MessageListener {
             	
             } else {
             	
-            	TextMessage requestMessage = (TextMessage) message;
+            	BytesMessage requestMessage = (BytesMessage) message;
             	
-            	OrderChangeEvent event = Utils.unmarshall(OrderChangeEvent.class, requestMessage.getText());
+            	byte[] bytes = new byte[(int) requestMessage.getBodyLength()];
+            	requestMessage.readBytes(bytes);
+            	
+            	OrderChangeEvent event = OrderChangeEvent.parseFrom(bytes);
+            	
+	            LOGGER.info("Received event: " + event.getType());
 	            
-	            LOGGER.info("Received event: " + requestMessage.getText());
+	            if (event.getType().equals(OrderChangeEvent.EventType.ORDER_CREATED)) {
 	            
-	            if (event.getOrderChangeEventEnum().equals(OrderChangeEventEnum.ORDER_CREATED)) {
-	            
-	            	PersistedOrder persistedOrder = event.getOrder();
+	            	org.gmagnotta.model.event.Orderchangeevent.Order orderCreated = event.getOrder();
 	            	
-	            	org.gmagnotta.model.Order order = convertoToJpaOrder(persistedOrder);
+	            	org.gmagnotta.model.Order order = Utils.convertoToModel(orderCreated);
 	            	
 	            	for (LineItem l : order.getLineItems()) {
-	            		
-	            		l.setOrderid(order.getId());
-	            		
-	            		// fix relationship
-	            		l.setOrder(order);
 	            		
 	            		DenormalizedLineItem d = DenormalizedLineItem.fromLineItem(l);
 	            		
@@ -154,7 +145,7 @@ public class OrderCreatedEventObserver implements MessageListener {
 
 	            	orderCache.putAsync(String.valueOf(order.getId()), order);
 	            	
-	            	LOGGER.info("Order id " + persistedOrder.getId() + " saved in Data Grid");
+	            	LOGGER.info("Order id " + order.getId() + " saved in Data Grid");
 		    	
 	            } else {
 	            	
@@ -171,41 +162,6 @@ public class OrderCreatedEventObserver implements MessageListener {
         	LOGGER.error("An exception occurred during message processing", e);
         	
         }
-		
-	}
-	
-	private org.gmagnotta.model.Order convertoToJpaOrder(org.gmagnotta.jaxb.PersistedOrder order) {
-		
-		org.gmagnotta.model.Order jpaOrder = new org.gmagnotta.model.Order();
-		
-		jpaOrder.setCreationDate(order.getCreationDate().toGregorianCalendar().getTime());
-		jpaOrder.setExternalOrderId(order.getExternalOrderId());
-		
-		List<PersistedLineItem> lineItems = order.getLineItem();
-		
-		for (PersistedLineItem l : lineItems) {
-            
-    		PersistedItem i = l.getItem();
-            
-        	org.gmagnotta.model.Item jpaItem = new org.gmagnotta.model.Item();
-        	jpaItem.setDescription(i.getDescription());
-        	jpaItem.setId(i.getId());
-        	jpaItem.setPrice(i.getPrice());
-
-        	org.gmagnotta.model.LineItem jpaLineItem = new org.gmagnotta.model.LineItem();
-        	jpaLineItem.setItem(jpaItem);
-        	jpaLineItem.setOrder(jpaOrder);
-        	jpaLineItem.setQuantity(l.getQuantity());
-        	jpaLineItem.setPrice(l.getPrice());
-        	jpaLineItem.setId(l.getId());
-        	
-        	jpaOrder.addLineItem(jpaLineItem);
-            
-        }
-    	
-		jpaOrder.setAmount(order.getAmount());
-		jpaOrder.setId(order.getId());
-    	return jpaOrder;
 		
 	}
 	
