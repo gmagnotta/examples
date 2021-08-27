@@ -20,12 +20,12 @@
 
 	<properties>
 		<camel-quarkus.version>1.6.0.fuse-jdk11-800006-redhat-00001</camel-quarkus.version>
-		<quarkus.version>1.11.6.Final-redhat-00001</quarkus.version>
+		<quarkus.version>1.11.7.Final-redhat-00009</quarkus.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.testTarget>${maven.compiler.target}</maven.compiler.testTarget>
 		<maven.compiler.testSource>${maven.compiler.source}</maven.compiler.testSource>
 
@@ -101,19 +101,10 @@
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-activemq</artifactId>
 		</dependency>
-		<!-- <dependency>
-			<groupId>org.apache.camel.quarkus</groupId>
-			<artifactId>camel-quarkus-seda</artifactId>
-		</dependency> -->
 		<dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-rest</artifactId>
 		</dependency>
-		<!-- <dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>artemis-ra</artifactId>
-			<version>2.17.0</version>
-		</dependency>  -->
 		<dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-platform-http</artifactId>
