@@ -1,31 +1,41 @@
-FROM registry.access.redhat.com/ubi8
+FROM registry.access.redhat.com/ubi8/openjdk-8-runtime
 
 EXPOSE 11222
 
 USER root
 
-RUN yum update && \
-    yum install -y unzip java-1.8.0-openjdk-devel
+COPY redhat-datagrid-8.2.1-server.zip /tmp/
 
-COPY redhat-datagrid-8.1.0-server.zip /tmp/
+RUN microdnf install -y unzip && \
+    mkdir /opt/datagrid && \
+    unzip /tmp/redhat-datagrid-8.2.1-server.zip -d /tmp/datagrid && \
+    mv /tmp/datagrid/redhat-datagrid-8.2.1-server/* /opt/datagrid && \
 
-RUN mkdir /opt/datagrid && \
-    unzip /tmp/redhat-datagrid-8.1.0-server.zip -d /tmp/datagrid && \
-    mv /tmp/datagrid/redhat-datagrid-8.1.0-server/* /opt/datagrid
-
-RUN groupadd datagrid && \
+    groupadd datagrid && \
     useradd -g datagrid datagrid && \
-    chown -R datagrid:0 /opt/datagrid
+    chown -R datagrid:0 /opt/datagrid && \
+
+    microdnf clean all && [ ! -d /var/cache/yum ] || rm -rf /var/cache/yum && \
+    rm -r /tmp/datagrid && \
+
+    ln -s /usr/lib/jvm/jre-1.8.0 /usr/lib/jvm/java-1.8.0
 
 USER datagrid
 
 WORKDIR /opt/datagrid
 
-RUN /opt/datagrid/bin/cli.sh user create admin -p "admin" -g supervisor,reader,writer
+RUN /opt/datagrid/bin/cli.sh user create admin -p "admin" -g supervisor,reader,writer && \
+    mkdir /opt/datagrid/server/log && \
+    mkdir /opt/datagrid/server/data
 
 USER root
 
-RUN chown -R datagrid:0 /opt/datagrid/server && \
-    yum clean all && [ ! -d /var/cache/yum ] || rm -rf /var/cache/yum && rm -r /tmp/datagrid
+RUN chown -R datagrid:0 /opt/datagrid && \
+    chmod 770 /opt/datagrid/ && \
+    chmod 770 /opt/datagrid/server/log && \
+    chmod 770 /opt/datagrid/server/data && \
+    sed -i 's/127.0.0.1/0.0.0.0/' /opt/datagrid/server/conf/infinispan.xml
 
-ENTRYPOINT /opt/datagrid/bin/server.sh
+USER datagrid
+
+ENTRYPOINT /opt/datagrid/bin/server.sh --cluster-stack=udp
