@@ -1,3 +1,5 @@
-Example Camel Quarkus application
+# camel-quarkus-datagrid-api
 
-For PostgreSQL set POSTGRESQL_MAX_PREPARED_TRANSACTIONS=63 in order to use XA transaction
+Example Camel Quarkus application that:
+
+* offers REST apis to interact via messaging with quarkus-datagrid application

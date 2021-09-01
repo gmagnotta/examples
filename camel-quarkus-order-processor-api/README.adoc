@@ -1,4 +1,6 @@
+# camel-quarkus-order-processor-api
+
 Example Camel Quarkus application that:
 
-* process incoming files containing orders in xml formar (see src/main/resources/order.xsd)
+* process incoming files containing orders in xml format (see src/main/resources/order.xsd)
 * offers REST apis to interact via messaging with quarkus-order-processor application
