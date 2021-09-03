@@ -38,4 +38,6 @@ RUN chown -R datagrid:0 /opt/datagrid && \
 
 USER datagrid
 
-ENTRYPOINT /opt/datagrid/bin/server.sh --cluster-stack=udp
+ENTRYPOINT ["/opt/datagrid/bin/server.sh"]
+
+CMD ["--cluster-stack=udp"]
