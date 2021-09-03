@@ -33,12 +33,6 @@ public class RestRoute extends RouteBuilder {
        .get().outType(Aggregationtype.class)
        .to("bean://queryutils?method=getTopItems");
        
-       rest("/order")
-        .post("/generate")
-         .param().name("amount").type(RestParamType.query).defaultValue("1").endParam()
-         .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
-         .to("bean://generateprocessor");
-       
        rest("/reset")
        .post()
         .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))

@@ -215,7 +215,6 @@
 					<!-- The package of your generated sources -->
 					<packageName>org.gmagnotta.jaxb</packageName>
 					<sources>
-					  <source>src/main/resources/order.xsd</source>
 					  <source>src/main/resources/aggregated.xsd</source>
 					  <source>src/main/resources/ordercommandrequest.xsd</source>
 					  <source>src/main/resources/ordercommandresponse.xsd</source>
