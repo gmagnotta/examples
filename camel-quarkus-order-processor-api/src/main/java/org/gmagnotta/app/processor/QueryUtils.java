@@ -237,5 +237,50 @@ public class QueryUtils {
         	
         }
 	}
+	
+	public void rebuild(Exchange exchange) throws Exception {
+
+    	Queue responseQueue = context.createTemporaryQueue();
+    	Queue requestQueue = context.createQueue(COMMAND_QUEUE);
+    	
+    	OrderCommandRequest requestMessage = new OrderCommandRequest();
+    	requestMessage.setOrderCommandEnum(OrderCommandRequestEnum.REBUILD);
+    	
+    	StringWriter s = Utils.marshall(new ObjectFactory().createOrderCommandRequest(requestMessage));
+    	
+    	TextMessage textMessage = context.createTextMessage(s.toString());
+    	textMessage.setJMSReplyTo(responseQueue);
+    	textMessage.setJMSExpiration(10000L);
+    	
+    	LOGGER.info("Sending message " + textMessage);
+    	
+    	context.createProducer().send(requestQueue, textMessage);
+    	
+    	JMSConsumer consumer = context.createConsumer(responseQueue);
+    	Message message = consumer.receive(10000L);
+        if (message == null) {
+        	LOGGER.warn("Received null reply");
+        	throw new TimeoutException();
+        }
+        
+        if (message.getJMSCorrelationID().equals(textMessage.getJMSMessageID())) {
+        	
+        	String responseContent = message.getBody(String.class);
+        	
+        	OrderCommandResponse responseMessage = Utils.unmarshall(OrderCommandResponse.class, responseContent);
+        	
+        	if (!"200".equalsIgnoreCase(responseMessage.getStatus())) {
+        		throw new Exception("Error");
+        	}
+        		
+        	
+        } else {
+        	
+        	LOGGER.error("Unknown response message " + message);
+        	
+        	throw new Exception("Unknown response message");
+        	
+        }
+	}
 
 }

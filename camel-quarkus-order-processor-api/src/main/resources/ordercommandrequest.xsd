@@ -23,6 +23,7 @@
 			<xs:enumeration value="ORDER_RECEIVED" />
 			<xs:enumeration value="GET_TOP_ORDERS" />
 			<xs:enumeration value="GET_TOP_ITEMS" />
+			<xs:enumeration value="REBUILD" />
 			<xs:enumeration value="RESET" />
 		</xs:restriction>
 	</xs:simpleType>

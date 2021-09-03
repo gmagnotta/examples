@@ -32,6 +32,7 @@ import org.gmagnotta.jaxb.OrderCommandRequest;
 import org.gmagnotta.jaxb.OrderCommandRequestEnum;
 import org.gmagnotta.jaxb.OrderCommandResponse;
 import org.gmagnotta.jaxb.TopValue;
+import org.gmagnotta.model.Order;
 import org.gmagnotta.model.event.Orderchangeevent.OrderChangeEvent;
 import org.gmagnotta.utils.Utils;
 import org.jboss.logging.Logger;
@@ -242,6 +243,42 @@ public class CommandObserver implements MessageListener {
 					context.createProducer().send(responseChannel, response);
 
 					LOGGER.info("Sent response");
+
+				} else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.REBUILD)) {
+					
+					OrderCommandResponse responseMessage = new OrderCommandResponse();
+					responseMessage.setStatus("200");
+
+					StringWriter s = Utils.marshall(new ObjectFactory().createOrderCommandResponse(responseMessage));
+
+					TextMessage response = context.createTextMessage(s.toString());
+					response.setJMSCorrelationID(requestMessage.getJMSMessageID());
+
+					Destination responseChannel = requestMessage.getJMSReplyTo();
+
+					context.createProducer().send(responseChannel, response);
+
+					LOGGER.info("Sent response");
+
+					Query query = entityManager.createNamedQuery("getAllOrders", Order.class);
+
+					List<Order> orders = query.getResultList();
+					
+					for (Order order : orders) {
+
+						OrderChangeEvent event = OrderChangeEvent.newBuilder()
+								.setType(OrderChangeEvent.EventType.ORDER_CREATED)
+								.setOrder(Utils.convertToProtobuf(order)).build();
+	
+						BytesMessage bmessage = context.createBytesMessage();
+						bmessage.writeBytes(event.toByteArray());
+	
+						Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
+						context.createProducer().send(orderChangedQueue, bmessage);
+	
+						LOGGER.info("Sent event message");
+					
+					}
 
 				} else {
 

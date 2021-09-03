@@ -26,7 +26,7 @@ public class XmlFileRoute extends RouteBuilder {
     @ConfigProperty(name = "orders.dir")
     String ordersDirectory;
     
-    @ConfigProperty(name = "broker.url")
+    @ConfigProperty(name = "quarkus.artemis.url")
     String brokerUrl;
     
     @ConfigProperty(name = "processingthreads")

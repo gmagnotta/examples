@@ -44,6 +44,11 @@ public class RestRoute extends RouteBuilder {
         .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
         .to("bean://queryutils?method=reset");
        
+       rest("/rebuild")
+       .post()
+        .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("200"))
+        .to("bean://queryutils?method=rebuild");
+       
     }
 
 }
