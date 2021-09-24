@@ -5,6 +5,8 @@ EXPOSE 11222
 USER root
 
 COPY redhat-datagrid-8.2.1-server.zip /tmp/
+COPY infinispan-lon.xml /tmp/
+COPY infinispan-nyc.xml /tmp/
 
 RUN microdnf install -y unzip && \
     mkdir /opt/datagrid && \
@@ -34,10 +36,12 @@ RUN chown -R datagrid:0 /opt/datagrid && \
     chmod 770 /opt/datagrid/ && \
     chmod 770 /opt/datagrid/server/log && \
     chmod 770 /opt/datagrid/server/data && \
+    cp /tmp/infinispan-lon.xml /opt/datagrid/server/conf/ && \
+    cp /tmp/infinispan-nyc.xml /opt/datagrid/server/conf/ && \
     sed -i 's/127.0.0.1/0.0.0.0/' /opt/datagrid/server/conf/infinispan.xml
 
 USER datagrid
 
 ENTRYPOINT ["/opt/datagrid/bin/server.sh"]
 
-CMD ["--cluster-stack=udp"]
+CMD ["--cluster-stack=udp", "-Dinfinispan.cluster.name=London", "--server-config=infinispan.xml"]
