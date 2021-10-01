@@ -43,8 +43,6 @@ import io.quarkus.runtime.StartupEvent;
 @ApplicationScoped
 public class CommandObserver implements MessageListener {
 
-	private static final Logger LOGGER = Logger.getLogger(CommandObserver.class);
-
 	private static final String COMMAND_QUEUE = "orderCommand";
 
 	private static final String ORDER_CHANGED_QUEUE = "orderChanged";
@@ -53,6 +51,9 @@ public class CommandObserver implements MessageListener {
 
 	@Inject
 	ConnectionFactory connectionFactory;
+
+	@Inject
+	Logger logger;
 
 	@Inject
 	EntityManager entityManager;
@@ -64,7 +65,7 @@ public class CommandObserver implements MessageListener {
 	Queue invalidMessageQueue;
 
 	@PostConstruct
-	private void init() {
+	void init() {
 
 		context = connectionFactory.createContext();
 
@@ -80,7 +81,7 @@ public class CommandObserver implements MessageListener {
 
 		consumer.setMessageListener(this);
 
-		LOGGER.info("Consumer started");
+		logger.info("Consumer started");
 
 	}
 
@@ -90,7 +91,7 @@ public class CommandObserver implements MessageListener {
 
 		context.close();
 
-		LOGGER.info("Consumer stopped");
+		logger.info("Consumer stopped");
 
 	}
 
@@ -102,7 +103,7 @@ public class CommandObserver implements MessageListener {
 
 			if (message == null || !(message instanceof TextMessage)) {
 
-				LOGGER.warn("Received unexpected message");
+				logger.warn("Received unexpected message");
 
 				context.createProducer().send(invalidMessageQueue, message);
 
@@ -115,7 +116,7 @@ public class CommandObserver implements MessageListener {
 				OrderCommandRequest orderCommandRequest = Utils.unmarshall(OrderCommandRequest.class,
 						requestMessage.getText());
 
-				LOGGER.info("Received message id " + message.getJMSMessageID());
+				logger.info("Received message id " + message.getJMSMessageID());
 
 				if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.ORDER_RECEIVED)) {
 
@@ -128,7 +129,7 @@ public class CommandObserver implements MessageListener {
 						entityManager.persist(l);
 					}
 
-					LOGGER.info("Persisted order id " + jpaOrder.getId());
+					logger.info("Persisted order id " + jpaOrder.getId());
 
 					OrderChangeEvent event = OrderChangeEvent.newBuilder()
 							.setType(OrderChangeEvent.EventType.ORDER_CREATED)
@@ -140,7 +141,7 @@ public class CommandObserver implements MessageListener {
 					Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
 					context.createProducer().send(orderChangedQueue, bmessage);
 
-					LOGGER.info("Sent event message");
+					logger.info("Sent event message");
 
 				} else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.GET_TOP_ORDERS)) {
 
@@ -181,7 +182,7 @@ public class CommandObserver implements MessageListener {
 
 					context.createProducer().send(responseChannel, response);
 
-					LOGGER.info("Sent response");
+					logger.info("Sent response");
 
 				} else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.GET_TOP_ITEMS)) {
 
@@ -222,7 +223,7 @@ public class CommandObserver implements MessageListener {
 
 					context.createProducer().send(responseChannel, response);
 
-					LOGGER.info("Sent response");
+					logger.info("Sent response");
 
 				} else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.RESET)) {
 
@@ -242,7 +243,7 @@ public class CommandObserver implements MessageListener {
 
 					context.createProducer().send(responseChannel, response);
 
-					LOGGER.info("Sent response");
+					logger.info("Sent response");
 
 				} else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.REBUILD)) {
 					
@@ -258,7 +259,7 @@ public class CommandObserver implements MessageListener {
 
 					context.createProducer().send(responseChannel, response);
 
-					LOGGER.info("Sent response");
+					logger.info("Sent response");
 
 					Query query = entityManager.createNamedQuery("getAllOrders", Order.class);
 
@@ -276,13 +277,13 @@ public class CommandObserver implements MessageListener {
 						Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
 						context.createProducer().send(orderChangedQueue, bmessage);
 	
-						LOGGER.info("Sent event message");
+						logger.info("Sent event message");
 					
 					}
 
 				} else {
 
-					LOGGER.warn("Unknown operation");
+					logger.warn("Unknown operation");
 
 					context.createProducer().send(invalidMessageQueue, message);
 
@@ -292,7 +293,7 @@ public class CommandObserver implements MessageListener {
 
 		} catch (Exception e) {
 
-			LOGGER.error("An exception occurred during message processing", e);
+			logger.error("An exception occurred during message processing", e);
 
 		}
 
