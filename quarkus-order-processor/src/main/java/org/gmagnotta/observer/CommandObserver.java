@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
 import org.gmagnotta.jaxb.ObjectFactory;
@@ -63,6 +64,9 @@ public class CommandObserver implements MessageListener {
 	JMSConsumer consumer;
 
 	Queue invalidMessageQueue;
+
+	@ConfigProperty(name = "emitCreatedEvent")
+	boolean emitCreatedEvent;
 
 	@PostConstruct
 	void init() {
@@ -131,17 +135,21 @@ public class CommandObserver implements MessageListener {
 
 					logger.info("Persisted order id " + jpaOrder.getId());
 
-					OrderChangeEvent event = OrderChangeEvent.newBuilder()
-							.setType(OrderChangeEvent.EventType.ORDER_CREATED)
-							.setOrder(Utils.convertToProtobuf(jpaOrder)).build();
+					if (emitCreatedEvent) {
 
-					BytesMessage bmessage = context.createBytesMessage();
-					bmessage.writeBytes(event.toByteArray());
+						OrderChangeEvent event = OrderChangeEvent.newBuilder()
+								.setType(OrderChangeEvent.EventType.ORDER_CREATED)
+								.setOrder(Utils.convertToProtobuf(jpaOrder)).build();
 
-					Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
-					context.createProducer().send(orderChangedQueue, bmessage);
+						BytesMessage bmessage = context.createBytesMessage();
+						bmessage.writeBytes(event.toByteArray());
 
-					logger.info("Sent event message");
+						Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
+						context.createProducer().send(orderChangedQueue, bmessage);
+
+						logger.info("Sent event message");
+
+					}
 
 				} else if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.GET_TOP_ORDERS)) {
 
