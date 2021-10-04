@@ -58,10 +58,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.camel.quarkus</groupId>
-			<artifactId>camel-quarkus-main</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-artemis-jms</artifactId>
 		</dependency>
@@ -130,10 +126,6 @@
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-    <groupId>org.apache.camel.quarkus</groupId>
-    <artifactId>camel-quarkus-soap</artifactId>
-</dependency>
 	</dependencies>
 
 	<build>

@@ -10,6 +10,9 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.gmagnotta.app.converter.OrderTypeConverter;
+import org.gmagnotta.jaxb.Order;
+import org.gmagnotta.jaxb.Ordertype;
 import org.jboss.logging.Logger;
 import org.jboss.narayana.jta.jms.ConnectionFactoryProxy;
 import org.jboss.narayana.jta.jms.TransactionHelperImpl;
@@ -54,10 +57,12 @@ public class XmlFileRoute extends RouteBuilder {
     	activeMq.setTransactionManager(jtaTransactionManager);
     	
     	getContext().addComponent("activemq", activeMq);
+        
+        getContext().getTypeConverterRegistry().addTypeConverter(Order.class, Ordertype.class, new OrderTypeConverter());
     	
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat("org.gmagnotta.jaxb");
         //jaxbDataFormat.setSchema("classpath:order.xsd");
-        
+
         onException(Exception.class)
          .log("Exception occurred during route processing: ${exception.stacktrace}")
          .markRollbackOnly();
@@ -67,9 +72,10 @@ public class XmlFileRoute extends RouteBuilder {
          .log("Consuming file ${headers.CamelFileAbsolutePath}")
          .threads(processingThreads, processingThreads, "fileProcessor")
           .unmarshal(jaxbDataFormat)
+          .convertBodyTo(Order.class)
+          .to("bean://orderprocessor")
+          .marshal(jaxbDataFormat)
           .transacted()
-           .to("bean://orderprocessor")
-           .marshal(jaxbDataFormat)
            .to("activemq:queue:orderCommand?jmsMessageType=Text")
           .end()
          .log("done processing order ${headers.OrderEntity.id}");
