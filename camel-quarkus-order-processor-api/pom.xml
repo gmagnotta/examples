@@ -19,7 +19,7 @@
 	<version>1.0.0-SNAPSHOT</version>
 
 	<properties>
-		<camel-quarkus.version>1.6.0.fuse-jdk11-800006-redhat-00001</camel-quarkus.version>
+		<camel-quarkus.version>1.8.1.fuse-800012-redhat-00001</camel-quarkus.version>
 		<quarkus.version>1.11.7.Final-redhat-00009</quarkus.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
