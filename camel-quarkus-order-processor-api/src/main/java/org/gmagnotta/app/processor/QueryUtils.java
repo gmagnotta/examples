@@ -71,7 +71,7 @@ public class QueryUtils {
     	textMessage.setJMSReplyTo(responseQueue);
     	textMessage.setJMSExpiration(10000L);
     	
-    	LOGGER.info("Sending message id " + textMessage.getJMSMessageID());
+    	LOGGER.info("Sending message " + textMessage);
     	
     	context.createProducer().send(requestQueue, textMessage);
     	

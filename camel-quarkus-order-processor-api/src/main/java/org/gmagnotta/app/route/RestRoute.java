@@ -27,27 +27,60 @@ public class RestRoute extends RouteBuilder {
    	
        rest("/topOrders")
         .get().outType(Aggregationtype.class)
-        .to("bean://queryutils?method=getTopOrders");
+        .route()
+         .circuitBreaker()
+          .to("bean://queryutils?method=getTopOrders")
+         .onFallback()
+           .setBody(constant("Dependant service not available"))
+           .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
+           .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+         .end()
+        .endRest();
        
        rest("/topItems")
        .get().outType(Aggregationtype.class)
-       .to("bean://queryutils?method=getTopItems");
-       
+       .route()
+       .circuitBreaker()
+        .to("bean://queryutils?method=getTopItems")
+        .onFallback()
+        .setBody(constant("Dependant service not available"))
+        .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
+        .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+        .end()
+       .endRest();
+
        rest("/order")
         .post("/generate")
          .param().name("amount").type(RestParamType.query).defaultValue("1").endParam()
          .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
-         .to("bean://generateprocessor");
+         .to("bean://generateprocessor")
+        .endRest();
        
        rest("/reset")
        .post()
-        .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
-        .to("bean://queryutils?method=reset");
+        .route()
+        .circuitBreaker()
+         .to("bean://queryutils?method=reset")
+         .setHeader(Exchange.HTTP_RESPONSE_CODE, simple("201"))
+        .onFallback()
+        .setBody(constant("Dependant service not available"))
+        .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
+        .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+        .end()
+      .endRest();
        
        rest("/rebuild")
        .post()
-        .route().setHeader(Exchange.HTTP_RESPONSE_CODE, simple("200"))
-        .to("bean://queryutils?method=rebuild");
+       .route()
+       .circuitBreaker()
+        .to("bean://queryutils?method=rebuild")
+        .setHeader(Exchange.HTTP_RESPONSE_CODE, simple("200"))
+       .onFallback()
+        .setBody(constant("Dependant service not available"))
+        .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
+        .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+      .end()
+      .endRest();
        
     }
 
