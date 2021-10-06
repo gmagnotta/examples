@@ -18,6 +18,7 @@ import javax.jms.Queue;
 import javax.jms.TextMessage;
 
 import org.apache.camel.Exchange;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.gmagnotta.jaxb.Aggregateditemtype;
 import org.gmagnotta.jaxb.Aggregatedordertype;
 import org.gmagnotta.jaxb.Aggregationtype;
@@ -31,6 +32,7 @@ import org.jboss.logging.Logger;
 
 @ApplicationScoped
 @Named("queryutils")
+@Traced
 /**
  * This class contains some methods to query the database
  */

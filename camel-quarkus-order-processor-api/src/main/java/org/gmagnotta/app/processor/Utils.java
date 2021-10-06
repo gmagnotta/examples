@@ -11,7 +11,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import org.eclipse.microprofile.opentracing.Traced;
 
+@Traced
 public class Utils {
 	
 	public static <T> T unmarshall(Class<T> type, String string) throws JAXBException {
