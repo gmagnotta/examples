@@ -26,6 +26,7 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
 import org.gmagnotta.jaxb.ObjectFactory;
@@ -101,6 +102,7 @@ public class CommandObserver implements MessageListener {
 
 	@Override
 	@Transactional
+	@Traced
 	public void onMessage(Message message) {
 
 		try {
