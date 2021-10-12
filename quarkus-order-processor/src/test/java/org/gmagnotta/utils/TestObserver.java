@@ -53,6 +53,7 @@ public class TestObserver {
     	TextMessage textMessage = context.createTextMessage(s.toString());
     	textMessage.setJMSReplyTo(responseQueue);
     	textMessage.setJMSExpiration(10000L);
+        textMessage.setJMSCorrelationID("testId");
     	
         logger.info("sending message");
 
@@ -65,7 +66,7 @@ public class TestObserver {
         	throw new TimeoutException();
         }
         
-        if (message.getJMSCorrelationID().equals(textMessage.getJMSMessageID())) {
+        if (message.getJMSCorrelationID().equals(textMessage.getJMSCorrelationID())) {
         	
             String responseContent = message.getBody(String.class);
         	

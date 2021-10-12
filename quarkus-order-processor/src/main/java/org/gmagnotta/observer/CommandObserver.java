@@ -186,7 +186,7 @@ public class CommandObserver implements MessageListener {
 					StringWriter s = Utils.marshall(new ObjectFactory().createOrderCommandResponse(responseMessage));
 
 					TextMessage response = context.createTextMessage(s.toString());
-					response.setJMSCorrelationID(requestMessage.getJMSMessageID());
+					response.setJMSCorrelationID(requestMessage.getJMSCorrelationID());
 
 					Destination responseChannel = requestMessage.getJMSReplyTo();
 
@@ -227,7 +227,7 @@ public class CommandObserver implements MessageListener {
 					StringWriter s = Utils.marshall(new ObjectFactory().createOrderCommandResponse(responseMessage));
 
 					TextMessage response = context.createTextMessage(s.toString());
-					response.setJMSCorrelationID(requestMessage.getJMSMessageID());
+					response.setJMSCorrelationID(requestMessage.getJMSCorrelationID());
 
 					Destination responseChannel = requestMessage.getJMSReplyTo();
 
@@ -247,7 +247,7 @@ public class CommandObserver implements MessageListener {
 					StringWriter s = Utils.marshall(new ObjectFactory().createOrderCommandResponse(responseMessage));
 
 					TextMessage response = context.createTextMessage(s.toString());
-					response.setJMSCorrelationID(requestMessage.getJMSMessageID());
+					response.setJMSCorrelationID(requestMessage.getJMSCorrelationID());
 
 					Destination responseChannel = requestMessage.getJMSReplyTo();
 
@@ -263,7 +263,7 @@ public class CommandObserver implements MessageListener {
 					StringWriter s = Utils.marshall(new ObjectFactory().createOrderCommandResponse(responseMessage));
 
 					TextMessage response = context.createTextMessage(s.toString());
-					response.setJMSCorrelationID(requestMessage.getJMSMessageID());
+					response.setJMSCorrelationID(requestMessage.getJMSCorrelationID());
 
 					Destination responseChannel = requestMessage.getJMSReplyTo();
 
