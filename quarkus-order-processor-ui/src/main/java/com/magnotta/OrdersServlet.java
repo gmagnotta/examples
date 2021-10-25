@@ -6,12 +6,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.UriBuilder;
 
+import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
 import org.gmagnotta.jaxb.Aggregationtype;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
 public class OrdersServlet extends HttpServlet {
 
@@ -28,14 +25,9 @@ public class OrdersServlet extends HttpServlet {
 
         getServletContext().log("Using backend " + path);
 
-        ResteasyClient client = new ResteasyClientBuilder().build();
-        ResteasyWebTarget target = client.target(UriBuilder.fromPath(path));
-
-        ServicesInterface proxy = target.proxy(ServicesInterface.class);
+        ServicesInterface proxy = JAXRSClientFactory.create(path, ServicesInterface.class);
 
         Aggregationtype res = proxy.getTopOrders();
-
-        client.close();
 
         request.setAttribute("orders", res);
 
