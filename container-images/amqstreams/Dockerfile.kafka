@@ -5,4 +5,4 @@ EXPOSE 9092/tcp
 
 USER kafka
 
-ENTRYPOINT /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+ENTRYPOINT ["/opt/kafka/bin/kafka-server-start.sh", "/opt/kafka/config/server.properties"]

@@ -1,0 +1,42 @@
+FROM registry.access.redhat.com/ubi8/openjdk-8-runtime
+
+USER root
+
+COPY amq-streams-1.8.0-bin.zip /tmp/
+
+RUN microdnf install -y unzip && \
+
+    mkdir /opt/kafka && \
+    unzip /tmp/amq-streams-1.8.0-bin.zip -d /tmp/kafka && \
+    mv /tmp/kafka/kafka_2.12-2.8.0.redhat-00002/* /opt/kafka && \
+
+    groupadd kafka && \
+    useradd -g kafka kafka && \
+    chown -R kafka:0 /opt/kafka && \
+    
+    mkdir /var/lib/zookeeper && \
+    chown -R kafka:0 /var/lib/zookeeper && \
+    chmod 770 /var/lib/zookeeper && \
+    
+    mkdir /var/lib/kafka && \
+    chown -R kafka:0 /var/lib/kafka && \
+    chmod 770 /var/lib/kafka && \
+    
+    mkdir /opt/kafka/logs && \
+    chown -R kafka:0 /opt/kafka/logs && \
+    chmod 770 /opt/kafka/logs && \
+    
+    sed -i '/dataDir=\/tmp\/zookeeper/c\dataDir=\/var\/lib\/zookeeper\/' /opt/kafka/config/zookeeper.properties && \
+    sed -i '/log.dirs=\/tmp\/kafka-logs/c\logs.dirs=\/var\/lib\/kafka\/' /opt/kafka/config/server.properties && \
+
+    echo "advertised.listeners=PLAINTEXT://amqstreams:9092" >> /opt/kafka/config/server.properties && \
+
+    microdnf clean all && [ ! -d /var/cache/yum ] || rm -rf /var/cache/yum && \
+    rm -rf /tmp/kafka && \
+    rm -rf /tmp/amq-streams-1.8.0-bin.zip && \
+    
+    ln -s /usr/lib/jvm/jre-1.8.0 /usr/lib/jvm/java-1.8.0
+
+USER kafka
+
+ENTRYPOINT /bin/bash
