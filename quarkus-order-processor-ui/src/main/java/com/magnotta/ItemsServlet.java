@@ -7,7 +7,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.cxf.jaxrs.client.ClientConfiguration;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
+import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.transport.http.HTTPConduit;
 import org.gmagnotta.jaxb.Aggregationtype;
 
 public class ItemsServlet extends HttpServlet {
@@ -23,6 +26,12 @@ public class ItemsServlet extends HttpServlet {
         getServletContext().log("Using backend " + path);
 
         ServicesInterface proxy = JAXRSClientFactory.create(path, ServicesInterface.class);
+
+        ClientConfiguration config = WebClient.getConfig(proxy);
+
+        HTTPConduit conduit = (HTTPConduit)config.getConduit();
+        conduit.getClient().setConnectionTimeout(1000 * 30);
+        conduit.getClient().setReceiveTimeout(1000 * 30);
 
         Aggregationtype res = proxy.getTopItems();
 
