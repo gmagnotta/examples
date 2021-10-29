@@ -10,7 +10,7 @@
    
    <stack name="public" extends="kubernetes">
       
-      <TCP bind_port="7900" />
+      <TCP bind_port="${relay2publicport:7900}" />
       
       <TCPPING initial_hosts="${jgroups.tcpping.initial_hosts:127.0.0.1[7900]}"
           port_range="0"
