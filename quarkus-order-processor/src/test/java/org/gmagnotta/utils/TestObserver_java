@@ -21,10 +21,12 @@ import javax.jms.Message;
 
 import io.quarkus.artemis.test.ArtemisTestResource;
 import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.h2.H2DatabaseTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @QuarkusTestResource(ArtemisTestResource.class)
+@QuarkusTestResource(H2DatabaseTestResource.class)
 public class TestObserver {
 
     private static final String COMMAND_QUEUE = "orderCommand";

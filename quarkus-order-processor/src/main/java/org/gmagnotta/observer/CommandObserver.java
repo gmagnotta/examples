@@ -27,6 +27,8 @@ import javax.transaction.Transactional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.opentracing.Traced;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
 import org.gmagnotta.jaxb.ObjectFactory;
@@ -60,6 +62,8 @@ public class CommandObserver implements MessageListener {
 	@Inject
 	EntityManager entityManager;
 
+	@Inject @Channel("order-created") Emitter<byte[]> orderEmitter;
+
 	JMSContext context;
 
 	JMSConsumer consumer;
@@ -79,6 +83,8 @@ public class CommandObserver implements MessageListener {
 		consumer = context.createConsumer(commandQueue);
 
 		invalidMessageQueue = context.createQueue(INVALID_MESSAGE_QUEUE);
+
+		
 
 	}
 
@@ -143,13 +149,9 @@ public class CommandObserver implements MessageListener {
 								.setType(OrderChangeEvent.EventType.ORDER_CREATED)
 								.setOrder(Utils.convertToProtobuf(jpaOrder)).build();
 
-						BytesMessage bmessage = context.createBytesMessage();
-						bmessage.writeBytes(event.toByteArray());
-
-						Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
-						context.createProducer().send(orderChangedQueue, bmessage);
-
 						logger.info("Sent event message");
+
+						orderEmitter.send(event.toByteArray());
 
 					}
 
@@ -281,11 +283,7 @@ public class CommandObserver implements MessageListener {
 								.setType(OrderChangeEvent.EventType.ORDER_CREATED)
 								.setOrder(Utils.convertToProtobuf(order)).build();
 	
-						BytesMessage bmessage = context.createBytesMessage();
-						bmessage.writeBytes(event.toByteArray());
-	
-						Queue orderChangedQueue = context.createQueue(ORDER_CHANGED_QUEUE);
-						context.createProducer().send(orderChangedQueue, bmessage);
+						orderEmitter.send(event.toByteArray());
 	
 						logger.info("Sent event message");
 					
