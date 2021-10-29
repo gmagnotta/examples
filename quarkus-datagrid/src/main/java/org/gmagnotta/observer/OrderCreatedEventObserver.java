@@ -5,16 +5,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.jms.BytesMessage;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Queue;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.gmagnotta.model.DenormalizedLineItem;
 import org.gmagnotta.model.LineItem;
 import org.gmagnotta.model.Order;
@@ -30,14 +24,10 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
-public class OrderCreatedEventObserver implements MessageListener {
+public class OrderCreatedEventObserver {
 	
 	private static final Logger LOGGER = Logger.getLogger(OrderCreatedEventObserver.class);
 
-	private static final String ORDER_CHANGED_QUEUE = "orderChanged";
-	
-	private static final String INVALID_MESSAGE_QUEUE = "invalidMessage";
-	
 	@Produces
 	RemoteCacheManager remoteCacheManager;
 
@@ -50,18 +40,9 @@ public class OrderCreatedEventObserver implements MessageListener {
 	@ConfigProperty(name = "infinispan.password")
     String infinispanPassword;
 	
-    @Inject
-    ConnectionFactory connectionFactory;
-    
-    JMSContext context;
-    
-    JMSConsumer consumer;
-
     RemoteCache<String, DenormalizedLineItem> lineItemsCache;
     
     RemoteCache<String, Order> orderCache;
-    
-    Queue invalidMessageQueue;
     
 	@PostConstruct
 	private void init() {
@@ -79,53 +60,21 @@ public class OrderCreatedEventObserver implements MessageListener {
 		
 		lineItemsCache = remoteCacheManager.getCache("lineitems");
 		
-		context = connectionFactory.createContext();
-    	
-     	Queue orderChangedTopic = context.createQueue(ORDER_CHANGED_QUEUE);
-     	
-     	consumer = context.createConsumer(orderChangedTopic);
-     	
-     	invalidMessageQueue = context.createQueue(INVALID_MESSAGE_QUEUE);
-
 	}
     
-     void onStart(@Observes StartupEvent ev) throws JMSException {
-
-     	consumer.setMessageListener(this);
-     	
-     	LOGGER.info("Starting consumer");
-
-    }
-
-    void onStop(@Observes ShutdownEvent ev) throws JMSException {
-    	
-    	consumer.close();
-    	
-    	context.close();
-        
-    	LOGGER.info("Stopped consumer");
-    	
-    }
-
-	@Override
-	public void onMessage(Message message) {
+	@Incoming("order-created")
+    @Acknowledgment(Acknowledgment.Strategy.PRE_PROCESSING)
+	public void onMessage(byte[] message) {
 		
 		try {
 			
-            if (message == null || !(message instanceof BytesMessage)) {
+            if (message == null) {
             	
             	LOGGER.warn("Received unexpected message");
             	
-            	context.createProducer().send(invalidMessageQueue, message);
-            	
             } else {
             	
-            	BytesMessage requestMessage = (BytesMessage) message;
-            	
-            	byte[] bytes = new byte[(int) requestMessage.getBodyLength()];
-            	requestMessage.readBytes(bytes);
-            	
-            	OrderChangeEvent event = OrderChangeEvent.parseFrom(bytes);
+            	OrderChangeEvent event = OrderChangeEvent.parseFrom(message);
             	
 	            LOGGER.info("Received event: " + event.getType());
 	            
@@ -150,8 +99,6 @@ public class OrderCreatedEventObserver implements MessageListener {
 	            } else {
 	            	
 	            	LOGGER.warn("Unknown operation");
-	            	
-	            	context.createProducer().send(invalidMessageQueue, message);
 	            	
 	            }
             
