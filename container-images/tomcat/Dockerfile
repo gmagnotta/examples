@@ -15,9 +15,13 @@ RUN microdnf install -y unzip && \
 
 #    groupadd tomcat && \
 #    useradd -g tomcat tomcat && \
+    mkdir /opt/jws/tomcat/work && \
     chown -R jboss:0 /opt/jws && \
     chmod 770 /opt/jws && \
     chmod 770 /opt/jws/tomcat/logs && \
+    chmod 770 /opt/jws/tomcat/webapps && \
+    chmod 770 /opt/jws/tomcat/conf && \
+    chmod 770 /opt/jws/tomcat/work && \
 
     microdnf clean all && [ ! -d /var/cache/yum ] || rm -rf /var/cache/yum && \
     rm -r /tmp/jws
