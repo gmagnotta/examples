@@ -5,13 +5,13 @@ USER root
 EXPOSE 61616
 EXPOSE 8161
 
-COPY amq-broker-7.8.2-bin.zip /tmp/
+COPY amq-broker-7.8.3-bin.zip /tmp/
 
 RUN microdnf install -y unzip && \
     mkdir /opt/amq-broker && \
     mkdir /tmp/amq-broker && \
-    unzip /tmp/amq-broker-7.8.2-bin.zip -d /tmp/amq-broker && \
-    mv /tmp/amq-broker/amq-broker-7.8.2/* /opt/amq-broker && \
+    unzip /tmp/amq-broker-7.8.3-bin.zip -d /tmp/amq-broker && \
+    mv /tmp/amq-broker/amq-broker-7.8.3/* /opt/amq-broker && \
 
     groupadd amq-broker && \
     useradd -g amq-broker amq-broker && \
