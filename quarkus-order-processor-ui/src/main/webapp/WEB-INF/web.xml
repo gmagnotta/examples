@@ -23,4 +23,10 @@
     <listener-class>com.magnotta.OrderContextListener</listener-class>
   </listener>
 
+  <resource-env-ref>
+    <resource-env-ref-name>BeanManager</resource-env-ref-name>
+    <resource-env-ref-type>
+      java.enterprise.inject.spi.BeanManager
+    </resource-env-ref-type>
+  </resource-env-ref>
 </web-app>
