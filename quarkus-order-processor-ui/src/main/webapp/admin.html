@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quarkus Order Processor ADMIN UI</title>
+</head>
+
+<body>
+    <h2>Welcome to Quarkus Order Processor UI!</h2>
+
+    <form action="admin" method="post">
+        <label>Reset DBMS</label>
+        <input type="hidden" name="action" value="reset">
+        <input type="submit" value="Reset">
+    </form>
+
+    <form action="admin" method="post">
+        <label>Rebuild NoSQL</label>
+        <input type="hidden" name="action" value="rebuild">
+        <input type="submit" value="Rebuild">
+    </form>
+
+    <form action="admin" method="post">
+        <label>Simulate Order Generation</label>
+        <input type="text" name="amount" required>
+        <input type="hidden" name="action" value="generate">
+        <input type="submit" value="Submit">
+    </form>
+
+</body>
+
+</html>

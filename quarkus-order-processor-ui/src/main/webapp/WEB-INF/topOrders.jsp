@@ -1,30 +1,35 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-    <!DOCTYPE html>
-    <html>
+<%@ page contentType="text/html" pageEncoding="UTF-8" %>
+    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+        <!DOCTYPE html>
+        <html>
 
-    <head>
-        <title>Order Management System</title>
-    </head>
+        <head>
+            <meta charset="UTF-8">
+            <title>Order Management System</title>
+        </head>
 
-    <body>
-        <p>This is the list of orders with most quantity ordered</p>
+        <body>
+            <p>This is the list of orders with most quantity ordered</p>
 
-        <table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Items</th>
+                    </tr>
+                </thead>
 
-            <tr>
-                <th>Order ID</th>
-                <th>Items</th>
-            </tr>
+                <tbody>
+                    <c:forEach items="${orders.aggregatedorder}" var="item">
+                        <tr>
+                            <td>${item.orderid}</td>
+                            <td>${item.items}</td>
+                        </tr>
+                    </c:forEach>
+                </tbody>
 
-            <c:forEach items="${orders.aggregatedorder}" var="item">
-                <tr>
-                    <td>${item.orderid}</td>
-                    <td>${item.items}</td>
-                </tr>
-            </c:forEach>
+            </table>
 
-        </table>
+        </body>
 
-    </body>
-
-    </html>
+        </html>
