@@ -1,12 +1,44 @@
 <!DOCTYPE html>
 <html>
-    <head><title>Quarkus Order Processor UI</title></head>
+
+<head>
+    <title>Quarkus Order Processor UI</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.cyan-light_blue.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+</head>
 
 <body>
-    <h2>Welcome to Quarkus Order Processor UI!</h2>
-    <a href="topOrders">Show top orders</a>
-    <a href="topItems">Show top items</a>
-    
+
+    <!-- Always shows a header, even in smaller screens. -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <!-- Title -->
+                <span class="mdl-layout-title">Quarkus Order Processor UI</span>
+                <!-- Add spacer, to align navigation to the right -->
+                <div class="mdl-layout-spacer"></div>
+            </div>
+        </header>
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">Operations</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="topOrders">Top Orders</a>
+                <a class="mdl-navigation__link" href="topItems">Top Items</a>
+            </nav>
+        </div>
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <!-- Your content goes here -->
+                <div class="mdl-grid">
+                    <div>This is a simple web UI application. Please select from the left menu the
+                        operation</div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
 </body>
 
 </html>

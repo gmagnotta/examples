@@ -6,28 +6,66 @@
         <head>
             <meta charset="UTF-8">
             <title>Order Management System</title>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+            <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.cyan-light_blue.min.css">
+            <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
         </head>
 
         <body>
-            <p>This is the list of most requested items</p>
+            <!-- Always shows a header, even in smaller screens. -->
+            <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+                <header class="mdl-layout__header">
+                    <div class="mdl-layout__header-row">
+                        <!-- Title -->
+                        <span class="mdl-layout-title">Quarkus Order Processor UI</span>
+                        <!-- Add spacer, to align navigation to the right -->
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                </header>
+                <div class="mdl-layout__drawer">
+                    <span class="mdl-layout-title">Operations</span>
+                    <nav class="mdl-navigation">
+                        <a class="mdl-navigation__link" href="topOrders">Top Orders</a>
+                        <a class="mdl-navigation__link" href="topItems">Top Items</a>
+                    </nav>
+                </div>
+                <main class="mdl-layout__content">
+                    <div class="page-content">
+                        <div class="mdl-grid">
+                            <!-- Your content goes here -->
+                            <div>This is the list of most requested items</div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Quantity</th>
-                    </tr>
-                </thead>
+                        </div>
+                        <!-- Your content goes here -->
 
-                <tbody>
-                    <c:forEach items="${items.aggregateditem}" var="item">
-                        <tr>
-                            <td>${item.item}</td>
-                            <td>${item.quantity}</td>
-                        </tr>
-                    </c:forEach>
-                </tbody>
-            </table>
+                        <style>
+                            .demo-list-item {
+                                width: 300px;
+                            }
+                        </style>
+
+                        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <c:forEach items="${items.aggregateditem}" var="item">
+                                    <tr>
+                                        <td>${item.item}</td>
+                                        <td>${item.quantity}</td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                </main>
+            </div>
+
+
 
         </body>
 
