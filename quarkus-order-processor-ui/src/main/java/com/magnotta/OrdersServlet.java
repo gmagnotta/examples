@@ -26,6 +26,8 @@ public class OrdersServlet extends HttpServlet {
 
         request.setAttribute("orders", res);
 
+        response.setHeader("cache-control", "no-cache");
+
         getServletContext().getRequestDispatcher("/WEB-INF/topOrders.jsp").forward(request, response);
 
     }

@@ -26,6 +26,8 @@ public class ItemsServlet extends HttpServlet {
 
         request.setAttribute("items", res);
 
+        response.setHeader("cache-control", "no-cache");
+
         getServletContext().getRequestDispatcher("/WEB-INF/topItems.jsp").forward(request, response);
 
     }
