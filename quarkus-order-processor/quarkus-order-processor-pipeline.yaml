@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: quarkus-datagrid-source-pvc
+  name: quarkus-order-processor-source-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -30,12 +30,15 @@ spec:
       type: string
     - name: image-sha
       type: string
+    - name: CONTEXT
+      type: string
+      default: .
   workspaces:
     - name: source
   steps:
     - name: replace
       image: registry.access.redhat.com/ubi8/ubi
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT)
       script: |
         #!/usr/bin/env bash
         IMAGE="$(params.image-path)@$(params.image-sha)"
@@ -47,6 +50,10 @@ kind: Task
 metadata:
   name: mavenbuild
 spec:
+  params:
+    - name: CONTEXT
+      type: string
+      default: .
   workspaces:
     - name: source
     - name: m2
@@ -54,7 +61,7 @@ spec:
   steps:
     - name: build
       image: registry.access.redhat.com/ubi8/openjdk-11
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT)
       script: |
         #!/usr/bin/env bash
         echo "Start maven build"
@@ -64,7 +71,7 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: quarkus-datagrid-pipeline
+  name: quarkus-order-processor-pipeline
 spec:
   params:
     - name: repo-url
@@ -96,6 +103,9 @@ spec:
           workspace: myworkspace
         - name: m2
           workspace: mavenworkspace
+      params:
+        - name: CONTEXT
+          value: quarkus-order-processor
     - name: build
       taskRef:
         name: buildah
@@ -104,7 +114,7 @@ spec:
         - compile
       params:
         - name: CONTEXT
-          value: .
+          value: quarkus-order-processor
         - name: TLSVERIFY
           value: "false"
         - name: IMAGE
@@ -125,6 +135,8 @@ spec:
           value: "$(tasks.build.results.IMAGE_DIGEST)"
         - name: image-path
           value: "$(params.image-path)"
+        - name: CONTEXT
+          value: quarkus-order-processor
     - name: deploy
       taskRef:
         name: kubernetes-actions
@@ -138,4 +150,4 @@ spec:
       params:
         - name: script
           value: |
-            kubectl apply -f deployment.yaml
+            kubectl apply -f quarkus-order-processor/deployment.yaml
