@@ -1,0 +1,72 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: quarkus-order-processor
+  labels:
+    app: quarkus-order-processor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-order-processor
+  template:
+    metadata:
+      labels:
+        app: quarkus-order-processor
+    spec:
+      volumes:
+        - name: quarkus-order-processor-1
+          emptyDir: {}
+      containers:
+        - resources: {}
+          name: quarkus-order-processor
+          env:
+            - name: quarkus_datasource_jdbc_url
+              value: >-
+                jdbc:postgresql://postgresql:5432/sampledb
+            - name: quarkus_datasource_username
+              value: userBYX
+            - name: quarkus_datasource_password
+              value: VvQxyIQL3niFQFek
+            - name: quarkus_artemis_url
+              value: 'tcp://amqbroker:61616'
+            - name: quarkus_log_level
+              value: INFO
+            - name: quarkus_log_file_path
+              value: /tmp/quarkus.log
+            - name: EMITCREATEDEVENT
+              value: 'false'
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: 'amqstreams:9092'
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: quarkus-order-processor-1
+              mountPath: /opt/quarkus-app/ObjectStore
+          image: {{IMAGE}}
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

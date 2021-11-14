@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quarkus-datagrid-source-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: m2-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: prepare-deploy
+spec:
+  params:
+    - name: image-path
+      type: string
+    - name: image-sha
+      type: string
+  workspaces:
+    - name: source
+  steps:
+    - name: replace
+      image: registry.access.redhat.com/ubi8/ubi
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env bash
+        IMAGE="$(params.image-path)@$(params.image-sha)"
+        echo "replacing $IMAGE"
+        sed -i "s|{{IMAGE}}|$IMAGE|g" deployment.yaml
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mavenbuild
+spec:
+  workspaces:
+    - name: source
+    - name: m2
+      mountPath: /home/jboss/.m2/repository
+  steps:
+    - name: build
+      image: registry.access.redhat.com/ubi8/openjdk-11
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env bash
+        echo "Start maven build"
+        mvn -Duser.home=/home/jboss clean package
+---
+# Internal OCP registry is located at image-registry.openshift-image-registry.svc:5000
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: quarkus-datagrid-pipeline
+spec:
+  params:
+    - name: repo-url
+    - name: image-path
+  workspaces:
+    - name: myworkspace
+    - name: mavenworkspace
+    - name: empty
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: myworkspace
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: "true"
+    - name: compile
+      taskRef:
+        name: mavenbuild
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: myworkspace
+        - name: m2
+          workspace: mavenworkspace
+    - name: build
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter:
+        - compile
+      params:
+        - name: CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: "false"
+        - name: IMAGE
+          value: $(params.image-path)
+      workspaces:
+        - name: source
+          workspace: myworkspace
+    - name: prepare-deploy
+      taskRef:
+        name: prepare-deploy
+      runAfter:
+        - build
+      workspaces:
+        - name: source
+          workspace: myworkspace
+      params:
+        - name: image-sha
+          value: "$(tasks.build.results.IMAGE_DIGEST)"
+        - name: image-path
+          value: "$(params.image-path)"
+    - name: deploy
+      taskRef:
+        name: kubernetes-actions
+      runAfter:
+        - prepare-deploy
+      workspaces:
+        - name: kubeconfig-dir
+          workspace: empty
+        - name: manifest-dir
+          workspace: myworkspace
+      params:
+        - name: script
+          value: |
+            kubectl apply -f deployment.yaml
