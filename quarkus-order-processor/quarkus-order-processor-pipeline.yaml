@@ -12,7 +12,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: m2-pvc
+  name: quarkus-order-processor-m2-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -33,6 +33,9 @@ spec:
     - name: CONTEXT
       type: string
       default: .
+    - name: deployment-file
+      type: string
+      default: deployment.yaml
   workspaces:
     - name: source
   steps:
@@ -42,8 +45,8 @@ spec:
       script: |
         #!/usr/bin/env bash
         IMAGE="$(params.image-path)@$(params.image-sha)"
-        echo "replacing $IMAGE"
-        sed -i "s|{{IMAGE}}|$IMAGE|g" deployment.yaml
+        echo "Using image: $IMAGE"
+        sed -i "s|{{IMAGE}}|$IMAGE|g" $(params.deployment-file)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -54,6 +57,9 @@ spec:
     - name: CONTEXT
       type: string
       default: .
+    - name: MVN_ARGS
+      type: string
+      default: "clean package"
   workspaces:
     - name: source
     - name: m2
@@ -65,7 +71,52 @@ spec:
       script: |
         #!/usr/bin/env bash
         echo "Start maven build"
-        mvn -Duser.home=/home/jboss clean package
+        mvn -Duser.home=/home/jboss $(params.MVN_ARGS)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: kubernetes-actions
+spec:
+  description: >-
+    This task is the generic kubectl CLI task which can be used
+    to run all kinds of k8s commands
+  workspaces:
+    - name: manifest-dir
+#      optional: true
+    - name: kubeconfig-dir
+#      optional: true
+  results:
+    - name: output-result
+      description: some result can be emitted if someone wants to.
+  params:
+    - name: script
+      description: The Kubernetes CLI script to run
+      type: string
+      default: "kubectl $@"
+    - name: args
+      description: The Kubernetes CLI arguments to run
+      type: array
+      default:
+        - "help"
+    - name: image
+      default: gcr.io/cloud-builders/kubectl@sha256:8ab94be8b2b4f3d117f02d868b39540fddd225447abf4014f7ba4765cb39f753 #image is huge
+      description: Kubectl wrapper image
+  steps:
+    - name: kubectl
+      image: $(params.image)
+      workingDir: $(workspaces.manifest-dir.path)
+      script: |
+        #!/usr/bin/env bash
+
+        if [[ -f $(workspaces.kubeconfig-dir.path)/kubeconfig ]]; then
+          export KUBECONFIG=$(workspaces.kubeconfig-dir.path)/kubeconfig
+        fi
+
+        $(params.script)
+
+      args:
+        - "$(params.args)"
 ---
 # Internal OCP registry is located at image-registry.openshift-image-registry.svc:5000
 apiVersion: tekton.dev/v1beta1
@@ -76,9 +127,10 @@ spec:
   params:
     - name: repo-url
     - name: image-path
+    - name: context
   workspaces:
-    - name: myworkspace
-    - name: mavenworkspace
+    - name: src
+    - name: m2
     - name: empty
   tasks:
     - name: fetch-repository
@@ -87,7 +139,7 @@ spec:
         kind: ClusterTask
       workspaces:
         - name: output
-          workspace: myworkspace
+          workspace: src
       params:
         - name: url
           value: $(params.repo-url)
@@ -100,12 +152,12 @@ spec:
         - fetch-repository
       workspaces:
         - name: source
-          workspace: myworkspace
+          workspace: src
         - name: m2
-          workspace: mavenworkspace
+          workspace: m2
       params:
         - name: CONTEXT
-          value: quarkus-order-processor
+          value: $(params.context)
     - name: build
       taskRef:
         name: buildah
@@ -114,14 +166,14 @@ spec:
         - compile
       params:
         - name: CONTEXT
-          value: quarkus-order-processor
+          value: $(params.context)
         - name: TLSVERIFY
           value: "false"
         - name: IMAGE
           value: $(params.image-path)
       workspaces:
         - name: source
-          workspace: myworkspace
+          workspace: src
     - name: prepare-deploy
       taskRef:
         name: prepare-deploy
@@ -129,14 +181,14 @@ spec:
         - build
       workspaces:
         - name: source
-          workspace: myworkspace
+          workspace: src
       params:
         - name: image-sha
           value: "$(tasks.build.results.IMAGE_DIGEST)"
         - name: image-path
           value: "$(params.image-path)"
         - name: CONTEXT
-          value: quarkus-order-processor
+          value: $(params.context)
     - name: deploy
       taskRef:
         name: kubernetes-actions
@@ -146,8 +198,8 @@ spec:
         - name: kubeconfig-dir
           workspace: empty
         - name: manifest-dir
-          workspace: myworkspace
+          workspace: src
       params:
         - name: script
           value: |
-            kubectl apply -f quarkus-order-processor/deployment.yaml
+            kubectl apply -f $(params.context)/deployment.yaml
