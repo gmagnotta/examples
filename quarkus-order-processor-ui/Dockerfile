@@ -5,4 +5,4 @@ USER root
 
 RUN rm -rf /opt/jws/tomcat/webapps/*
 
-COPY --from=builder target/quarkus-order-processor-ui.war /opt/jws/tomcat/webapps/ROOT.war
+COPY target/quarkus-order-processor-ui.war /opt/jws/tomcat/webapps/ROOT.war

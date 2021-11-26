@@ -36,7 +36,7 @@ apiVersion: v1
 metadata:
   name: quarkus-order-processor-ui-pipelineconfig
 data:
-  dev-image-path: 'image-registry.openshift-image-registry.svc:5000/helloservlet/helloservlet'
+  dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/quarkus-order-processor-ui'
   release-image-path: 'quay.io/gmagnotta/helloservlet'
 ---
 apiVersion: tekton.dev/v1beta1
@@ -155,6 +155,9 @@ spec:
   workspaces:
     - name: source
   params:
+    - name: CONTEXT
+      type: string
+      default: .
     - name: script
       description: The oc CLI script to run
       type: string
@@ -165,7 +168,7 @@ spec:
   steps:
     - name: oc
       image: $(params.image)
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT)
       script: |
         #!/usr/bin/env bash
 
@@ -306,6 +309,9 @@ spec:
           workspace: src
         - name: m2
           workspace: m2
+      params:
+        - name: CONTEXT
+          value: "quarkus-order-processor-ui"
     - name: get-dev-path
       taskRef:
         name: get-dev-path
@@ -324,6 +330,8 @@ spec:
           value: "false"
         - name: IMAGE
           value: $(tasks.get-dev-path.results.path)
+        - name: CONTEXT
+          value: "quarkus-order-processor-ui"
       workspaces:
         - name: source
           workspace: src
@@ -338,6 +346,8 @@ spec:
         - name: source
           workspace: src
       params:
+        - name: CONTEXT
+          value: "quarkus-order-processor-ui"
         - name: script
           value: |
             oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-order-processor-ui-template.yaml | oc apply -f -
