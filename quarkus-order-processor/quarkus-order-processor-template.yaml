@@ -1,0 +1,139 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: quarkus-order-processor
+message: This is an OpenShift template to deploy quarkus-order-processor.
+metadata:
+  name: quarkus-order-processor
+  annotations:
+    description: "quarkus-order-processor Template"
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: quarkus-order-processor
+  data:
+    quarkus-datasource-jdbc-url: 'jdbc:postgresql://postgresql:5432/sampledb'
+    quarkus-log-level: 'INFO'
+    quarkus-log-file-path: '/tmp/quarkus.log'
+    quarkus-artemis-url: 'tcp://amqbroker:61616'
+    emit-created-event: 'false'
+    kafka-bootstrap-servers: 'amqstreams:9092'
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: quarkus-order-processor
+  data:
+    quarkus-datasource-username: dXNlckJZWA==
+    quarkus-datasource-password: VnZReHlJUUwzbmlGUUZlaw==
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: quarkus-order-processor
+    labels:
+      app: quarkus-order-processor
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: quarkus-order-processor
+    template:
+      metadata:
+        labels:
+          app: quarkus-order-processor
+        annotations:
+          kubernetes.io/change-cause: ${CAUSE}
+          gitcommit: ${CAUSE}
+      spec:
+        volumes:
+          - name: quarkus-order-processor-1
+            emptyDir: {}
+        containers:
+          - name: quarkus-order-processor
+            image: ${IMAGE}
+            env:
+              - name: QUARKUS_DATASOURCE_JDBC_URL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-jdbc-url
+              - name: QUARKUS_DATASOURCE_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-username
+              - name: QUARKUS_DATASOURCE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-password
+              - name: QUARKUS_ARTEMIS_URL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-artemis-url
+              - name: QUARKUS_LOG_LEVEL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-log-level
+              - name: QUARKUS_LOG_FILE_PATH
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-log-file-path
+              - name: EMITCREATEDEVENT
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: emit-created-event
+              - name: KAFKA_BOOTSTRAP_SERVERS
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: kafka-bootstrap-servers
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+              - containerPort: 8443
+                protocol: TCP
+              - containerPort: 8778
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
+              limits:
+                cpu: "1000m"
+                memory: "512Mi"
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - name: quarkus-order-processor-1
+                mountPath: /opt/quarkus-app/ObjectStore
+            livenessProbe:
+              httpGet:
+                path: /q/health/live
+                port: 8080
+            readinessProbe:
+              httpGet:
+                path: /q/health/ready
+                port: 8080
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
+- description: Description of this deployment
+  name: CAUSE
+  required: true
