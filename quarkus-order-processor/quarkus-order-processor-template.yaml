@@ -26,6 +26,39 @@ objects:
   data:
     quarkus-datasource-username: dXNlckJZWA==
     quarkus-datasource-password: VnZReHlJUUwzbmlGUUZlaw==
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: quarkus-order-processor-migrate
+    labels:
+      app: quarkus-order-processor-migrate
+  spec:
+    template:
+      metadata:
+        labels:
+          app: quarkus-order-processor-migrate
+      spec:
+        restartPolicy: OnFailure
+        containers:
+          - name: quarkus-order-processor-migration
+            image: ${MIGRATION-IMAGE}
+            args: ["migrate"]
+            env:
+              - name: JDBC_URL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-jdbc-url
+              - name: USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-username
+              - name: PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-password
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -118,6 +151,26 @@ objects:
               httpGet:
                 path: /q/health/ready
                 port: 8080
+        initContainers:
+          - name: quarkus-order-processor-wait-migration
+            image: ${MIGRATION-IMAGE}
+            args: ["validate"]
+            env:
+              - name: JDBC_URL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-jdbc-url
+              - name: USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-username
+              - name: PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-password
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
@@ -133,6 +186,9 @@ objects:
 parameters:
 - description: Container image to use
   name: IMAGE
+  required: true
+- description: Container image to use
+  name: MIGRATION-IMAGE
   required: true
 - description: Description of this deployment
   name: CAUSE

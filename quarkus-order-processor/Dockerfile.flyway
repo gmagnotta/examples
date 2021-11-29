@@ -1,0 +1,14 @@
+FROM docker.io/flyway/flyway
+
+ENV FLYWAY_EDITION community
+
+ENV USERNAME USERNAME
+ENV PASSWORD PASSWORD
+ENV JDBC_URL URL
+
+COPY src/main/resources/db/* /flyway/sql/
+COPY startup.sh /flyway/
+
+ENTRYPOINT ["/flyway/startup.sh"]
+
+CMD ["-?"]
