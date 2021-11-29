@@ -41,7 +41,7 @@ objects:
         restartPolicy: OnFailure
         containers:
           - name: quarkus-order-processor-migration
-            image: ${MIGRATION-IMAGE}
+            image: ${MIGRATION_IMAGE}
             args: ["migrate"]
             env:
               - name: JDBC_URL
@@ -188,7 +188,7 @@ parameters:
   name: IMAGE
   required: true
 - description: Container image to use
-  name: MIGRATION-IMAGE
+  name: MIGRATION_IMAGE
   required: true
 - description: Description of this deployment
   name: CAUSE
