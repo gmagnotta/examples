@@ -460,4 +460,131 @@ objects:
     port:
       targetPort: 16686-tcp
     wildcardPolicy: None
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: prometheus
+    labels:
+      app: prometheus
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: prometheus
+    template:
+      metadata:
+        labels:
+          app: prometheus
+      spec:
+        containers:
+          - name: prometheus
+            image: quay.io/gmagnotta/prometheus
+            args: ["--config.file=/opt/prometheus/config/prometheus.yml"]
+            ports:
+              - containerPort: 9090
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
+              limits:
+                cpu: "1000m"
+                memory: "1024Mi"
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - name: config-volume
+                mountPath: /opt/prometheus/config
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prometheus
+              items:
+              - key: prometheus.yaml
+                path: prometheus.yml
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: prometheus
+    labels:
+      app: prometheus
+  spec:
+    ports:
+      - name: 9090-tcp
+        protocol: TCP
+        port: 9090
+        targetPort: 9090
+    selector:
+      app: prometheus
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: prometheus
+    labels:
+      app: prometheus
+  spec:
+    to:
+      kind: Service
+      name: prometheus
+      weight: 100
+    port:
+      targetPort: 9090-tcp
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: prometheus
+  data:
+    prometheus.yaml: |-
+      # my global config
+      global:
+        scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+        evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+        # scrape_timeout is set to the global default (10s).
+        external_labels:
+          monitor: 'codelab-monitor'
+
+      # Alertmanager configuration
+      alerting:
+        alertmanagers:
+          - static_configs:
+              - targets:
+                # - alertmanager:9093
+
+      # Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+      rule_files:
+        # - "first_rules.yml"
+        # - "second_rules.yml"
+
+      # A scrape configuration containing exactly one endpoint to scrape:
+      # Here it's Prometheus itself.
+      scrape_configs:
+        # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+        - job_name: "prometheus"
+
+        # metrics_path defaults to '/metrics'
+        # scheme defaults to 'http'.
+
+          static_configs:
+            - targets: ["localhost:9090"]
+        - job_name: "camel"
+
+        # metrics_path defaults to '/metrics'
+        # scheme defaults to 'http'.
+
+          static_configs:
+            - targets: ["localhost:8080"]
 parameters:
