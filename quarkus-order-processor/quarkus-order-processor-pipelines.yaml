@@ -29,7 +29,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 2Gi
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -37,6 +37,7 @@ metadata:
   name: quarkus-order-processor-pipelineconfig
 data:
   dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/quarkus-order-processor'
+  dev-migration-path: 'image-registry.openshift-image-registry.svc:5000/dev/quarkus-order-processor-migration'
   release-image-path: 'quay.io/gmagnotta/helloservlet'
 ---
 apiVersion: tekton.dev/v1beta1
@@ -241,6 +242,8 @@ spec:
   results:
     - name: path
       description: the dev image where we need to push to.
+    - name: migration-path
+      description: the migration image where we need to push to.
   steps:
     - name: oc
       image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
@@ -250,7 +253,11 @@ spec:
 
         echo -n "$IMAGE_PATH" > $(results.path.path)
 
-        echo "Read path is $IMAGE_PATH"
+        MIGRATION_PATH=$(oc get configmap $(params.configmap-name) -o jsonpath='{.data.dev-migration-path}')
+
+        echo -n "$MIGRATION_PATH" > $(results.migration-path.path)
+
+        echo "Read path is $IMAGE_PATH and migration path is $MIGRATION_PATH"
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -346,7 +353,7 @@ spec:
         - name: TLSVERIFY
           value: "false"
         - name: IMAGE
-          value: $(tasks.get-dev-path.results.path)-migration
+          value: $(tasks.get-dev-path.results.migration-path)
         - name: CONTEXT
           value: "quarkus-order-processor"
         - name: DOCKERFILE
@@ -369,4 +376,4 @@ spec:
           value: "quarkus-order-processor"
         - name: script
           value: |
-            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p MIGRATION_IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build-migration.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-order-processor-template.yaml | oc apply -f -
+            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p MIGRATION_IMAGE=$(tasks.get-dev-path.results.migration-path)@$(tasks.build-migration.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-order-processor-template.yaml | oc apply -f -
