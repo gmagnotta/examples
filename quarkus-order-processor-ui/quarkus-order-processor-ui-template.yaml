@@ -110,7 +110,7 @@ objects:
 parameters:
 - description: Backend url
   name: BACKEND_URL
-  value: 'http://camel-quarkus-order-processor-api:8080'
+  value: 'http://quarkus-order-processor-api:8080'
 - description: Container image to use
   name: IMAGE
   required: true
