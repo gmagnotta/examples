@@ -13,7 +13,7 @@ objects:
   metadata:
     name: quarkus-order-processor
   data:
-    quarkus-datasource-jdbc-url: 'jdbc:postgresql://postgresql:5432/sampledb'
+    quarkus-datasource-jdbc-url: 'jdbc:postgresql://postgresql:5432/sample'
     quarkus-log-level: 'INFO'
     quarkus-log-file-path: '/tmp/quarkus.log'
     quarkus-artemis-url: 'tcp://amqbroker:61616'
@@ -24,8 +24,8 @@ objects:
   metadata:
     name: quarkus-order-processor
   data:
-    quarkus-datasource-username: dXNlckJZWA==
-    quarkus-datasource-password: VnZReHlJUUwzbmlGUUZlaw==
+    quarkus-artemis-username: dXNlckJZWA==
+    quarkus-artemis-password: VnZReHlJUUwzbmlGUUZlaw==
 - apiVersion: batch/v1
   kind: Job
   metadata:
@@ -52,13 +52,13 @@ objects:
               - name: USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-username
+                    name: postgresql
+                    key: postgresql-username
               - name: PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-password
+                    name: postgresql
+                    key: postgresql-password
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -93,13 +93,13 @@ objects:
               - name: QUARKUS_DATASOURCE_USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-username
+                    name: postgresql
+                    key: postgresql-username
               - name: QUARKUS_DATASOURCE_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-password
+                    name: postgresql
+                    key: postgresql-password
               - name: QUARKUS_ARTEMIS_URL
                 valueFrom:
                   configMapKeyRef:
@@ -164,13 +164,13 @@ objects:
               - name: USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-username
+                    name: postgresql
+                    key: postgresql-username
               - name: PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-password
+                    name: postgresql
+                    key: postgresql-password
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
