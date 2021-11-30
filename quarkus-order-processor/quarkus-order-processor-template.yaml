@@ -153,7 +153,7 @@ objects:
                 port: 8080
         initContainers:
           - name: quarkus-order-processor-wait-migration
-            image: ${MIGRATION-IMAGE}
+            image: ${MIGRATION_IMAGE}
             args: ["validate"]
             env:
               - name: JDBC_URL
