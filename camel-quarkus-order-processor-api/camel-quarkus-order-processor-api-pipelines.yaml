@@ -350,4 +350,4 @@ spec:
           value: "camel-quarkus-order-processor-api"
         - name: script
           value: |
-            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-order-processor-api-template.yaml | oc apply -f -
+            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f camel-quarkus-order-processor-api-template.yaml | oc apply -f -
