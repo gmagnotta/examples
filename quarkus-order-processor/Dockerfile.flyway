@@ -14,11 +14,9 @@ FROM registry.access.redhat.com/ubi8/openjdk-11
 
 USER root
 
-RUN mkdir /flyway && \
-    chown -R 0:0 /flyway && \
-    chmod -R 770 /flyway
+#RUN mkdir /flyway
 
-COPY --from=build /tmp/flyway /flyway
+COPY --chown=0:0 --from=build /tmp/flyway /flyway
 
 ENV FLYWAY_EDITION community
 
@@ -28,6 +26,10 @@ ENV JDBC_URL URL
 
 COPY src/main/resources/db/* /flyway/sql/
 COPY startup.sh /flyway/
+
+RUN chown -R 0:0 /flyway && \
+    chmod 555 /flyway/flyway && \
+    chmod 555 /flyway/startup.sh
 
 ENTRYPOINT ["/flyway/startup.sh"]
 
