@@ -31,6 +31,6 @@ RUN chown -R 0:0 /flyway && \
 
 WORKDIR /flyway
 
-ENTRYPOINT ["startup.sh"]
+ENTRYPOINT ["/flyway/startup.sh"]
 
 CMD ["-?"]
