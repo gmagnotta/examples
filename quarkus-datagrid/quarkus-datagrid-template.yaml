@@ -13,7 +13,7 @@ objects:
   metadata:
     name: quarkus-datagrid
   data:
-    infinispan-uri: 'hotrod://datagrid:11222'
+    infinispan-uri: 'hotrod://datagridnodes:11222'
     quarkus-log-level: 'INFO'
     quarkus-log-file-path: '/tmp/quarkus.log'
     quarkus-artemis-url: 'tcp://amqbroker:61616'
