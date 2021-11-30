@@ -1,0 +1,353 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quarkus-order-processor-api-source-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quarkus-order-processor-api-m2-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quarkus-order-processor-api-varlibcontainers-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: quarkus-order-processor-api-pipelineconfig
+data:
+  dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/quarkus-order-processor-api'
+  release-image-path: 'quay.io/gmagnotta/helloservlet'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mavenbuild
+spec:
+  params:
+    - name: CONTEXT
+      type: string
+      default: .
+    - name: MVN_ARGS
+      type: string
+      default: "clean package"
+  workspaces:
+    - name: source
+    - name: m2
+      mountPath: /home/jboss/.m2/repository
+  steps:
+    - name: build
+      image: registry.access.redhat.com/ubi8/openjdk-11
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT)
+      script: |
+        #!/usr/bin/env bash
+        echo "Start maven build"
+        mvn -Duser.home=/home/jboss $(params.MVN_ARGS)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah
+spec:
+  params:
+    - description: Reference of the image buildah will produce.
+      name: IMAGE
+      type: string
+    - default: >-
+        registry.redhat.io/rhel8/buildah@sha256:180c4d9849b6ab0e5465d30d4f3a77765cf0d852ca1cb1efb59d6e8c9f90d467
+      description: The location of the buildah builder image.
+      name: BUILDER_IMAGE
+      type: string
+    - default: overlay
+      description: Set buildah storage driver
+      name: STORAGE_DRIVER
+      type: string
+    - default: ./Dockerfile
+      description: Path to the Dockerfile to build.
+      name: DOCKERFILE
+      type: string
+    - default: .
+      description: Path to the directory to use as context.
+      name: CONTEXT
+      type: string
+    - default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      name: TLSVERIFY
+      type: string
+    - default: oci
+      description: 'The format of the built container, oci or docker'
+      name: FORMAT
+      type: string
+    - default: ''
+      description: Extra parameters passed for the build command when building images.
+      name: BUILD_EXTRA_ARGS
+      type: string
+    - default: ''
+      description: Extra parameters passed for the push command when pushing images.
+      name: PUSH_EXTRA_ARGS
+      type: string
+  results:
+    - description: Digest of the image just built.
+      name: IMAGE_DIGEST
+  workspaces:
+    - name: source
+    - name: varlibcontainers
+      mountPath: /var/lib/containers
+  steps:
+    - image: $(params.BUILDER_IMAGE)
+      name: build
+      resources: {}
+      script: |
+        buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
+          $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
+          --tls-verify=$(params.TLSVERIFY) --no-cache \
+          -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+      securityContext:
+        privileged: true
+      workingDir: $(workspaces.source.path)
+    - image: $(params.BUILDER_IMAGE)
+      name: push
+      resources: {}
+      script: |
+        buildah --storage-driver=$(params.STORAGE_DRIVER) push \
+          $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
+          --digestfile $(workspaces.source.path)/image-digest $(params.IMAGE) \
+          docker://$(params.IMAGE)
+      securityContext:
+        privileged: true
+      workingDir: $(workspaces.source.path)
+    - image: $(params.BUILDER_IMAGE)
+      name: digest-to-results
+      resources: {}
+      script: >-
+        cat $(workspaces.source.path)/image-digest | tee
+        /tekton/results/IMAGE_DIGEST
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: openshift-actions
+spec:
+  description: >-
+    This task runs oc client
+  workspaces:
+    - name: source
+  params:
+    - name: CONTEXT
+      type: string
+      default: .
+    - name: script
+      description: The oc CLI script to run
+      type: string
+      default: "oc help"
+    - name: image
+      default: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      description: Oc image
+  steps:
+    - name: oc
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT)
+      script: |
+        #!/usr/bin/env bash
+
+        $(params.script)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-dev-image-built
+spec:
+  params:
+    - name: deployment-name
+      type: string
+  results:
+    - name: image
+      description: the image where container was pushed to.
+    - name: commit
+      description: the git commit.
+  steps:
+    - name: oc
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      script: |
+        #!/usr/bin/env bash
+        IMAGE=$(oc get deployment $(params.deployment-name) -o jsonpath='{.spec.template.spec.containers[0].image}')
+
+        echo -n "$IMAGE" > $(results.image.path)
+
+        COMMIT=$(oc get deployment $(params.deployment-name) -o jsonpath='{.spec.template.metadata.annotations.gitcommit}')
+
+        echo -n "$COMMIT" > $(results.commit.path)
+
+        echo "Read image is $IMAGE and commit is $COMMIT"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-int-image-built
+spec:
+  params:
+    - name: deployment-name
+      type: string
+  results:
+    - name: image
+      description: the image where container was pushed to.
+    - name: commit
+      description: the git commit.
+  steps:
+    - name: oc
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      script: |
+        #!/usr/bin/env bash
+        IMAGE=$(oc get deployment $(params.deployment-name) -o jsonpath='{.spec.template.spec.containers[0].image}' --namespace=integration)
+
+        echo -n "$IMAGE" > $(results.image.path)
+
+        COMMIT=$(oc get deployment $(params.deployment-name) -o jsonpath='{.spec.template.metadata.annotations.gitcommit}' --namespace=integration)
+
+        echo -n "$COMMIT" > $(results.commit.path)
+
+        echo "Read image is $IMAGE and commit is $COMMIT"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-dev-path
+spec:
+  params:
+    - name: configmap-name
+      type: string
+  results:
+    - name: path
+      description: the dev image where we need to push to.
+  steps:
+    - name: oc
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      script: |
+        #!/usr/bin/env bash
+        IMAGE_PATH=$(oc get configmap $(params.configmap-name) -o jsonpath='{.data.dev-image-path}')
+
+        echo -n "$IMAGE_PATH" > $(results.path.path)
+
+        echo "Read path is $IMAGE_PATH"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-release-image-path
+spec:
+  params:
+    - name: configmap-name
+      type: string
+  results:
+    - name: release-image-path
+      description: the image where container should be pushed to.
+  steps:
+    - name: oc
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      script: |
+        #!/usr/bin/env bash
+        RELEASE_IMAGE_PATH=$(oc get configmap $(params.configmap-name) -o jsonpath='{.data.release-image-path}')
+
+        echo -n "$RELEASE_IMAGE_PATH" > $(results.release-image-path.path)
+
+        echo "Image should be pushed to $RELEASE_IMAGE_PATH"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: quarkus-order-processor-api-dev-pipeline
+spec:
+  params:
+    - name: repo-url
+  workspaces:
+    - name: src
+    - name: m2
+    - name: varlibcontainers
+    - name: empty
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: src
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: "true"
+    - name: compile
+      taskRef:
+        name: mavenbuild
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: src
+        - name: m2
+          workspace: m2
+      params:
+        - name: CONTEXT
+          value: "camel-quarkus-order-processor-api"
+    - name: get-dev-path
+      taskRef:
+        name: get-dev-path
+      runAfter:
+        - compile
+      params:
+        - name: configmap-name
+          value: "quarkus-order-processor-api-pipelineconfig"
+    - name: build
+      taskRef:
+        name: buildah
+      runAfter:
+        - get-dev-path
+      params:
+        - name: TLSVERIFY
+          value: "false"
+        - name: IMAGE
+          value: $(tasks.get-dev-path.results.path)
+        - name: CONTEXT
+          value: "camel-quarkus-order-processor-api"
+      workspaces:
+        - name: source
+          workspace: src
+        - name: varlibcontainers
+          workspace: varlibcontainers
+    - name: deploy
+      taskRef:
+        name: openshift-actions
+      runAfter:
+        - build
+      workspaces:
+        - name: source
+          workspace: src
+      params:
+        - name: CONTEXT
+          value: "camel-quarkus-order-processor-api"
+        - name: script
+          value: |
+            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-order-processor-api-template.yaml | oc apply -f -
