@@ -350,4 +350,4 @@ spec:
           value: "quarkus-datagrid"
         - name: script
           value: |
-            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p MIGRATION_IMAGE=$(tasks.get-dev-path.results.migration-path)@$(tasks.build-migration.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-datagrid-template.yaml | oc apply -f -
+            oc process -p IMAGE=$(tasks.get-dev-path.results.path)@$(tasks.build.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f quarkus-datagrid-template.yaml | oc apply -f -
