@@ -1,20 +1,13 @@
 # BUILD IMAGE
-FROM registry.access.redhat.com/ubi8/openjdk-11 as builder
+FROM registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8 as builder
 
-USER root
+ARG S2I_SCRIPTS=/usr/local/s2i
 
-COPY . /tmp/src
+COPY --chown=jboss:0 ./ /tmp/src/
 
-WORKDIR /tmp/src
-
-RUN mvn clean package
+RUN $S2I_SCRIPTS/assemble
 
 # RUN IMAGE
-FROM tomcat
+FROM registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8
 
-USER root
-
-RUN rm -rf /opt/jws/tomcat/webapps/*
-
-COPY --from=builder /tmp/src/target/quarkus-order-processor-ui.war /opt/jws/tomcat/webapps/ROOT.war
-
+COPY --chown=jboss:0 --from=builder /deployments/quarkus-order-processor-ui.war $JWS_HOME/webapps/ROOT.war
