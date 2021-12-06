@@ -1,0 +1,281 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: s2i-java-11
+spec:
+  params:
+    - name: S2I_SOURCE_DEPLOYMENTS_FILTER
+      type: string
+      default: "*"
+    - name: MAVEN_S2I_GOALS
+      type: string
+      default: "package"
+    - name: CONTEXT
+      type: string
+      default: .
+    - name: S2I_SCRIPTS
+      type: string
+      default: "/usr/local/s2i"
+    - name: S2I_ENABLE_INCREMENTAL_BUILDS
+      type: string
+      default: "true"
+  workspaces:
+    - name: source
+    - name: m2
+  steps:
+    - name: assemble
+      image: registry.access.redhat.com/ubi8/openjdk-11
+      env:
+        - name: S2I_SOURCE_DEPLOYMENTS_FILTER
+          value: $(params.S2I_SOURCE_DEPLOYMENTS_FILTER)
+        - name: MAVEN_S2I_GOALS
+          value: $(params.MAVEN_S2I_GOALS)
+        - name: S2I_ENABLE_INCREMENTAL_BUILDS
+          value: $(params.S2I_ENABLE_INCREMENTAL_BUILDS)
+      script: |
+        #!/usr/bin/env bash
+
+        echo "copy sources"
+        cp -r $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
+
+        if [ "$S2I_ENABLE_INCREMENTAL_BUILDS" = "true" ]; then
+
+          if [ -f "$(workspaces.m2.path)/artifacts.tar" ]; then
+           echo "restorings artifacts"
+           tar xvf $(workspaces.m2.path)/artifacts.tar -C /tmp/
+          fi
+        
+        fi
+
+        echo "start build"
+        $(params.S2I_SCRIPTS)/assemble
+
+        echo "copying /deployments to workspace"
+        if [ -d $(workspaces.source.path)/$(params.CONTEXT)/deployments ]; then
+          rm -rf $(workspaces.source.path)/$(params.CONTEXT)/deployments
+        fi
+        cp -r /deployments $(workspaces.source.path)/$(params.CONTEXT)/
+
+        if [ "$S2I_ENABLE_INCREMENTAL_BUILDS" = "true" ]; then
+        
+          echo "saving artifacts"
+          if [ -f "$(workspaces.m2.path)/artifacts.tar" ]; then
+            rm $(workspaces.m2.path)/artifacts.tar
+          fi
+
+          tar cvf $(workspaces.m2.path)/artifacts.tar -C /tmp/ artifacts
+
+        fi
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: image-from-s2i
+spec:
+  params:
+    - name: BUILDAH_IMAGE
+      default: registry.access.redhat.com/ubi8/buildah:8.5-4
+      description: The location of the buildah builder image.
+      type: string
+    - name: IMAGE
+      description: Reference of the image buildah will produce.
+      type: string
+    - name: CONTEXT
+      default: .
+      description: Path to the directory to use as context.
+      type: string
+    - name: PUSH_EXTRA_ARGS
+      default: ''
+      description: Extra parameters passed for the push command when pushing images.
+      type: string
+    - name: TLSVERIFY
+      default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      type: string
+  results:
+    - description: Digest of the image just built.
+      name: IMAGE_DIGEST
+  workspaces:
+    - name: source
+    - name: varlibcontainers
+      mountPath: /var/lib/containers
+  steps:
+    - name: build
+      image: $(params.BUILDAH_IMAGE)
+      script: |
+        #!/usr/bin/env bash
+
+        runner=$(buildah from registry.access.redhat.com/ubi8/openjdk-11)
+
+        buildah copy $runner $(workspaces.source.path)/$(params.CONTEXT)/deployments /deployments
+
+        buildah commit $runner $(params.IMAGE)
+
+        buildah rm $runner
+      securityContext:
+        privileged: true
+    - name: push
+      image: $(params.BUILDAH_IMAGE)
+      script: |
+        buildah push \
+          $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
+          --digestfile $(results.IMAGE_DIGEST.path) $(params.IMAGE) \
+          docker://$(params.IMAGE)
+
+          cat $(results.IMAGE_DIGEST.path)
+      securityContext:
+        privileged: true
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: image-from-dockerfile
+spec:
+  params:
+    - description: Reference of the image buildah will produce.
+      name: IMAGE
+      type: string
+    - default: registry.access.redhat.com/ubi8/buildah:8.5-4
+      description: The location of the buildah builder image.
+      name: BUILDER_IMAGE
+      type: string
+    - default: overlay
+      description: Set buildah storage driver
+      name: STORAGE_DRIVER
+      type: string
+    - default: ./Dockerfile
+      description: Path to the Dockerfile to build.
+      name: DOCKERFILE
+      type: string
+    - default: .
+      description: Path to the directory to use as context.
+      name: CONTEXT
+      type: string
+    - default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      name: TLSVERIFY
+      type: string
+    - default: oci
+      description: 'The format of the built container, oci or docker'
+      name: FORMAT
+      type: string
+    - default: ''
+      description: Extra parameters passed for the build command when building images.
+      name: BUILD_EXTRA_ARGS
+      type: string
+    - default: ''
+      description: Extra parameters passed for the push command when pushing images.
+      name: PUSH_EXTRA_ARGS
+      type: string
+  results:
+    - description: Digest of the image just built.
+      name: IMAGE_DIGEST
+  workspaces:
+    - name: source
+    - name: varlibcontainers
+      mountPath: /var/lib/containers
+  steps:
+    - image: $(params.BUILDER_IMAGE)
+      name: build
+      script: |
+        buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
+          $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
+          --tls-verify=$(params.TLSVERIFY) --no-cache \
+          -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+      securityContext:
+        privileged: true
+      workingDir: $(workspaces.source.path)
+    - image: $(params.BUILDER_IMAGE)
+      name: push
+      script: |
+        buildah --storage-driver=$(params.STORAGE_DRIVER) push \
+          $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
+          --digestfile $(results.IMAGE_DIGEST.path) $(params.IMAGE) \
+          docker://$(params.IMAGE)
+        
+        cat $(results.IMAGE_DIGEST.path)
+      securityContext:
+        privileged: true
+      workingDir: $(workspaces.source.path)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-configmap-value
+spec:
+  params:
+    - name: IMAGE
+      default: registry.redhat.io/openshift4/ose-cli
+      type: string
+    - name: CONFIGMAP-NAME
+      type: string
+    - name: CONFIGMAP-KEY
+      type: string
+  results:
+    - name: VALUE
+      description: the value read
+  steps:
+    - name: oc
+      image: $(params.IMAGE)
+      script: |
+        #!/usr/bin/env bash
+        VALUE=$(oc get configmap $(params.CONFIGMAP-NAME) -o jsonpath='{.data.$(params.CONFIGMAP-KEY)}')
+
+        echo -n "$VALUE" > $(results.VALUE.path)
+
+        echo "Read value is $VALUE"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: set-configmap-value
+spec:
+  params:
+    - name: IMAGE
+      default: registry.redhat.io/openshift4/ose-cli
+      type: string
+    - name: CONFIGMAP-NAME
+      type: string
+    - name: CONFIGMAP-KEY
+      type: string
+    - name: VALUE
+      type: string
+  steps:
+    - name: oc
+      image: $(params.IMAGE)
+      script: |
+        #!/usr/bin/env bash
+        oc patch configmap/$(params.CONFIGMAP-NAME) --type merge -p '{"data":{"$(params.CONFIGMAP-KEY)":"$(params.VALUE)"}}'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: openshift-actions
+spec:
+  description: >-
+    This task runs oc client
+  workspaces:
+    - name: source
+  params:
+    - name: CONTEXT
+      type: string
+      default: .
+    - name: SCRIPT
+      description: The oc CLI script to run
+      type: string
+      default: "oc help"
+    - name: IMAGE
+      default: registry.redhat.io/openshift4/ose-cli
+      description: Oc image
+  steps:
+    - name: oc
+      image: $(params.IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT)
+      script: |
+        #!/usr/bin/env bash
+
+        $(params.SCRIPT)
