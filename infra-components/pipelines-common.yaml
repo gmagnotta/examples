@@ -10,6 +10,9 @@ spec:
     - name: MAVEN_S2I_GOALS
       type: string
       default: "package"
+    - name: MAVEN_ARGS_APPEND
+      type: string
+      default: ""
     - name: CONTEXT
       type: string
       default: .
@@ -28,6 +31,8 @@ spec:
       env:
         - name: S2I_SOURCE_DEPLOYMENTS_FILTER
           value: $(params.S2I_SOURCE_DEPLOYMENTS_FILTER)
+        - name: MAVEN_ARGS_APPEND
+          value: $(params.MAVEN_ARGS_APPEND)
         - name: MAVEN_S2I_GOALS
           value: $(params.MAVEN_S2I_GOALS)
         - name: S2I_ENABLE_INCREMENTAL_BUILDS
