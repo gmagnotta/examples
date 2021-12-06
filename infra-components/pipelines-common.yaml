@@ -109,7 +109,7 @@ spec:
 
         runner=$(buildah from registry.access.redhat.com/ubi8/openjdk-11)
 
-        buildah copy $runner $(workspaces.source.path)/$(params.CONTEXT)/deployments /deployments
+        buildah copy --chown jboss:0 $runner $(workspaces.source.path)/$(params.CONTEXT)/deployments /deployments
 
         buildah commit $runner $(params.IMAGE)
 
