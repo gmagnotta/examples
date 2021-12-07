@@ -1,4 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
-         http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" version="3.1">
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+ 
+  <servlet>
+  	<servlet-name>Application</servlet-name>
+  	<servlet-class>javax.ws.rs.core.Application</servlet-class>
+  </servlet>
+ 
+  <servlet>
+  	<servlet-name>ItemServlet</servlet-name>
+  	<servlet-class>com.mycompany.app.servlet.ItemsServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+  	<servlet-name>ItemDetailServlet</servlet-name>
+  	<servlet-class>com.mycompany.app.servlet.ItemDetailServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+  	<servlet-name>AdminItemsServlet</servlet-name>
+  	<servlet-class>com.mycompany.app.servlet.AdminItemsServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+  	<servlet-name>OrdersServlet</servlet-name>
+  	<servlet-class>com.mycompany.app.servlet.OrdersServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+  	<servlet-name>AdminOrdersServlet</servlet-name>
+  	<servlet-class>com.mycompany.app.servlet.AdminOrdersServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+  	<servlet-name>CartServlet</servlet-name>
+  	<servlet-class>com.mycompany.app.servlet.CartServlet</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+	  <servlet-name>Application</servlet-name>
+	  <url-pattern>/api/*</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+	  <servlet-name>ItemServlet</servlet-name>
+	  <url-pattern>/itemcontroller</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+	  <servlet-name>ItemDetailServlet</servlet-name>
+	  <url-pattern>/itemdetailcontroller</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+	  <servlet-name>OrdersServlet</servlet-name>
+	  <url-pattern>/ordercontroller</url-pattern>
+  </servlet-mapping>
+  
+   <servlet-mapping>
+	  <servlet-name>CartServlet</servlet-name>
+	  <url-pattern>/cartcontroller</url-pattern>
+  </servlet-mapping>
+
+
+
+  <servlet-mapping>
+	  <servlet-name>AdminOrdersServlet</servlet-name>
+	  <url-pattern>/admin/ordercontroller</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+	  <servlet-name>AdminItemsServlet</servlet-name>
+	  <url-pattern>/admin/itemcontroller</url-pattern>
+  </servlet-mapping>
 </web-app>
