@@ -1,0 +1,100 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: nexus3
+message: This is an OpenShift template to deploy nexus3.
+metadata:
+  name: nexus3
+  annotations:
+    description: "nexus3 Template"
+objects:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: nexus3
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 8Gi
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nexus3
+    labels:
+      app: nexus3
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: nexus3
+    template:
+      metadata:
+        labels:
+          app: nexus3
+      spec:
+        volumes:
+          - name: nexus-data
+            persistentVolumeClaim:
+              claimName: nexus3
+        containers:
+          - name: nexus3
+            image: docker.io/sonatype/nexus3
+            ports:
+              - containerPort: 8081
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "512Mi"
+              limits:
+                cpu: "1000m"
+                memory: "4Gi"
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - name: nexus-data
+                mountPath: /nexus-data
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: nexus3
+    labels:
+      app: nexus3
+  spec:
+    ports:
+      - name: 8081-tcp
+        protocol: TCP
+        port: 8081
+        targetPort: 8081
+    selector:
+      app: nexus3
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: nexus3
+    labels:
+      app: nexus3
+  spec:
+    to:
+      kind: Service
+      name: nexus3
+      weight: 100
+    port:
+      targetPort: 8081-tcp
+    wildcardPolicy: None
+parameters:
