@@ -1,3 +1,18 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: s2isecrets
+data:
+  secrets: ''
+type: Opaque
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: s2ienvironment
+data:
+  environment: ''
+---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
