@@ -114,7 +114,7 @@ spec:
         - get-dev-path
       params:
         - name: S2I_IMAGE
-          value: "registry.redhat.io/jboss-eap-7/eap74-openjdk11-runtime-openshift-rhel8"
+          value: "registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8"
         - name: TLSVERIFY
           value: "false"
         - name: IMAGE
