@@ -22,12 +22,32 @@ spec:
     - name: S2I_ENABLE_INCREMENTAL_BUILDS
       type: string
       default: "true"
+    - name: S2I_ENVIRONMENT
+      type: string
+      default: "s2ienvironment"
+    - name: S2I_SECRETS
+      type: string
+      default: "s2isecrets"
   workspaces:
     - name: source
     - name: m2
+  volumes:
+    - name: s2isecrets
+      secret:
+        secretName: $(params.S2I_SECRETS)
+    - name: s2ienvironment
+      configMap:
+        name: $(params.S2I_ENVIRONMENT)
   steps:
     - name: assemble
       image: registry.access.redhat.com/ubi8/openjdk-11
+      volumeMounts:
+        - name: s2isecrets
+          mountPath: /var/s2i/secrets
+          subPath: secrets
+        - name: s2ienvironment
+          mountPath: /var/s2i/environment
+          subPath: environment
       env:
         - name: S2I_SOURCE_DEPLOYMENTS_FILTER
           value: $(params.S2I_SOURCE_DEPLOYMENTS_FILTER)
@@ -39,6 +59,21 @@ spec:
           value: $(params.S2I_ENABLE_INCREMENTAL_BUILDS)
       script: |
         #!/usr/bin/env bash
+
+        if [ -f $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment ]; then
+          echo "including $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment"
+          export $(grep -v '^#' $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment | xargs)
+        fi
+
+        if [ -f /var/s2i/secrets ]; then
+          echo "including $(params.S2I_SECRETS)"
+          export $(grep -v '^#' /var/s2i/secrets | xargs)
+        fi
+
+        if [ -f /var/s2i/environment ]; then
+          echo "including $(params.S2I_ENVIRONMENT)"
+          export $(grep -v '^#' /var/s2i/environment | xargs)
+        fi
 
         echo "copy sources"
         cp -r $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
