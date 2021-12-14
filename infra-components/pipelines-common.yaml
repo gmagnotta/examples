@@ -126,6 +126,10 @@ spec:
       default: "/deployments"
       description: The S2I deployment directory.
       type: string
+    - name: S2I_SRC_DIR
+      default: "/deployments"
+      description: The S2I deployment source directory.
+      type: string
     - name: IMAGE
       description: Reference of the image buildah will produce.
       type: string
@@ -158,7 +162,7 @@ spec:
 
         runner=$(buildah from $(params.S2I_IMAGE))
 
-        buildah copy --chown jboss:0 $runner $(workspaces.source.path)/$(params.CONTEXT)/deployments $(params.S2I_DST_DIR)
+        buildah copy --chown jboss:0 $runner $(workspaces.source.path)/$(params.CONTEXT)/$(params.S2I_SRC_DIR) $(params.S2I_DST_DIR)
 
         buildah commit $runner $(params.IMAGE)
 
