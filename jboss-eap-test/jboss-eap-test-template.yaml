@@ -42,7 +42,6 @@ objects:
                   configMapKeyRef:
                     name: jboss-eap-test
                     key: enable-generate-default-datasource
-                        env:
               - name: JGROUPS_PING_PROTOCOL
                 value: "dns.DNS_PING"
               - name: OPENSHIFT_DNS_PING_SERVICE_NAME
