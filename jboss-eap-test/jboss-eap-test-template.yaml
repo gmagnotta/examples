@@ -1,0 +1,112 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: jboss-eap-test
+message: This is an OpenShift template to deploy jboss-eap-test.
+metadata:
+  name: jboss-eap-test
+  annotations:
+    description: "jboss-eap-test Template"
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: jboss-eap-test
+  data:
+    enable-generate-default-datasource: 'true'
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: jboss-eap-test
+    labels:
+      app: jboss-eap-test
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: jboss-eap-test
+    template:
+      metadata:
+        labels:
+          app: jboss-eap-test
+        annotations:
+          kubernetes.io/change-cause: ${CAUSE}
+          gitcommit: ${CAUSE}
+      spec:
+        containers:
+          - name: jboss-eap-test
+            image: ${IMAGE}
+            env:
+              - name: ENABLE_GENERATE_DEFAULT_DATASOURCE
+                valueFrom:
+                  configMapKeyRef:
+                    name: jboss-eap-test
+                    key: enable-generate-default-datasource
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep -iq ''"status": "UP"'''
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+              - containerPort: 8778
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
+              limits:
+                cpu: "1000m"
+                memory: "512Mi"
+            imagePullPolicy: IfNotPresent
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: jboss-eap-test
+    labels:
+      app: jboss-eap-test
+  spec:
+    ports:
+      - name: 8080-tcp
+        protocol: TCP
+        port: 8080
+        targetPort: 8080
+    selector:
+      app: jboss-eap-test
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: jboss-eap-test
+    labels:
+      app: jboss-eap-test
+  spec:
+    to:
+      kind: Service
+      name: jboss-eap-test
+      weight: 100
+    port:
+      targetPort: 8080-tcp
+    wildcardPolicy: None
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
+- description: Description of this deployment
+  name: CAUSE
+  required: true
