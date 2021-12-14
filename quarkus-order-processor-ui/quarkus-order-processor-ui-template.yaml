@@ -74,7 +74,7 @@ objects:
                 memory: "512Mi"
             imagePullPolicy: IfNotPresent
         restartPolicy: Always
-        terminationGracePeriodSeconds: 30
+        terminationGracePeriodSeconds: 60
         dnsPolicy: ClusterFirst
         securityContext: {}
         schedulerName: default-scheduler
@@ -97,6 +97,10 @@ objects:
         protocol: TCP
         port: 8080
         targetPort: 8080
+      - name: 8778-tcp
+        protocol: TCP
+        port: 8778
+        targetPort: 8778
     selector:
       app: quarkus-order-processor-ui
     type: ClusterIP
