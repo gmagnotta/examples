@@ -127,7 +127,7 @@ spec:
       description: The S2I deployment directory.
       type: string
     - name: S2I_SRC_DIR
-      default: "/deployments"
+      default: "deployments"
       description: The S2I deployment source directory.
       type: string
     - name: IMAGE
