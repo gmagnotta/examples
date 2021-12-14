@@ -121,10 +121,10 @@ spec:
           value: $(tasks.get-dev-path.results.VALUE)
         - name: CONTEXT
           value: "quarkus-order-processor-ui"
-        - name: S2I_DST_DIR
-          value: "$JWS_HOME/webapps/ROOT.war"
         - name: S2I_SRC_DIR
-          value: "/deployments/quarkus-order-processor-ui.war"
+          value: "deployments/quarkus-order-processor-ui.war"
+        - name: S2I_DST_DIR
+          value: "/deployments/ROOT.war"
       workspaces:
         - name: source
           workspace: src
