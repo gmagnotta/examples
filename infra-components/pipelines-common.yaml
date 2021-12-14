@@ -1,21 +1,15 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: s2i-java-11
+  name: s2i-build
 spec:
   params:
-    - name: S2I_SOURCE_DEPLOYMENTS_FILTER
-      type: string
-      default: "*"
-    - name: MAVEN_S2I_GOALS
-      type: string
-      default: "package"
-    - name: MAVEN_ARGS_APPEND
-      type: string
-      default: ""
     - name: CONTEXT
       type: string
       default: .
+    - name: S2I_IMAGE
+      type: string
+      default: "registry.access.redhat.com/ubi8/openjdk-11"
     - name: S2I_SCRIPTS
       type: string
       default: "/usr/local/s2i"
@@ -28,9 +22,12 @@ spec:
     - name: S2I_SECRETS
       type: string
       default: "s2isecrets"
+    - name: S2I_OUTPUT_DIR
+      type: string
+      default: "/deployments"
   workspaces:
     - name: source
-    - name: m2
+    - name: artifacts
   volumes:
     - name: s2isecrets
       secret:
@@ -40,7 +37,7 @@ spec:
         name: $(params.S2I_ENVIRONMENT)
   steps:
     - name: assemble
-      image: registry.access.redhat.com/ubi8/openjdk-11
+      image: $(params.S2I_IMAGE)
       volumeMounts:
         - name: s2isecrets
           mountPath: /var/s2i/secrets
@@ -49,12 +46,6 @@ spec:
           mountPath: /var/s2i/environment
           subPath: environment
       env:
-        - name: S2I_SOURCE_DEPLOYMENTS_FILTER
-          value: $(params.S2I_SOURCE_DEPLOYMENTS_FILTER)
-        - name: MAVEN_ARGS_APPEND
-          value: $(params.MAVEN_ARGS_APPEND)
-        - name: MAVEN_S2I_GOALS
-          value: $(params.MAVEN_S2I_GOALS)
         - name: S2I_ENABLE_INCREMENTAL_BUILDS
           value: $(params.S2I_ENABLE_INCREMENTAL_BUILDS)
       script: |
@@ -62,17 +53,23 @@ spec:
 
         if [ -f $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment ]; then
           echo "including $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment"
-          export $(grep -v '^#' $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment | xargs)
+          set -o allexport
+          source $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment
+          set +o allexport
         fi
 
         if [ -f /var/s2i/secrets ]; then
           echo "including $(params.S2I_SECRETS)"
-          export $(grep -v '^#' /var/s2i/secrets | xargs)
+          set -o allexport
+          source /var/s2i/secrets
+          set +o allexport
         fi
 
         if [ -f /var/s2i/environment ]; then
           echo "including $(params.S2I_ENVIRONMENT)"
-          export $(grep -v '^#' /var/s2i/environment | xargs)
+          set -o allexport
+          source /var/s2i/environment
+          set +o allexport
         fi
 
         echo "copy sources"
@@ -80,9 +77,9 @@ spec:
 
         if [ "$S2I_ENABLE_INCREMENTAL_BUILDS" = "true" ]; then
 
-          if [ -f "$(workspaces.m2.path)/artifacts.tar" ]; then
+          if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
            echo "restorings artifacts"
-           tar xvf $(workspaces.m2.path)/artifacts.tar -C /tmp/
+           tar xvf $(workspaces.artifacts.path)/artifacts.tar -C /tmp/
           fi
         
         fi
@@ -90,20 +87,24 @@ spec:
         echo "start build"
         $(params.S2I_SCRIPTS)/assemble
 
+        if [ $? -ne 0 ]; then
+          exit 1
+        fi
+
         echo "copying /deployments to workspace"
         if [ -d $(workspaces.source.path)/$(params.CONTEXT)/deployments ]; then
           rm -rf $(workspaces.source.path)/$(params.CONTEXT)/deployments
         fi
-        cp -r /deployments $(workspaces.source.path)/$(params.CONTEXT)/
+        cp -r $(params.S2I_OUTPUT_DIR) $(workspaces.source.path)/$(params.CONTEXT)/
 
         if [ "$S2I_ENABLE_INCREMENTAL_BUILDS" = "true" ]; then
         
           echo "saving artifacts"
-          if [ -f "$(workspaces.m2.path)/artifacts.tar" ]; then
-            rm $(workspaces.m2.path)/artifacts.tar
+          if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
+            rm $(workspaces.artifacts.path)/artifacts.tar
           fi
 
-          tar cvf $(workspaces.m2.path)/artifacts.tar -C /tmp/ artifacts
+          tar cvf $(workspaces.artifacts.path)/artifacts.tar -C /tmp/ artifacts
 
         fi
 ---
@@ -116,6 +117,14 @@ spec:
     - name: BUILDAH_IMAGE
       default: registry.access.redhat.com/ubi8/buildah:8.5-4
       description: The location of the buildah builder image.
+      type: string
+    - name: S2I_IMAGE
+      default: registry.access.redhat.com/ubi8/openjdk-11
+      description: The S2I builder image.
+      type: string
+    - name: S2I_DST_DIR
+      default: "/deployments"
+      description: The S2I deployment directory.
       type: string
     - name: IMAGE
       description: Reference of the image buildah will produce.
@@ -147,9 +156,9 @@ spec:
       script: |
         #!/usr/bin/env bash
 
-        runner=$(buildah from registry.access.redhat.com/ubi8/openjdk-11)
+        runner=$(buildah from $(params.S2I_IMAGE))
 
-        buildah copy --chown jboss:0 $runner $(workspaces.source.path)/$(params.CONTEXT)/deployments /deployments
+        buildah copy --chown jboss:0 $runner $(workspaces.source.path)/$(params.CONTEXT)/deployments $(params.S2I_DST_DIR)
 
         buildah commit $runner $(params.IMAGE)
 
