@@ -3,7 +3,6 @@ apiVersion: v1
 metadata:
   name: s2isecrets
 data:
-  secrets: ''
 type: Opaque
 ---
 kind: ConfigMap
@@ -11,7 +10,6 @@ apiVersion: v1
 metadata:
   name: s2ienvironment
 data:
-  environment: ''
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -28,9 +26,9 @@ spec:
     - name: S2I_SCRIPTS
       type: string
       default: "/usr/local/s2i"
-    - name: S2I_ENABLE_INCREMENTAL_BUILDS
+    - name: INCREMENTAL
       type: string
-      default: "true"
+      default: "false"
     - name: S2I_ENVIRONMENT
       type: string
       default: "s2ienvironment"
@@ -53,50 +51,29 @@ spec:
   steps:
     - name: assemble
       image: $(params.S2I_IMAGE)
-      volumeMounts:
-        - name: s2isecrets
-          mountPath: /var/s2i/secrets
-          subPath: secrets
-        - name: s2ienvironment
-          mountPath: /var/s2i/environment
-          subPath: environment
       env:
-        - name: S2I_ENABLE_INCREMENTAL_BUILDS
-          value: $(params.S2I_ENABLE_INCREMENTAL_BUILDS)
+        - name: INCREMENTAL
+          value: $(params.INCREMENTAL)
+      envFrom:
+        - configMapRef:
+            name: $(params.S2I_ENVIRONMENT)
+        - secretRef:
+            name: $(params.S2I_SECRETS)
       script: |
         #!/usr/bin/env bash
-
-        if [ -f $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment ]; then
-          echo "including $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment"
-          set -o allexport
-          source $(workspaces.source.path)/$(params.CONTEXT)/.s2i/environment
-          set +o allexport
-        fi
-
-        if [ -f /var/s2i/secrets ]; then
-          echo "including $(params.S2I_SECRETS)"
-          set -o allexport
-          source /var/s2i/secrets
-          set +o allexport
-        fi
-
-        if [ -f /var/s2i/environment ]; then
-          echo "including $(params.S2I_ENVIRONMENT)"
-          set -o allexport
-          source /var/s2i/environment
-          set +o allexport
-        fi
 
         echo "copy sources"
         cp -r $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
 
-        if [ "$S2I_ENABLE_INCREMENTAL_BUILDS" = "true" ]; then
+        if [ "$INCREMENTAL" = "true" ]; then
 
           if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
            echo "restorings artifacts"
-           tar xvf $(workspaces.artifacts.path)/artifacts.tar -C /tmp/
+
+           mkdir -p /tmp/artifacts
+           tar xvf $(workspaces.artifacts.path)/artifacts.tar -C /tmp/artifacts
           fi
-        
+
         fi
 
         echo "start build"
@@ -112,14 +89,18 @@ spec:
         fi
         cp -r $(params.S2I_OUTPUT_DIR) $(workspaces.source.path)/$(params.CONTEXT)/
 
-        if [ "$S2I_ENABLE_INCREMENTAL_BUILDS" = "true" ]; then
-        
-          echo "saving artifacts"
-          if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
-            rm $(workspaces.artifacts.path)/artifacts.tar
-          fi
+        if [ "$INCREMENTAL" = "true" ]; then
 
-          tar cvf $(workspaces.artifacts.path)/artifacts.tar -C /tmp/ artifacts
+          if [ -x "$(params.S2I_SCRIPTS)/save-artifacts" ]; then
+
+              echo "saving artifacts"
+              if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
+                rm $(workspaces.artifacts.path)/artifacts.tar
+              fi
+
+              $(params.S2I_SCRIPTS)/save-artifacts > "$(workspaces.artifacts.path)/artifacts.tar"
+
+          fi
 
         fi
 ---
@@ -182,6 +163,78 @@ spec:
         buildah commit $runner $(params.IMAGE)
 
         buildah rm $runner
+      securityContext:
+        privileged: true
+    - name: push
+      image: $(params.BUILDAH_IMAGE)
+      script: |
+        buildah push \
+          $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
+          --digestfile $(results.IMAGE_DIGEST.path) $(params.IMAGE) \
+          docker://$(params.IMAGE)
+
+          cat $(results.IMAGE_DIGEST.path)
+      securityContext:
+        privileged: true
+---
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: image-from-buildah__
+spec:
+  params:
+    - name: BUILDAH_IMAGE
+      default: registry.access.redhat.com/ubi8/buildah:8.5-4
+      description: The location of the buildah builder image.
+      type: string
+    - name: S2I_IMAGE
+      default: registry.access.redhat.com/ubi8/openjdk-11
+      description: The S2I builder image.
+      type: string
+    - name: S2I_DST_DIR
+      default: "/deployments"
+      description: The S2I deployment directory.
+      type: string
+    - name: S2I_SRC_DIR
+      default: "deployments"
+      description: The S2I deployment source directory.
+      type: string
+    - name: IMAGE
+      description: Reference of the image buildah will produce.
+      type: string
+    - name: CONTEXT
+      default: .
+      description: Path to the directory to use as context.
+      type: string
+    - name: PUSH_EXTRA_ARGS
+      default: ''
+      description: Extra parameters passed for the push command when pushing images.
+      type: string
+    - name: TLSVERIFY
+      default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      type: string
+    - name: SCRIPT
+      description: The script to run
+      type: string
+      default: "exit"
+  results:
+    - description: Digest of the image just built.
+      name: IMAGE_DIGEST
+  workspaces:
+    - name: source
+    - name: varlibcontainers
+      mountPath: /var/lib/containers
+  steps:
+    - name: build
+      image: $(params.BUILDAH_IMAGE)
+      script: |
+        #!/usr/bin/env bash
+
+        $(params.SCRIPT)
       securityContext:
         privileged: true
     - name: push
