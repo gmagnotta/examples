@@ -44,16 +44,15 @@ apiVersion: v1
 metadata:
   name: quarkus-order-processor-ui-s2ienvironment
 data:
-  environment: |
-    LOGGING_SCRIPT_DEBUG="false"
-    MAVEN_MIRRORS="nexus"
-    NEXUS_MAVEN_MIRROR_ID="nexus"
-    NEXUS_MAVEN_MIRROR_OF="*"
-    NEXUS_MAVEN_MIRROR_URL="http://nexus3:8081/repository/maven-public/"
-    MAVEN_REPOS="nexus"
-    NEXUS_MAVEN_REPO_ID="nexus"
-    NEXUS_MAVEN_REPO_URL="http://nexus3:8081"
-    MAVEN_SETTINGS_XML="/home/jboss/.m2/settings.xml"
+  LOGGING_SCRIPT_DEBUG: "false"
+  MAVEN_MIRRORS: "nexus"
+  NEXUS_MAVEN_MIRROR_ID: "nexus"
+  NEXUS_MAVEN_MIRROR_OF: "*"
+  NEXUS_MAVEN_MIRROR_URL: "http://nexus3:8081/repository/maven-public/"
+  MAVEN_REPOS: "nexus"
+  NEXUS_MAVEN_REPO_ID: "nexus"
+  NEXUS_MAVEN_REPO_URL: "http://nexus3:8081"
+  MAVEN_SETTINGS_XML: "/home/jboss/.m2/settings.xml"
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -97,6 +96,8 @@ spec:
           value: "quarkus-order-processor-ui"
         - name: S2I_ENVIRONMENT
           value: "quarkus-order-processor-ui-s2ienvironment"
+        - name: INCREMENTAL
+          value: "true"
     - name: get-dev-path
       taskRef:
         name: get-configmap-value
