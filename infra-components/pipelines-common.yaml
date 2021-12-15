@@ -181,7 +181,7 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: image-from-buildah__
+  name: image-from-buildah-review
 spec:
   params:
     - name: BUILDAH_IMAGE
