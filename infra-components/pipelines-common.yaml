@@ -38,6 +38,9 @@ spec:
     - name: S2I_OUTPUT_DIR
       type: string
       default: "/deployments"
+    - name: STAGE_OUTPUT
+      type: string
+      default: "stageoutput"
   workspaces:
     - name: source
     - name: artifacts
@@ -61,6 +64,7 @@ spec:
             name: $(params.S2I_SECRETS)
       script: |
         #!/usr/bin/env bash
+        set -e
 
         echo "copy sources"
         cp -r $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
@@ -83,11 +87,12 @@ spec:
           exit 1
         fi
 
-        echo "copying /deployments to workspace"
-        if [ -d $(workspaces.source.path)/$(params.CONTEXT)/deployments ]; then
-          rm -rf $(workspaces.source.path)/$(params.CONTEXT)/deployments
+        echo "copying $(params.S2I_OUTPUT_DIR) to $(workspaces.source.path)/$(params.CONTEXT)/$(params.STAGE_OUTPUT)/"
+        if [ -d $(workspaces.source.path)/$(params.CONTEXT)/$(params.STAGE_OUTPUT)/$(params.S2I_OUTPUT_DIR) ]; then
+          rm -rf $(workspaces.source.path)/$(params.CONTEXT)/$(params.STAGE_OUTPUT)/$(params.S2I_OUTPUT_DIR)
         fi
-        cp -r $(params.S2I_OUTPUT_DIR) $(workspaces.source.path)/$(params.CONTEXT)/
+        mkdir -p $(workspaces.source.path)/$(params.CONTEXT)/$(params.STAGE_OUTPUT)/
+        cp -r $(params.S2I_OUTPUT_DIR) $(workspaces.source.path)/$(params.CONTEXT)/$(params.STAGE_OUTPUT)/
 
         if [ "$INCREMENTAL" = "true" ]; then
 
@@ -143,6 +148,12 @@ spec:
         Verify the TLS on the registry endpoint (for push/pull to a non-TLS
         registry)
       type: string
+    - name: USER
+      default: 'jboss'
+      type: string
+    - name: STAGE_OUTPUT
+      type: string
+      default: "stageoutput"
   results:
     - description: Digest of the image just built.
       name: IMAGE_DIGEST
@@ -155,10 +166,11 @@ spec:
       image: $(params.BUILDAH_IMAGE)
       script: |
         #!/usr/bin/env bash
+        set -e
 
         runner=$(buildah from $(params.S2I_IMAGE))
 
-        buildah copy --chown jboss:0 $runner $(workspaces.source.path)/$(params.CONTEXT)/$(params.S2I_SRC_DIR) $(params.S2I_DST_DIR)
+        buildah copy --chown $(params.USER):0 $runner $(workspaces.source.path)/$(params.CONTEXT)/$(params.STAGE_OUTPUT)/$(params.S2I_SRC_DIR) $(params.S2I_DST_DIR)
 
         buildah commit $runner $(params.IMAGE)
 
@@ -174,14 +186,11 @@ spec:
           docker://$(params.IMAGE)
 
           cat $(results.IMAGE_DIGEST.path)
-      securityContext:
-        privileged: true
----
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: image-from-buildah-review
+  name: image-from-buildah
 spec:
   params:
     - name: BUILDAH_IMAGE
@@ -220,7 +229,7 @@ spec:
     - name: SCRIPT
       description: The script to run
       type: string
-      default: "exit"
+      default: "buildah -v"
   results:
     - description: Digest of the image just built.
       name: IMAGE_DIGEST
@@ -233,6 +242,7 @@ spec:
       image: $(params.BUILDAH_IMAGE)
       script: |
         #!/usr/bin/env bash
+        set -e
 
         $(params.SCRIPT)
       securityContext:
@@ -246,8 +256,6 @@ spec:
           docker://$(params.IMAGE)
 
           cat $(results.IMAGE_DIGEST.path)
-      securityContext:
-        privileged: true
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
