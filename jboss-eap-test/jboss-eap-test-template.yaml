@@ -48,6 +48,10 @@ objects:
                 value: "jboss-eap-test-ping"
               - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                 value: "8888"
+              - name: JGROUPS_CLUSTER_PASSWORD
+                value: "securepassword"
+              - name: AUTO_DEPLOY_EXPLODED
+                value: "false"
             livenessProbe:
               exec:
                 command:
@@ -105,6 +109,22 @@ objects:
       app: jboss-eap-test
     type: ClusterIP
     sessionAffinity: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: jboss-eap-test-ping
+    labels:
+      app: jboss-eap-test
+  spec:
+    publishNotReadyAddresses: true
+    clusterIP: None
+    ports:
+      - name: 8888-tcp
+        protocol: TCP
+        port: 8888
+        targetPort: 8888
+    selector:
+      app: jboss-eap-test
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
