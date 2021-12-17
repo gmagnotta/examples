@@ -74,4 +74,7 @@
 	  <servlet-name>AdminItemsServlet</servlet-name>
 	  <url-pattern>/admin/itemcontroller</url-pattern>
   </servlet-mapping>
+
+  <distributable/>
+  
 </web-app>
