@@ -49,9 +49,15 @@ objects:
               - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                 value: "8888"
               - name: JGROUPS_CLUSTER_PASSWORD
-                value: "securepassword"
+                value: "${JGROUPS_CLUSTER_PASSWORD}"
               - name: AUTO_DEPLOY_EXPLODED
-                value: "false"
+                value: "${AUTO_DEPLOY_EXPLODED}"
+              - name: MQ_QUEUES
+                value: "${MQ_QUEUES}"
+              - name: MQ_TOPICS
+                value: "${MQ_TOPICS}"
+              - name: MQ_CLUSTER_PASSWORD
+                value: "${MQ_CLUSTER_PASSWORD}"
             livenessProbe:
               exec:
                 command:
@@ -79,10 +85,10 @@ objects:
                 memory: "128Mi"
               limits:
                 cpu: "1000m"
-                memory: "512Mi"
+                memory: "${MEMORY_LIMIT}"
             imagePullPolicy: IfNotPresent
         restartPolicy: Always
-        terminationGracePeriodSeconds: 30
+        terminationGracePeriodSeconds: 75
         dnsPolicy: ClusterFirst
         securityContext: {}
         schedulerName: default-scheduler
@@ -145,4 +151,27 @@ parameters:
   required: true
 - description: Description of this deployment
   name: CAUSE
-  required: true
+- description: Memory Limit
+  name: MEMORY_LIMIT
+  value: "1Gi"
+  required: false
+- description: JGroups cluster password
+  name: JGROUPS_CLUSTER_PASSWORD
+  value: "jgrouppassword"
+  required: false
+- description: Auto Deploy exploded
+  name: AUTO_DEPLOY_EXPLODED
+  value: "false"
+  required: false
+- description: Queue names, separated by commas. These queues will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all queues used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.
+  name: MQ_QUEUES
+  value: ""
+  required: false
+- description: Topic names, separated by commas. These topics will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all topics used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.
+  name: MQ_TOPICS
+  value: ""
+  required: false
+- description: AMQ cluster admin password
+  name: MQ_CLUSTER_PASSWORD
+  value: "mqpassword"
+  required: false
