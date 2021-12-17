@@ -1,8 +1,10 @@
 package com.mycompany.app;
 
+import java.io.Serializable;
+
 import com.mycompany.model.Item;
 
-public class CartItem {
+public class CartItem implements Serializable {
 	
 	private Item item;
 	private int quantity;
