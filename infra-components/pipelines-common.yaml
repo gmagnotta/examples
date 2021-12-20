@@ -260,6 +260,117 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  name: image-from-buildah2
+spec:
+  params:
+    - name: BUILDAH_IMAGE
+      default: registry.access.redhat.com/ubi8/buildah:8.5-4
+      description: The location of the buildah builder image.
+      type: string
+    - name: S2I_IMAGE
+      default: registry.access.redhat.com/ubi8/openjdk-11
+      description: The S2I builder image.
+      type: string
+    - name: IMAGE
+      description: Reference of the image buildah will produce.
+      type: string
+    - name: CONTEXT
+      default: .
+      description: Path to the directory to use as context.
+      type: string
+    - name: PUSH_EXTRA_ARGS
+      default: ''
+      description: Extra parameters passed for the push command when pushing images.
+      type: string
+    - name: TLSVERIFY
+      default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      type: string
+    - name: INCREMENTAL
+      type: string
+      default: "false"
+    - name: ENVIRONMENTS
+      type: string
+      default: ""
+  results:
+    - description: Digest of the image just built.
+      name: IMAGE_DIGEST
+  workspaces:
+    - name: source
+    - name: varlibcontainers
+      mountPath: /var/lib/containers
+  steps:
+    - name: build
+      image: $(params.BUILDAH_IMAGE)
+      env:
+        - name: INCREMENTAL
+          value: $(params.INCREMENTAL)
+        - name: ENVIRONMENTS
+          value: $(params.ENVIRONMENTS)
+      script: |
+        #!/usr/bin/env bash
+        set -e
+
+        builder=$(buildah from $(params.S2I_IMAGE))
+
+        buildah add --chown jboss:0 $builder $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
+
+        if [ "$INCREMENTAL" = "true" ]; then
+
+          if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
+           buildah add --chown jboss:0 $builder $(workspaces.artifacts.path)/artifacts.tar /tmp/artifacts
+          fi
+
+        fi
+
+        COMMAND=""
+
+        if [ -n "$ENVIRONMENTS" ]; then
+
+          COMMAND+="buildah config "
+
+          IFS=','; for word in $ENVIRONMENTS; do COMMAND+="--env $word=${!word} "; done
+
+          COMMAND+='$builder'
+
+        fi
+
+        if [ ! -z "$COMMAND" ]; then
+         #echo "executing $COMMAND"
+
+         eval "$COMMAND"
+        fi
+
+        buildah config --cmd /usr/local/s2i/run $builder
+
+        buildah run $builder -- /usr/local/s2i/assemble
+
+        if [ "$INCREMENTAL" = "true" ]; then
+
+          buildah run $builder -- /bin/bash -c 'if [ -x "/usr/local/s2i/save-artifacts" ]; then /usr/local/s2i/save-artifacts ; fi' > $(workspaces.artifacts.path)/artifacts.tar
+
+        fi
+
+        buildah commit $builder $(params.IMAGE)
+
+        buildah rm $builder
+      securityContext:
+        privileged: true
+    - name: push
+      image: $(params.BUILDAH_IMAGE)
+      script: |
+        buildah push \
+          $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
+          --digestfile $(results.IMAGE_DIGEST.path) $(params.IMAGE) \
+          docker://$(params.IMAGE)
+
+          cat $(results.IMAGE_DIGEST.path)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
   name: image-from-dockerfile
 spec:
   params:
@@ -483,7 +594,7 @@ spec:
       name: url
   steps:
     - image: >-
-        registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8
+        registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.6.1-4
       name: clone
       resources: {}
       script: >
