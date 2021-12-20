@@ -121,6 +121,9 @@ objects:
     name: jboss-eap-test-ping
     labels:
       app: jboss-eap-test
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: true
+      description: "The JGroups ping port for clustering"
   spec:
     publishNotReadyAddresses: true
     clusterIP: None
