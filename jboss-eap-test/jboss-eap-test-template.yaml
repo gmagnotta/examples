@@ -195,6 +195,9 @@ parameters:
 - description: Container image to use
   name: IMAGE
   required: true
+- description: Container image to use for migration
+  name: MIGRATION_IMAGE
+  required: true
 - description: Description of this deployment
   name: CAUSE
 - description: Memory Limit
