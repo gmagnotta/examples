@@ -364,7 +364,8 @@ spec:
 
         buildah config --cmd $(params.S2I_SCRIPTS_URL)/run $builder
 
-        if [ -x "/tmp/src/.s2i/bin/assemble" ]; then
+        if [ -x "$(workspaces.source.path)/$(params.CONTEXT)/.s2i/bin/assemble" ]; then
+          echo "Using assemble from .s2i"
           buildah run $builder -- /tmp/src/.s2i/bin/assemble
         else
           buildah run $builder -- $(params.S2I_SCRIPTS_URL)/assemble
