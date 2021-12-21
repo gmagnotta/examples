@@ -113,6 +113,8 @@ spec:
           value: "quarkus-order-processor-ui-s2ienvironment"
         - name: INCREMENTAL
           value: "true"
+        - name: S2I_SCRIPTS_URL
+          value: "/tmp/src/.s2i/bin"
     - name: deploy
       taskRef:
         name: openshift-actions
