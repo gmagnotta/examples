@@ -29,7 +29,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 4Gi
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -70,7 +70,6 @@ spec:
     - name: fetch-repository
       taskRef:
         name: git-clone
-        kind: ClusterTask
       workspaces:
         - name: output
           workspace: src
@@ -79,30 +78,11 @@ spec:
           value: $(params.repo-url)
         - name: deleteExisting
           value: "true"
-    - name: compile
-      taskRef:
-        name: s2i-build
-      runAfter:
-        - fetch-repository
-      workspaces:
-        - name: source
-          workspace: src
-        - name: artifacts
-          workspace: m2
-      params:
-        - name: S2I_IMAGE
-          value: "registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8"
-        - name: CONTEXT
-          value: "quarkus-order-processor-ui"
-        - name: S2I_ENVIRONMENT
-          value: "quarkus-order-processor-ui-s2ienvironment"
-        - name: INCREMENTAL
-          value: "true"
     - name: get-dev-path
       taskRef:
         name: get-configmap-value
       runAfter:
-        - compile
+        - fetch-repository
       params:
         - name: CONFIGMAP-NAME
           value: "quarkus-order-processor-ui-pipelineconfig"
@@ -110,9 +90,16 @@ spec:
           value: "dev-image-path"
     - name: build
       taskRef:
-        name: image-from-s2i
+        name: image-from-buildah2
       runAfter:
         - get-dev-path
+      workspaces:
+        - name: source
+          workspace: src
+        - name: artifacts
+          workspace: m2
+        - name: varlibcontainers
+          workspace: varlibcontainers
       params:
         - name: S2I_IMAGE
           value: "registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8"
@@ -122,15 +109,10 @@ spec:
           value: $(tasks.get-dev-path.results.VALUE)
         - name: CONTEXT
           value: "quarkus-order-processor-ui"
-        - name: S2I_SRC_DIR
-          value: "deployments/quarkus-order-processor-ui.war"
-        - name: S2I_DST_DIR
-          value: "/deployments/ROOT.war"
-      workspaces:
-        - name: source
-          workspace: src
-        - name: varlibcontainers
-          workspace: varlibcontainers
+        - name: S2I_ENVIRONMENT
+          value: "quarkus-order-processor-ui-s2ienvironment"
+        - name: INCREMENTAL
+          value: "true"
     - name: deploy
       taskRef:
         name: openshift-actions
