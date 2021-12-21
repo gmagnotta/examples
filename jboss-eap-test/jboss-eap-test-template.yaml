@@ -109,6 +109,27 @@ objects:
                 cpu: "1000m"
                 memory: "${MEMORY_LIMIT}"
             imagePullPolicy: IfNotPresent
+        initContainers:
+          - name: jboss-eap-test-wait-migration
+            image: ${MIGRATION_IMAGE}
+            env:
+              - name: JDBC_URL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-order-processor
+                    key: quarkus-datasource-jdbc-url
+              - name: USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: postgresql
+                    key: postgresql-username
+              - name: PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: postgresql
+                    key: postgresql-password
+              - name: FLYWAY_PARAMS
+                value: 'validate'
         restartPolicy: Always
         terminationGracePeriodSeconds: 75
         dnsPolicy: ClusterFirst
