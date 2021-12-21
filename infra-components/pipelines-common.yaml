@@ -294,11 +294,21 @@ spec:
     - name: ENVIRONMENTS
       type: string
       default: ""
+    - name: USER
+      type: string
+      default: "jboss"
+    - name: S2I_ENVIRONMENT
+      type: string
+      default: "s2ienvironment"
+    - name: S2I_SECRETS
+      type: string
+      default: "s2isecrets"
   results:
     - description: Digest of the image just built.
       name: IMAGE_DIGEST
   workspaces:
     - name: source
+    - name: artifacts
     - name: varlibcontainers
       mountPath: /var/lib/containers
   steps:
@@ -309,18 +319,24 @@ spec:
           value: $(params.INCREMENTAL)
         - name: ENVIRONMENTS
           value: $(params.ENVIRONMENTS)
+      envFrom:
+        - configMapRef:
+            name: $(params.S2I_ENVIRONMENT)
+        - secretRef:
+            name: $(params.S2I_SECRETS)
       script: |
         #!/usr/bin/env bash
         set -e
 
         builder=$(buildah from $(params.S2I_IMAGE))
 
-        buildah add --chown jboss:0 $builder $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
+        buildah add --chown $(params.USER):0 $builder $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
 
         if [ "$INCREMENTAL" = "true" ]; then
 
           if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
-           buildah add --chown jboss:0 $builder $(workspaces.artifacts.path)/artifacts.tar /tmp/artifacts
+           echo "restoring artifacts"
+           buildah add --chown $(params.USER):0 $builder $(workspaces.artifacts.path)/artifacts.tar /tmp/artifacts
           fi
 
         fi
@@ -348,6 +364,11 @@ spec:
         buildah run $builder -- /usr/local/s2i/assemble
 
         if [ "$INCREMENTAL" = "true" ]; then
+
+          echo "saving artifacts"
+          if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
+            rm $(workspaces.artifacts.path)/artifacts.tar
+          fi
 
           buildah run $builder -- /bin/bash -c 'if [ -x "/usr/local/s2i/save-artifacts" ]; then /usr/local/s2i/save-artifacts ; fi' > $(workspaces.artifacts.path)/artifacts.tar
 
