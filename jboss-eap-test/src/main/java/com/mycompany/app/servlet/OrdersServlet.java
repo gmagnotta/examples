@@ -11,10 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 import com.mycompany.app.Cart;
 import com.mycompany.app.CartItem;
 import com.mycompany.app.service.OrderService;
-import com.mycompany.app.service.ShopService;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
-import com.mycompany.model.Shop;
 
 public class OrdersServlet extends HttpServlet {
 
@@ -23,9 +21,6 @@ public class OrdersServlet extends HttpServlet {
 	@EJB
 	private OrderService orderService;
 	
-	@EJB
-	private ShopService shopService;
-
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
@@ -41,10 +36,7 @@ public class OrdersServlet extends HttpServlet {
 				
 			}
 			
-			
-			Shop shop = shopService.getShops().get(0);
 			Order order = new Order();
-			order.setShop(shop);
 			int sum = 0; 
 			for (CartItem i : cart.getItems()) {
 				
@@ -58,7 +50,8 @@ public class OrdersServlet extends HttpServlet {
 			}
 			
 			order.setAmount(new BigDecimal(sum));
-			orderService.createOrderOnJms(order);
+
+			orderService.createOrder(order);
 			
 			request.getSession().invalidate();
 			

@@ -14,8 +14,6 @@
 	<div id="body">
 		<div id="content">
 		
-		<a href="itemcontroller">Show items</a>
-		
 		<c:choose>
 		
 		 <c:when test="${cart != null}">
@@ -52,7 +50,7 @@
 		 </c:when>
 		 
 		 <c:otherwise>
-		 	<span>Cart is empty</span>
+		 	<span>The cart is empty!</span>
 		 </c:otherwise>
 		</c:choose>
 		

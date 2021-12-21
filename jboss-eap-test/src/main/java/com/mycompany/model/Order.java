@@ -11,15 +11,12 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
@@ -27,7 +24,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name="order")
 @NamedQueries({
 		@NamedQuery(name = "getAllOrders", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems"),
-		@NamedQuery(name = "getOrderById", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems WHERE o.shop.id = :id")
 })
 public class Order implements Serializable {
 	
@@ -49,11 +45,6 @@ public class Order implements Serializable {
 	private Date orderWithdrawal;
 	
 	private BigDecimal amount;
-	
-	@ManyToOne
-	@JoinColumn(name = "shop")
-	@XmlElement(name= "negozio")
-	private Shop shop;
 	
 	@OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
 	private Set<LineItem> lineItems;
@@ -92,14 +83,6 @@ public class Order implements Serializable {
 
 	public void setAmount(BigDecimal amount) {
 		this.amount = amount;
-	}
-
-	public Shop getShop() {
-		return shop;
-	}
-
-	public void setShop(Shop shop) {
-		this.shop = shop;
 	}
 
 	public Set<LineItem> getLineItems() {

@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.mycompany.app.service.OrderService;
-import com.mycompany.app.service.ShopService;
 import com.mycompany.model.Order;
 
 public class AdminOrdersServlet extends HttpServlet {
@@ -19,21 +18,10 @@ public class AdminOrdersServlet extends HttpServlet {
 	@EJB
 	private OrderService orderService;
 	
-	@EJB
-	private ShopService shopService;
-
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		String shop = request.getParameter("shop");
-		
-		List<Order> orders = null;
-		
-		if (shop != null) {
-			orders = orderService.getOrders(Integer.valueOf(shop));
-		} else {
-			orders = orderService.getOrders();
-		}
+		List<Order> orders = orderService.getOrders();
 		
 		request.getSession().setAttribute("orders", orders);
 		

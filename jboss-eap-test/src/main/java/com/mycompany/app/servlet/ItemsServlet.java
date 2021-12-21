@@ -27,7 +27,7 @@ public class ItemsServlet extends HttpServlet {
 		if (description != null) {
 			items = itemService.getItemsByDescription(description);
 		} else {
-			items = itemService.getItems();
+			items = itemService.getAllItems();
 		}
 		
 		request.setAttribute("items", items);
