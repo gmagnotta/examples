@@ -25,7 +25,7 @@ import com.mycompany.model.Shop;
 @Produces(MediaType.APPLICATION_JSON)
 public class ShopService 
 {
-    @PersistenceContext(unitName = "my-persistence-unit")
+    @PersistenceContext(unitName = "store")
 	private EntityManager entityManager;
     
     @GET

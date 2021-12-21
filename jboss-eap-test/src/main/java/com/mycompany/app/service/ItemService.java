@@ -25,7 +25,7 @@ import com.mycompany.model.Item;
 @Produces(MediaType.APPLICATION_JSON)
 public class ItemService 
 {
-    @PersistenceContext(unitName = "my-persistence-unit")
+    @PersistenceContext(unitName = "store")
 	private EntityManager entityManager;
     
     @POST

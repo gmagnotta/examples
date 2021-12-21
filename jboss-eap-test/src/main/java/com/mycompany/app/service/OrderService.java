@@ -36,7 +36,7 @@ import com.mycompany.model.Order;
 @Produces(MediaType.APPLICATION_JSON)
 public class OrderService 
 {
-    @PersistenceContext(unitName = "my-persistence-unit")
+    @PersistenceContext(unitName = "store")
 	private EntityManager entityManager;
     
     // @Resource(mappedName = "java:/jms/queue/TodoListQueue")
