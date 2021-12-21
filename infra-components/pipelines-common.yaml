@@ -303,6 +303,9 @@ spec:
     - name: S2I_SECRETS
       type: string
       default: "s2isecrets"
+    - name: S2I_SCRIPTS_URL
+      type: string
+      default: "/usr/local/s2i"
   results:
     - description: Digest of the image just built.
       name: IMAGE_DIGEST
@@ -359,9 +362,9 @@ spec:
          eval "$COMMAND"
         fi
 
-        buildah config --cmd /usr/local/s2i/run $builder
+        buildah config --cmd $(params.S2I_SCRIPTS_URL)/run $builder
 
-        buildah run $builder -- /usr/local/s2i/assemble
+        buildah run $builder -- $(params.S2I_SCRIPTS_URL)/assemble
 
         if [ "$INCREMENTAL" = "true" ]; then
 
