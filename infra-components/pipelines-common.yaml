@@ -364,7 +364,11 @@ spec:
 
         buildah config --cmd $(params.S2I_SCRIPTS_URL)/run $builder
 
-        buildah run $builder -- $(params.S2I_SCRIPTS_URL)/assemble
+        if [ -x "/tmp/src/.s2i/bin/assemble" ]; then
+          buildah run $builder -- /tmp/src/.s2i/bin/assemble
+        else
+          buildah run $builder -- $(params.S2I_SCRIPTS_URL)/assemble
+        fi
 
         if [ "$INCREMENTAL" = "true" ]; then
 
