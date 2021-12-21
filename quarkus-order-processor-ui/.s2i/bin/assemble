@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "Before assembling"
+
+echo "Deleting /deployments/ROOT.war"
+rm /deployments/ROOT.war
+
+echo "invoking assemble"
+/usr/local/s2i/assemble
+
+echo "renaming /deployments/quarkus-order-processor-ui.war to /deployments/ROOT.war"
+mv /deployments/quarkus-order-processor-ui.war /deployments/ROOT.war
