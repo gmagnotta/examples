@@ -21,6 +21,7 @@
 			   <th>Id</th>
 			   <th>Amount</th>
 			   <th>Content</th>
+			   <th>Creation Date</th>
 			 </tr>
 		   
 		   <c:forEach var="order" items="${orders}">
@@ -33,6 +34,7 @@
 					<li>${item.quantity} x ${item.item.description}</li>
 					</ul>
 				</c:forEach>
+				<td>${order.creationDate}</td>
 				</td>
 			</tr>
 			</c:forEach>

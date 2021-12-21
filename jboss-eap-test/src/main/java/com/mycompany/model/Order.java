@@ -51,6 +51,7 @@ public class Order implements Serializable {
 
 	public Order() {
 		this.lineItems = new HashSet<>();
+		this.creationDate = new Date();
 	}
 	
 	public int getId() {
