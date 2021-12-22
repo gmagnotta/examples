@@ -11,7 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name =  "line_item")
+@Table(name =  "line_items")
 public class LineItem implements Serializable {
 
 	/**
@@ -26,7 +26,7 @@ public class LineItem implements Serializable {
 	private BigDecimal price;
 	
 	@ManyToOne
-	@JoinColumn(name = "orders")
+	@JoinColumn(name = "ord")
 	private Order order;
 	
 	@ManyToOne

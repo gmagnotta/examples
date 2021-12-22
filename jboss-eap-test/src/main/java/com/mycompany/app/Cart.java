@@ -1,6 +1,7 @@
 package com.mycompany.app;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,13 +53,13 @@ public class Cart implements Serializable {
 		}
 	}
 	
-	public int getTotal() {
+	public float getTotal() {
 		
-		int sum = 0;
+		float sum = 0;
 		
 		for (CartItem i : items.values()) {
 			
-			sum += (i.getItem().getPrice().intValue() * i.getQuantity());
+			sum += (i.getItem().getPrice().multiply(BigDecimal.valueOf(i.getQuantity()))).floatValue();
 			
 		}
 		

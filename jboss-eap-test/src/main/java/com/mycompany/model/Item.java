@@ -8,10 +8,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
+@Table(name = "items")
 @XmlRootElement(name="oggetto")
 @NamedQueries({
 @NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.id"),

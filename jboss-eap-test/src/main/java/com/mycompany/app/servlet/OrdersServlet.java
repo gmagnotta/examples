@@ -1,6 +1,7 @@
 package com.mycompany.app.servlet;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Date;
 
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
@@ -37,19 +38,21 @@ public class OrdersServlet extends HttpServlet {
 			}
 			
 			Order order = new Order();
-			int sum = 0; 
-			for (CartItem i : cart.getItems()) {
+			BigDecimal sum = BigDecimal.ZERO; 
+			for (CartItem cartItem : cart.getItems()) {
 				
 				LineItem line = new LineItem();
-				line.setItem(i.getItem());
+				line.setItem(cartItem.getItem());
 				line.setOrder(order);
-				line.setQuantity(i.getQuantity());
-				order.getLineItems().add(line);
-				sum += (i.getItem().getPrice().intValue() * i.getQuantity());
+				order.addLineItem(line);
+				line.setQuantity(cartItem.getQuantity());
+				line.setPrice(cartItem.getItem().getPrice());
+				sum = sum.add(line.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
 				
 			}
 			
-			order.setAmount(new BigDecimal(sum));
+			order.setAmount(sum);
+			order.setCreationDate(new Date());
 
 			orderService.createOrder(order);
 			

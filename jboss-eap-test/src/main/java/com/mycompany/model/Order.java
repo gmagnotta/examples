@@ -40,10 +40,6 @@ public class Order implements Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creationDate;
 	
-	@Column(name = "order_withdrawal")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date orderWithdrawal;
-	
 	private BigDecimal amount;
 	
 	@OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
@@ -68,14 +64,6 @@ public class Order implements Serializable {
 
 	public void setCreationDate(Date creationDate) {
 		this.creationDate = creationDate;
-	}
-
-	public Date getOrderWithdrawal() {
-		return orderWithdrawal;
-	}
-
-	public void setOrderWithdrawal(Date orderWithdrawal) {
-		this.orderWithdrawal = orderWithdrawal;
 	}
 
 	public BigDecimal getAmount() {
