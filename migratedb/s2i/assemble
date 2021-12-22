@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "---> Installing application source ..."
+mv /tmp/src/* /flyway/sql/
+
+echo "purging"
+rm -rf /tmp/src
