@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jboss-eap-test-migrate
+  labels:
+    app: jboss-eap-test
+spec:
+  template:
+    metadata:
+      labels:
+        app: jboss-eap-test
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: jboss-eap-test-migration
+          image: <PUT_HERE_IMAGE>
+          env:
+            - name: FLYWAY_PARAMS
+              value: 'migrate'
+            - name: JDBC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: jboss-eap-test
+                  key: MIGRATION_JDBC
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: postgresql-username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql
+                  key: postgresql-password
