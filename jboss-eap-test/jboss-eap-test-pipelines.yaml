@@ -37,6 +37,7 @@ metadata:
   name: jboss-eap-test-pipelineconfig
 data:
   dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test'
+  dev-image-migration-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test-migration'
   release-image-path: 'quay.io/gmagnotta/helloservlet'
 ---
 kind: ConfigMap
@@ -84,6 +85,16 @@ spec:
           value: "jboss-eap-test-pipelineconfig"
         - name: CONFIGMAP-KEY
           value: "dev-image-path"
+    - name: get-migration-path
+      taskRef:
+        name: get-configmap-value
+      runAfter:
+        - fetch-repository
+      params:
+        - name: CONFIGMAP-NAME
+          value: "jboss-eap-test-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "dev-image-migration-path"
     - name: build
       taskRef:
         name: image-from-buildah2
@@ -111,11 +122,38 @@ spec:
           value: "true"
         - name: ENVIRONMENTS
           value: "CUSTOM_INSTALL_DIRECTORIES"
+    - name: build-migrate
+      taskRef:
+        name: image-from-buildah2
+      runAfter:
+        - get-migration-path
+        - build
+      workspaces:
+        - name: source
+          workspace: src
+        - name: varlibcontainers
+          workspace: varlibcontainers
+        - name: artifacts
+          workspace: m2
+      params:
+        - name: S2I_IMAGE
+          value: "quay.io/gmagnotta/flyway"
+        - name: TLSVERIFY
+          value: "false"
+        - name: IMAGE
+          value: $(tasks.get-migration-path.results.VALUE)
+        - name: CONTEXT
+          value: "jboss-eap-test/src/main/resources/db"
+        - name: S2I_ENVIRONMENT
+          value: "jboss-eap-test-s2ienvironment"
+        - name: S2I_SCRIPTS_URL
+          value: "/flyway"
     - name: deploy
       taskRef:
         name: openshift-actions
       runAfter:
         - build
+        - build-migrate
       workspaces:
         - name: source
           workspace: src
@@ -124,7 +162,7 @@ spec:
           value: "jboss-eap-test"
         - name: SCRIPT
           value: |
-            oc process -p IMAGE=$(tasks.get-dev-path.results.VALUE)@$(tasks.build.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f jboss-eap-test-template.yaml | oc apply -f -
+            oc process -p IMAGE=$(tasks.get-dev-path.results.VALUE)@$(tasks.build.results.IMAGE_DIGEST) -p MIGRATION_IMAGE=$(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f jboss-eap-test-template.yaml | oc apply -f -
     - name: update-built-image
       taskRef:
         name: set-configmap-value
@@ -137,3 +175,15 @@ spec:
           value: "dev-latest-built-image"
         - name: VALUE
           value: $(tasks.get-dev-path.results.VALUE)@$(tasks.build.results.IMAGE_DIGEST)
+    - name: update-migrate-image
+      taskRef:
+        name: set-configmap-value
+      runAfter:
+        - deploy
+      params:
+        - name: CONFIGMAP-NAME
+          value: "jboss-eap-test-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "dev-latest-migration-image"
+        - name: VALUE
+          value: $(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST)

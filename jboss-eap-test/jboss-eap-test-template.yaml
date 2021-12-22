@@ -23,6 +23,7 @@ objects:
     DS1_MAX_POOL_SIZE: '20'
     DS1_MIN_POOL_SIZE: '20'
     DS1_NONXA: 'true'
+    MIGRATION_JDBC: 'jdbc:postgresql://postgresql:5432/sample'
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -116,8 +117,8 @@ objects:
               - name: JDBC_URL
                 valueFrom:
                   configMapKeyRef:
-                    name: quarkus-order-processor
-                    key: quarkus-datasource-jdbc-url
+                    name: jboss-eap-test
+                    key: MIGRATION_JDBC
               - name: USERNAME
                 valueFrom:
                   secretKeyRef:
