@@ -24,6 +24,7 @@ objects:
     DS1_MIN_POOL_SIZE: '20'
     DS1_NONXA: 'true'
     MIGRATION_JDBC: 'jdbc:postgresql://postgresql:5432/sample'
+    AB_PROMETHEUS_ENABLE: 'true'
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -102,6 +103,8 @@ objects:
                 protocol: TCP
               - containerPort: 8888
                 protocol: TCP
+              - containerPort: 9799
+                protocol: TCP
             resources:
               requests:
                 cpu: "500m"
@@ -155,6 +158,10 @@ objects:
         protocol: TCP
         port: 8080
         targetPort: 8080
+      - name: 9799-tcp
+        protocol: TCP
+        port: 9799
+        targetPort: 9799
     selector:
       app: jboss-eap-test
     type: ClusterIP
