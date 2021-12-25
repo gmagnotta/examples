@@ -1,9 +1,8 @@
 {
-    "realm": "mrealm",
-    "auth-server-url": "http://keycloak.giuseppe.svc.cluster.local:8080/auth",
+    "realm": "myrealm",
+    "auth-server-url": "http://keycloak-giuseppe.apps.playground.rhocplab.com/auth/",
     "ssl-required": "external",
-    "resource": "app-profile-jsp",
-    "credentials": {
-      "secret": "578262e1-9181-4721-baec-7cc913331c1f"
-    }
+    "resource": "my-app-1.0-SNAPSHOT",
+    "public-client": true,
+    "confidential-port": 0
   }
