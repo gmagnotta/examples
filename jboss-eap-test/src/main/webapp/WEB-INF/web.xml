@@ -77,6 +77,7 @@
 
   <login-config>
     <auth-method>KEYCLOAK</auth-method>
+    <realm-name>myrealm</realm-name>
   </login-config>
 
   <security-role>
