@@ -99,6 +99,16 @@ objects:
       targetPort: 8161-tcp
     wildcardPolicy: None
 - apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: postgresql-pvc
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
   kind: ConfigMap
   metadata:
     name: postgresql
@@ -128,6 +138,10 @@ objects:
         labels:
           app: postgresql
       spec:
+        volumes:
+          - name: pgdata
+            persistentVolumeClaim:
+              claimName: postgresql-pvc
         containers:
           - name: postgresql
             image: registry.redhat.io/rhscl/postgresql-12-rhel7
@@ -155,6 +169,9 @@ objects:
                   configMapKeyRef:
                     name: postgresql
                     key: postgresql-max-prepared-transactions
+            volumeMounts:
+              - mountPath: "/var/lib/pgsql/data"
+                name: pgdata
             resources:
               requests:
                 cpu: "500m"
@@ -602,4 +619,155 @@ objects:
 
           static_configs:
             - targets: ["localhost:8080"]
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: keycloak
+    labels:
+      app: keycloak
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: keycloak
+    template:
+      metadata:
+        labels:
+          app: keycloak
+      spec:
+        containers:
+          - name: keycloak
+            image: quay.io/keycloak/keycloak
+            env:
+              - name: KEYCLOAK_USER
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: KEYCLOAK_USER
+              - name: KEYCLOAK_PASSWORD
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: KEYCLOAK_PASSWORD
+              - name: DB_VENDOR
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: DB_VENDOR
+              - name: DB_ADDR
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: DB_ADDR
+              - name: DB_PORT
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: DB_PORT
+              - name: DB_DATABASE
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: DB_DATABASE
+              - name: DB_USER
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: DB_USER
+              - name: DB_PASSWORD
+                valueFrom:
+                  configMapKeyRef:
+                    name: keycloak
+                    key: DB_PASSWORD
+              - name: JGROUPS_DISCOVERY_PROTOCOL
+                value: "dns.DNS_PING"
+              - name: JGROUPS_DISCOVERY_PROPERTIES
+                value: "dns_query=keycloak-ping"
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+              - containerPort: 7600
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
+              limits:
+                cpu: "1000m"
+                memory: "1024Mi"
+            imagePullPolicy: IfNotPresent
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: keycloak
+    labels:
+      app: keycloak
+  spec:
+    ports:
+      - name: 8080-tcp
+        protocol: TCP
+        port: 8080
+        targetPort: 8080
+    selector:
+      app: keycloak
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: keycloak-ping
+    labels:
+      app: keycloak
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: true
+      description: "The JGroups ping port for clustering"
+  spec:
+    publishNotReadyAddresses: true
+    clusterIP: None
+    ports:
+      - name: 7600-tcp
+        protocol: TCP
+        port: 7600
+        targetPort: 7600
+    selector:
+      app: keycloak
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: keycloak
+    labels:
+      app: keycloak
+  spec:
+    to:
+      kind: Service
+      name: keycloak
+      weight: 100
+    port:
+      targetPort: 8080-tcp
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: keycloak
+  data:
+    KEYCLOAK_USER: 'admin'
+    KEYCLOAK_PASSWORD: '4dmin'
+    DB_VENDOR: 'postgres'
+    DB_ADDR: 'postgresql'
+    DB_PORT: '5432'
+    DB_DATABASE: 'keycloak'
+    DB_USER: 'keycloak'
+    DB_PASSWORD: 'keycloak'
 parameters:
