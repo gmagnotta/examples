@@ -85,6 +85,8 @@ objects:
                 value: 'http://keycloak.giuseppe.svc.cluster.local:8080/auth'
               - name: SSO_REALM
                 value: myrealm
+              - name: SSO_SECRET
+                value: 'putherevalidsecret'
             envFrom:
             - configMapRef:
                 name: jboss-eap-test
