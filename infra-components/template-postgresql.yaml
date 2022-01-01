@@ -2,6 +2,7 @@ apiVersion: template.openshift.io/v1
 kind: Template
 labels:
   template: postgresql
+  application: "${APPLICATION_NAME}"
 message: This is a template to provision postgresql
 metadata:
   name: postgresql
@@ -11,7 +12,7 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: postgresql-pvc
+    name: "${APPLICATION_NAME}-pvc"
   spec:
     accessModes:
       - ReadWriteOnce
@@ -21,7 +22,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: postgresql
+    name: "${APPLICATION_NAME}"
   data:
     postgresql-max-prepared-transactions: ''
     postgresql-max-connections: ''
@@ -29,7 +30,7 @@ objects:
 - apiVersion: v1
   kind: Secret
   metadata:
-    name: postgresql
+    name: "${APPLICATION_NAME}"
   data:
     postgresql-database: ${POSTGRESQL_DATABASE}
     postgresql-user: ${POSTGRESQL_USER}
@@ -51,25 +52,25 @@ objects:
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: postgresql
+    name: "${APPLICATION_NAME}"
     labels:
-      app: postgresql
+      app: "${APPLICATION_NAME}"
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: postgresql
+        app: "${APPLICATION_NAME}"
     template:
       metadata:
         labels:
-          app: postgresql
+          app: "${APPLICATION_NAME}"
         annotations:
           alpha.image.policy.openshift.io/resolve-names: '*'
       spec:
         volumes:
           - name: pgdata
             persistentVolumeClaim:
-              claimName: postgresql-pvc
+              claimName: "${APPLICATION_NAME}-pvc"
         containers:
           - name: postgresql
             image: postgresql-10:latest
@@ -80,32 +81,32 @@ objects:
               - name: POSTGRESQL_USER
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
+                    name: "${APPLICATION_NAME}"
                     key: postgresql-user
               - name: POSTGRESQL_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
+                    name: "${APPLICATION_NAME}"
                     key: postgresql-password
               - name: POSTGRESQL_DATABASE
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
+                    name: "${APPLICATION_NAME}"
                     key: postgresql-database
               - name: POSTGRESQL_MAX_CONNECTIONS
                 valueFrom:
                   configMapKeyRef:
-                    name: postgresql
+                    name: "${APPLICATION_NAME}"
                     key: postgresql-max-connections
               - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
                 valueFrom:
                   configMapKeyRef:
-                    name: postgresql
+                    name: "${APPLICATION_NAME}"
                     key: postgresql-max-prepared-transactions
               - name: POSTGRESQL_SHARED_BUFFERS
                 valueFrom:
                   configMapKeyRef:
-                    name: postgresql
+                    name: "${APPLICATION_NAME}"
                     key: postgresql-shared-buffers
             readinessProbe:
               timeoutSeconds: 10
@@ -142,9 +143,9 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    name: postgresql
+    name: "${APPLICATION_NAME}"
     labels:
-      app: postgresql
+      app: "${APPLICATION_NAME}"
   spec:
     ports:
       - name: 5432-tcp
@@ -152,10 +153,15 @@ objects:
         port: 5432
         targetPort: 5432
     selector:
-      app: postgresql
+      app: "${APPLICATION_NAME}"
     type: ClusterIP
     sessionAffinity: None
 parameters:
+- displayName: Application Name
+  description: The name for the application.
+  name: APPLICATION_NAME
+  value: postgresql
+  required: true
 - displayName: Database Volume Capacity
   description: Size of persistent storage for database volume.
   name: VOLUME_CAPACITY
