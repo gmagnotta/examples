@@ -1,17 +1,28 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 labels:
-  template: jboss-eap-test
-message: This is an OpenShift template to deploy jboss-eap-test.
+  template: jboss-eap
+  application: "${APPLICATION_NAME}"
+message: This is an OpenShift template to deploy jboss-eap based applications.
 metadata:
-  name: jboss-eap-test
+  name: jboss-eap
   annotations:
-    description: "jboss-eap-test Template"
+    description: "jboss-eap Template"
 objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: "${APPLICATION_NAME}"
+  data:
+    database-username: amJvc3M=
+    database-password: amJvc3M=
+    database-database: amJvc3M=
+    sso-secret: ${SSO_SECRET}
+    sso-public-key: ${SSO_PUBLIC_KEY}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: jboss-eap-test
+    name: "${APPLICATION_NAME}"
   data:
     ENABLE_GENERATE_DEFAULT_DATASOURCE: 'false'
     DB_SERVICE_PREFIX_MAPPING: 'ocp-postgresql=DS1'
@@ -25,33 +36,35 @@ objects:
     DS1_NONXA: 'true'
     MIGRATION_JDBC: 'jdbc:postgresql://postgresql:5432/sample'
     AB_PROMETHEUS_ENABLE: 'true'
+    sso-url: ${SSO_URL}
+    sso-realm: ${SSO_REALM}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: jboss-eap-test
+    name: "${APPLICATION_NAME}"
     labels:
-      app: jboss-eap-test
+      app: "${APPLICATION_NAME}"
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: jboss-eap-test
+        app: "${APPLICATION_NAME}"
     template:
       metadata:
         labels:
-          app: jboss-eap-test
+          app: "${APPLICATION_NAME}"
         annotations:
           kubernetes.io/change-cause: ${CAUSE}
           gitcommit: ${CAUSE}
       spec:
         containers:
-          - name: jboss-eap-test
+          - name: jboss-eap
             image: ${IMAGE}
             env:
               - name: JGROUPS_PING_PROTOCOL
                 value: "dns.DNS_PING"
               - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                value: "jboss-eap-test-ping"
+                value: "${APPLICATION_NAME}-ping"
               - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                 value: "8888"
               - name: JGROUPS_CLUSTER_PASSWORD
@@ -66,30 +79,46 @@ objects:
                 value: "${MQ_CLUSTER_PASSWORD}"
               - name: DS1_DATABASE
                 valueFrom:
-                  configMapKeyRef:
-                    name: postgresql
-                    key: postgresql-database
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: database-database
               - name: DS1_USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
-                    key: postgresql-username
+                    name: "${APPLICATION_NAME}"
+                    key: database-username
               - name: DS1_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
-                    key: postgresql-password
+                    name: "${APPLICATION_NAME}"
+                    key: database-password
               - name: SSO_URL
-                value: 'http://keycloak-giuseppe.apps.playground.rhocplab.com/auth/'
-              - name: SSO_SERVICE_URL
-                value: 'http://keycloak.giuseppe.svc.cluster.local:8080/auth'
+                valueFrom:
+                  configMapKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-url
               - name: SSO_REALM
-                value: myrealm
+                valueFrom:
+                  configMapKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-realm
               - name: SSO_SECRET
-                value: 'putherevalidsecret'
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-secret
+              - name: SSO_PUBLIC_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-public-key
+              - name: SSO_BEARER_ONLY
+                value: "false"
+              - name: SSO_ENABLE_CORS
+                value: "true"
             envFrom:
             - configMapRef:
-                name: jboss-eap-test
+                name: "${APPLICATION_NAME}"
             livenessProbe:
               exec:
                 command:
@@ -122,24 +151,24 @@ objects:
                 memory: "${MEMORY_LIMIT}"
             imagePullPolicy: IfNotPresent
         initContainers:
-          - name: jboss-eap-test-wait-migration
+          - name: "${APPLICATION_NAME}-wait-migration"
             image: ${MIGRATION_IMAGE}
             env:
               - name: JDBC_URL
                 valueFrom:
                   configMapKeyRef:
-                    name: jboss-eap-test
+                    name: "${APPLICATION_NAME}"
                     key: MIGRATION_JDBC
               - name: USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
-                    key: postgresql-username
+                    name: "${APPLICATION_NAME}"
+                    key: database-username
               - name: PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: postgresql
-                    key: postgresql-password
+                    name: "${APPLICATION_NAME}"
+                    key: database-password
               - name: FLYWAY_PARAMS
                 value: 'validate'
         restartPolicy: Always
@@ -148,18 +177,15 @@ objects:
         securityContext: {}
         schedulerName: default-scheduler
     strategy:
-      type: RollingUpdate
-      rollingUpdate:
-        maxUnavailable: 25%
-        maxSurge: 25%
+      type: Recreate
     revisionHistoryLimit: 10
     progressDeadlineSeconds: 600
 - apiVersion: v1
   kind: Service
   metadata:
-    name: jboss-eap-test
+    name: "${APPLICATION_NAME}"
     labels:
-      app: jboss-eap-test
+      app: "${APPLICATION_NAME}"
   spec:
     ports:
       - name: 8080-tcp
@@ -171,15 +197,15 @@ objects:
         port: 9799
         targetPort: 9799
     selector:
-      app: jboss-eap-test
+      app: "${APPLICATION_NAME}"
     type: ClusterIP
     sessionAffinity: None
 - apiVersion: v1
   kind: Service
   metadata:
-    name: jboss-eap-test-ping
+    name: "${APPLICATION_NAME}-ping"
     labels:
-      app: jboss-eap-test
+      app: "${APPLICATION_NAME}"
     annotations:
       service.alpha.kubernetes.io/tolerate-unready-endpoints: true
       description: "The JGroups ping port for clustering"
@@ -192,22 +218,27 @@ objects:
         port: 8888
         targetPort: 8888
     selector:
-      app: jboss-eap-test
+      app: "${APPLICATION_NAME}"
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
-    name: jboss-eap-test
+    name: "${APPLICATION_NAME}"
     labels:
-      app: jboss-eap-test
+      app: "${APPLICATION_NAME}"
   spec:
     to:
       kind: Service
-      name: jboss-eap-test
+      name: "${APPLICATION_NAME}"
       weight: 100
     port:
       targetPort: 8080-tcp
     wildcardPolicy: None
 parameters:
+- displayName: Application Name
+  description: The name for the application.
+  name: APPLICATION_NAME
+  value: jboss-eap
+  required: true
 - description: Container image to use
   name: IMAGE
   required: true
@@ -222,8 +253,9 @@ parameters:
   required: false
 - description: JGroups cluster password
   name: JGROUPS_CLUSTER_PASSWORD
-  value: "jgrouppassword"
-  required: false
+  from: "[a-zA-Z0-9]{8}"
+  generate: expression
+  required: true
 - description: Auto Deploy exploded
   name: AUTO_DEPLOY_EXPLODED
   value: "false"
@@ -239,4 +271,20 @@ parameters:
 - description: AMQ cluster admin password
   name: MQ_CLUSTER_PASSWORD
   value: "mqpassword"
+  required: false
+- description: SSO Realm
+  name: SSO_REALM
+  value: "ZGVtbw=="
+  required: false
+- description: SSO Secret
+  name: SSO_SECRET
+  value: "cGFzc3dvcmQ="
+  required: false
+- description: SSO URL
+  name: SSO_URL
+  value: "http://localhost/auth"
+  required: false
+- description: SSO Public Key
+  name: SSO_PUBLIC_KEY
+  value: ""
   required: false
