@@ -44,6 +44,8 @@ objects:
     sso-realm: ${SSO_REALM}
     sso-client: "${APPLICATION_NAME}"
     sso-disable-ssl-certificate-validation: 'false'
+    hostname-http: ''
+    hostname-https: ''
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -75,6 +77,16 @@ objects:
           - name: jboss-eap
             image: ${IMAGE}
             env:
+              - name: HOSTNAME_HTTP
+                valueFrom:
+                  configMapKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: hostname-http
+              - name: HOSTNAME_HTTPS
+                valueFrom:
+                  configMapKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: hostname-https
               - name: JGROUPS_PING_PROTOCOL
                 value: "dns.DNS_PING"
               - name: OPENSHIFT_DNS_PING_SERVICE_NAME
