@@ -18,8 +18,8 @@ objects:
     database-password: amJvc3M=
     database-database: amJvc3M=
     sso-public-key: ${SSO_PUBLIC_KEY}
-    sso-username: ''
-    sso-password: ''
+    sso-username: ${SSO_USERNAME}
+    sso-password: ${SSO_PASSWORD}
     sso-secret: ${SSO_SECRET}
 - apiVersion: v1
   kind: ConfigMap
@@ -61,6 +61,13 @@ objects:
           kubernetes.io/change-cause: ${CAUSE}
           gitcommit: ${CAUSE}
       spec:
+        volumes:
+          - name: eap-keystore-volume
+            secret:
+              secretName: "${HTTPS_SECRET}"
+          - name: eap-jgroups-keystore-volume
+            secret:
+              secretName: "${JGROUPS_ENCRYPT_SECRET}"
         containers:
           - name: jboss-eap
             image: ${IMAGE}
@@ -71,16 +78,36 @@ objects:
                 value: "${APPLICATION_NAME}-ping"
               - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                 value: "8888"
-              - name: JGROUPS_CLUSTER_PASSWORD
-                value: "${JGROUPS_CLUSTER_PASSWORD}"
-              - name: AUTO_DEPLOY_EXPLODED
-                value: "${AUTO_DEPLOY_EXPLODED}"
+              - name: HTTPS_KEYSTORE_DIR
+                value: "/etc/eap-secret-volume"
+              - name: HTTPS_KEYSTORE
+                value: "${HTTPS_KEYSTORE}"
+              - name: HTTPS_KEYSTORE_TYPE
+                value: "${HTTPS_KEYSTORE_TYPE}"
+              - name: HTTPS_NAME
+                value: "${HTTPS_NAME}"
+              - name: HTTPS_PASSWORD
+                value: "${HTTPS_PASSWORD}"
+              - name: MQ_CLUSTER_PASSWORD
+                value: "${MQ_CLUSTER_PASSWORD}"
               - name: MQ_QUEUES
                 value: "${MQ_QUEUES}"
               - name: MQ_TOPICS
                 value: "${MQ_TOPICS}"
-              - name: MQ_CLUSTER_PASSWORD
-                value: "${MQ_CLUSTER_PASSWORD}"
+              - name: JGROUPS_ENCRYPT_SECRET
+                value: "${JGROUPS_ENCRYPT_SECRET}"
+              - name: JGROUPS_ENCRYPT_KEYSTORE_DIR
+                value: "/etc/jgroups-encrypt-secret-volume"
+              - name: JGROUPS_ENCRYPT_KEYSTORE
+                value: "${JGROUPS_ENCRYPT_KEYSTORE}"
+              - name: JGROUPS_ENCRYPT_NAME
+                value: "${JGROUPS_ENCRYPT_NAME}"
+              - name: JGROUPS_ENCRYPT_PASSWORD
+                value: "${JGROUPS_ENCRYPT_PASSWORD}"
+              - name: JGROUPS_CLUSTER_PASSWORD
+                value: "${JGROUPS_CLUSTER_PASSWORD}"
+              - name: AUTO_DEPLOY_EXPLODED
+                value: "${AUTO_DEPLOY_EXPLODED}"
               - name: DS1_DATABASE
                 valueFrom:
                   secretKeyRef:
@@ -160,6 +187,8 @@ objects:
             ports:
               - containerPort: 8080
                 protocol: TCP
+              - containerPort: 8443
+                protocol: TCP
               - containerPort: 8778
                 protocol: TCP
               - containerPort: 8888
@@ -174,6 +203,13 @@ objects:
                 cpu: "1000m"
                 memory: "${MEMORY_LIMIT}"
             imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - name: eap-keystore-volume
+                mountPath: "/etc/eap-secret-volume"
+                readOnly: true
+              - name: eap-jgroups-keystore-volume
+                mountPath: "/etc/jgroups-encrypt-secret-volume"
+                readOnly: true
         initContainers:
           - name: "${APPLICATION_NAME}-wait-migration"
             image: ${MIGRATION_IMAGE}
@@ -227,6 +263,22 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
+    name: "secure-${APPLICATION_NAME}"
+    labels:
+      app: "${APPLICATION_NAME}"
+  spec:
+    ports:
+      - name: 8443-tcp
+        protocol: TCP
+        port: 8443
+        targetPort: 8443
+    selector:
+      app: "${APPLICATION_NAME}"
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: v1
+  kind: Service
+  metadata:
     name: "${APPLICATION_NAME}-ping"
     labels:
       app: "${APPLICATION_NAME}"
@@ -257,31 +309,35 @@ objects:
     port:
       targetPort: 8080-tcp
     wildcardPolicy: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: "secure-${APPLICATION_NAME}"
+    labels:
+      app: "${APPLICATION_NAME}"
+  spec:
+    to:
+      kind: Service
+      name: "secure-${APPLICATION_NAME}"
+    port:
+      targetPort: 8443-tcp
+    tls:
+      termination: passthrough
+    wildcardPolicy: None
 parameters:
 - displayName: Application Name
   description: The name for the application.
   name: APPLICATION_NAME
   value: jboss-eap
   required: true
-- description: Container image to use
-  name: IMAGE
-  required: true
-- description: Container image to use for migration
-  name: MIGRATION_IMAGE
-  required: true
-- description: Description of this deployment
-  name: CAUSE
-- description: Memory Limit
-  name: MEMORY_LIMIT
-  value: "1Gi"
+- displayName: Custom https Route Hostname
+  description: Custom https Route Hostname
+  name: HOSTNAME_HTTPS
+  value: ""
   required: false
-- description: JGroups cluster password
-  name: JGROUPS_CLUSTER_PASSWORD
-  from: "[a-zA-Z0-9]{8}"
-  generate: expression
-  required: true
-- description: Auto Deploy exploded
-  name: AUTO_DEPLOY_EXPLODED
+- displayName: Enable ExampleDS datasource
+  description: Enable ExampleDS datasource
+  name: ENABLE_GENERATE_DEFAULT_DATASOURCE
   value: "false"
   required: false
 - description: Queue names, separated by commas. These queues will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all queues used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.
@@ -292,23 +348,97 @@ parameters:
   name: MQ_TOPICS
   value: ""
   required: false
+- displayName: Server Keystore Secret Name
+  description: The name of the secret containing the keystore file
+  name: HTTPS_SECRET
+  value: eap7-app-secret
+  required: true
+- displayName: Server Keystore Filename
+  description: The name of the keystore file within the secret
+  name: HTTPS_KEYSTORE
+  value: keystore.jks
+  required: false
+- displayName: Server Keystore Type
+  description: The type of the keystore file (JKS or JCEKS)
+  name: HTTPS_KEYSTORE_TYPE
+  value: ''
+  required: false
+- displayName: Server Certificate Name
+  description: The name associated with the server certificate
+  name: HTTPS_NAME
+  value: ''
+  required: false
+- displayName: Server Keystore Password
+  description: The password for the keystore and certificate
+  name: HTTPS_PASSWORD
+  value: ''
+  required: false
 - description: AMQ cluster admin password
   name: MQ_CLUSTER_PASSWORD
   value: "mqpassword"
   required: false
-- description: SSO Realm
-  name: SSO_REALM
-  value: "ZGVtbw=="
+- description: The name of the secret containing the keystore file
+  displayName: JGroups Secret Name
+  name: JGROUPS_ENCRYPT_SECRET
+  value: "eap7-app-secret"
   required: false
-- description: SSO Secret
-  name: SSO_SECRET
-  value: "cGFzc3dvcmQ="
+- description: The name of the keystore file within the secret
+  displayName: JGroups Keystore Filename
+  name: JGROUPS_ENCRYPT_KEYSTORE
+  value: "jgroups.jceks"
+  required: false
+- description: The name associated with the server certificate
+  displayName: JGroups Certificate Name
+  name: JGROUPS_ENCRYPT_NAME
+  value: ""
+  required: false
+- description: The password for the keystore and certificate
+  displayName: JGroups Keystore Password
+  name: JGROUPS_ENCRYPT_PASSWORD
+  value: ""
+  required: false
+- description: JGroups cluster password
+  name: JGROUPS_CLUSTER_PASSWORD
+  from: "[a-zA-Z0-9]{8}"
+  generate: expression
+  required: true
+- description: Auto Deploy exploded
+  name: AUTO_DEPLOY_EXPLODED
+  value: "false"
+  required: false
+- description: Memory Limit
+  name: MEMORY_LIMIT
+  value: "1Gi"
   required: false
 - description: SSO URL
   name: SSO_URL
   value: "http://localhost/auth"
   required: false
+- description: SSO Realm
+  name: SSO_REALM
+  value: "ZGVtbw=="
+  required: false
 - description: SSO Public Key
   name: SSO_PUBLIC_KEY
   value: ""
   required: false
+- description: SSO Username
+  name: SSO_USERNAME
+  value: ""
+  required: false
+- description: SSO Password
+  name: SSO_PASSWORD
+  value: ""
+  required: false
+- description: SSO Secret
+  name: SSO_SECRET
+  value: "cGFzc3dvcmQ="
+  required: false
+- description: Container image to use
+  name: IMAGE
+  required: true
+- description: Container image to use for migration
+  name: MIGRATION_IMAGE
+  required: true
+- description: Description of this deployment
+  name: CAUSE
