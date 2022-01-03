@@ -17,8 +17,10 @@ objects:
     database-username: amJvc3M=
     database-password: amJvc3M=
     database-database: amJvc3M=
-    sso-secret: ${SSO_SECRET}
     sso-public-key: ${SSO_PUBLIC_KEY}
+    sso-username: ''
+    sso-password: ''
+    sso-secret: ${SSO_SECRET}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -38,6 +40,8 @@ objects:
     AB_PROMETHEUS_ENABLE: 'true'
     sso-url: ${SSO_URL}
     sso-realm: ${SSO_REALM}
+    sso-client: "${APPLICATION_NAME}"
+    sso-disable-ssl-certificate-validation: 'false'
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -102,20 +106,40 @@ objects:
                   configMapKeyRef:
                     name: "${APPLICATION_NAME}"
                     key: sso-realm
-              - name: SSO_SECRET
-                valueFrom:
-                  secretKeyRef:
-                    name: "${APPLICATION_NAME}"
-                    key: sso-secret
               - name: SSO_PUBLIC_KEY
                 valueFrom:
                   secretKeyRef:
                     name: "${APPLICATION_NAME}"
                     key: sso-public-key
+              - name: SSO_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-username
+              - name: SSO_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-password
               - name: SSO_BEARER_ONLY
                 value: "false"
+              - name: SSO_CLIENT
+                valueFrom:
+                  configMapKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-client
               - name: SSO_ENABLE_CORS
-                value: "true"
+                value: "false"
+              - name: SSO_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-secret
+              - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+                valueFrom:
+                  configMapKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: sso-disable-ssl-certificate-validation
             envFrom:
             - configMapRef:
                 name: "${APPLICATION_NAME}"
