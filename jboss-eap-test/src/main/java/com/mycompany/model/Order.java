@@ -45,6 +45,7 @@ public class Order implements Serializable {
 	@OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
 	private Set<LineItem> lineItems;
 
+	@Column(name = "username")
 	private String user;
 
 	public Order() {
