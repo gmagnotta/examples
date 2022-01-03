@@ -48,7 +48,11 @@ public class CartServlet extends HttpServlet {
 			}
 			
 			cart.addToCart(item, Integer.valueOf(quantity));
-				
+
+			String nextURL = "/WEB-INF/cart.jsp";
+
+			getServletContext().getRequestDispatcher(nextURL).forward(request,response);
+
 		} else if (request.getParameter("editQuantity") != null) {
 			
 			String id = request.getParameter("itemId");
@@ -70,6 +74,10 @@ public class CartServlet extends HttpServlet {
 			if (cart.getItems().size() == 0) {
 				request.getSession().removeAttribute("cart");
 			}
+
+			String nextURL = "/WEB-INF/cart.jsp";
+
+			getServletContext().getRequestDispatcher(nextURL).forward(request,response);
 			
 		} else if (request.getParameter("emptyCart") != null) {
 
@@ -78,12 +86,6 @@ public class CartServlet extends HttpServlet {
 			request.getSession().invalidate();
 
 			response.sendRedirect(getServletContext().getContextPath().concat(nextURL));
-
-		} else {
-
-			String nextURL = "/WEB-INF/cart.jsp";
-
-			getServletContext().getRequestDispatcher(nextURL).forward(request,response);
 
 		}
 
