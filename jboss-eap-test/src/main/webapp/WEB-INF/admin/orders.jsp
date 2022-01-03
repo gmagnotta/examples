@@ -22,6 +22,7 @@
 			   <th>Amount</th>
 			   <th>Content</th>
 			   <th>Creation Date</th>
+			   <th>User</th>
 			 </tr>
 		   
 		   <c:forEach var="order" items="${orders}">
@@ -35,6 +36,7 @@
 					</ul>
 				</c:forEach>
 				<td>${order.creationDate}</td>
+				<td>${order.user}</td>
 				</td>
 			</tr>
 			</c:forEach>

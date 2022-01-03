@@ -43,8 +43,13 @@
 		    <form action="ordercontroller" method="post">
 	
 				<input type="submit" name="addOrder" value="Place Order" />
-				<input type="submit" name="cancelOrder" value="Cancel Order" />
 			
+			</form>
+
+			<form action="cartcontroller" method="post">
+
+				<input type="submit" name="emptyCart" value="Empty Cart" />
+
 			</form>
 		 
 		 </c:when>

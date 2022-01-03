@@ -45,6 +45,8 @@ public class Order implements Serializable {
 	@OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
 	private Set<LineItem> lineItems;
 
+	private String user;
+
 	public Order() {
 		this.lineItems = new HashSet<>();
 		this.creationDate = new Date();
@@ -81,7 +83,15 @@ public class Order implements Serializable {
 	public void addLineItem(LineItem lineItem) {
 		lineItems.add(lineItem);
 	}
-	
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
 	@Override
     public int hashCode() {
         return java.util.Objects.hashCode(id) ;

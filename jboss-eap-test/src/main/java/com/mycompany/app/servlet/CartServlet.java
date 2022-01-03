@@ -71,12 +71,22 @@ public class CartServlet extends HttpServlet {
 				request.getSession().removeAttribute("cart");
 			}
 			
+		} else if (request.getParameter("emptyCart") != null) {
+
+			String nextURL = "/itemcontroller";
+
+			request.getSession().invalidate();
+
+			response.sendRedirect(getServletContext().getContextPath().concat(nextURL));
+
+		} else {
+
+			String nextURL = "/WEB-INF/cart.jsp";
+
+			getServletContext().getRequestDispatcher(nextURL).forward(request,response);
+
 		}
-		
-		String nextURL = "/WEB-INF/cart.jsp";
-		
-		getServletContext().getRequestDispatcher(nextURL).forward(request,response);
-		
+
 	}
 	
 }

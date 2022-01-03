@@ -12,6 +12,7 @@ CREATE TABLE orders
   id integer NOT NULL,
   amount numeric(19,2) NOT NULL,
   creation_date timestamp without time zone,
+  user character varying(255),
   CONSTRAINT orders_pkey PRIMARY KEY (id)
 );
 
