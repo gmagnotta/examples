@@ -78,7 +78,7 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>Users</web-resource-name>
-      <url-pattern>/cartcontroller</url-pattern>
+      <url-pattern>/ordercontroller</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>user</role-name>
