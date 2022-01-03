@@ -21,6 +21,8 @@ objects:
     sso-username: ${SSO_USERNAME}
     sso-password: ${SSO_PASSWORD}
     sso-secret: ${SSO_SECRET}
+    https-password: ${HTTPS_PASSWORD}
+    jgroups-encrypt-password: ${JGROUPS_ENCRYPT_PASSWORD}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -61,6 +63,7 @@ objects:
           kubernetes.io/change-cause: ${CAUSE}
           gitcommit: ${CAUSE}
       spec:
+        serviceAccountName: default
         volumes:
           - name: eap-keystore-volume
             secret:
@@ -87,7 +90,10 @@ objects:
               - name: HTTPS_NAME
                 value: "${HTTPS_NAME}"
               - name: HTTPS_PASSWORD
-                value: "${HTTPS_PASSWORD}"
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: https-password
               - name: MQ_CLUSTER_PASSWORD
                 value: "${MQ_CLUSTER_PASSWORD}"
               - name: MQ_QUEUES
@@ -103,7 +109,10 @@ objects:
               - name: JGROUPS_ENCRYPT_NAME
                 value: "${JGROUPS_ENCRYPT_NAME}"
               - name: JGROUPS_ENCRYPT_PASSWORD
-                value: "${JGROUPS_ENCRYPT_PASSWORD}"
+                valueFrom:
+                  secretKeyRef:
+                    name: "${APPLICATION_NAME}"
+                    key: jgroups-encrypt-password
               - name: JGROUPS_CLUSTER_PASSWORD
                 value: "${JGROUPS_CLUSTER_PASSWORD}"
               - name: AUTO_DEPLOY_EXPLODED
@@ -330,11 +339,6 @@ parameters:
   name: APPLICATION_NAME
   value: jboss-eap
   required: true
-- displayName: Custom https Route Hostname
-  description: Custom https Route Hostname
-  name: HOSTNAME_HTTPS
-  value: ""
-  required: false
 - displayName: Enable ExampleDS datasource
   description: Enable ExampleDS datasource
   name: ENABLE_GENERATE_DEFAULT_DATASOURCE
@@ -351,27 +355,27 @@ parameters:
 - displayName: Server Keystore Secret Name
   description: The name of the secret containing the keystore file
   name: HTTPS_SECRET
-  value: eap7-app-secret
+  value: eap-ssl-secret
   required: true
 - displayName: Server Keystore Filename
   description: The name of the keystore file within the secret
   name: HTTPS_KEYSTORE
-  value: keystore.jks
+  value: eapkeystore.jks
   required: false
 - displayName: Server Keystore Type
   description: The type of the keystore file (JKS or JCEKS)
   name: HTTPS_KEYSTORE_TYPE
-  value: ''
+  value: 'JKS'
   required: false
 - displayName: Server Certificate Name
   description: The name associated with the server certificate
   name: HTTPS_NAME
-  value: ''
+  value: 'https'
   required: false
 - displayName: Server Keystore Password
   description: The password for the keystore and certificate
   name: HTTPS_PASSWORD
-  value: ''
+  value: 'cGFzc3dvcmQ='
   required: false
 - description: AMQ cluster admin password
   name: MQ_CLUSTER_PASSWORD
@@ -380,22 +384,22 @@ parameters:
 - description: The name of the secret containing the keystore file
   displayName: JGroups Secret Name
   name: JGROUPS_ENCRYPT_SECRET
-  value: "eap7-app-secret"
+  value: "eap-jgroup-secret"
   required: false
 - description: The name of the keystore file within the secret
   displayName: JGroups Keystore Filename
   name: JGROUPS_ENCRYPT_KEYSTORE
-  value: "jgroups.jceks"
+  value: "eapjgroups.jceks"
   required: false
 - description: The name associated with the server certificate
   displayName: JGroups Certificate Name
   name: JGROUPS_ENCRYPT_NAME
-  value: ""
+  value: "jgroups"
   required: false
 - description: The password for the keystore and certificate
   displayName: JGroups Keystore Password
   name: JGROUPS_ENCRYPT_PASSWORD
-  value: ""
+  value: "cGFzc3dvcmQ="
   required: false
 - description: JGroups cluster password
   name: JGROUPS_CLUSTER_PASSWORD
@@ -412,11 +416,11 @@ parameters:
   required: false
 - description: SSO URL
   name: SSO_URL
-  value: "http://localhost/auth"
+  value: "https://secure-sso/auth"
   required: false
 - description: SSO Realm
   name: SSO_REALM
-  value: "ZGVtbw=="
+  value: "demo"
   required: false
 - description: SSO Public Key
   name: SSO_PUBLIC_KEY
