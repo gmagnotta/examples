@@ -154,17 +154,17 @@ objects:
           - name: "${APPLICATION_NAME}-wait-migration"
             image: ${MIGRATION_IMAGE}
             env:
-              - name: JDBC_URL
+              - name: FLYWAY_URL
                 valueFrom:
                   configMapKeyRef:
                     name: "${APPLICATION_NAME}"
                     key: MIGRATION_JDBC
-              - name: USERNAME
+              - name: FLYWAY_USER
                 valueFrom:
                   secretKeyRef:
                     name: "${APPLICATION_NAME}"
                     key: database-username
-              - name: PASSWORD
+              - name: FLYWAY_PASSWORD
                 valueFrom:
                   secretKeyRef:
                     name: "${APPLICATION_NAME}"

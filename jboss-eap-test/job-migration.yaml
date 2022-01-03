@@ -17,18 +17,18 @@ spec:
           env:
             - name: FLYWAY_PARAMS
               value: 'migrate'
-            - name: JDBC_URL
+            - name: FLYWAY_URL
               valueFrom:
                 configMapKeyRef:
-                  name: jboss-eap-test
+                  name: <PUT_HERE_VALUE>
                   key: MIGRATION_JDBC
-            - name: USERNAME
+            - name: FLYWAY_USER
               valueFrom:
                 secretKeyRef:
-                  name: postgresql
-                  key: postgresql-username
-            - name: PASSWORD
+                  name: <PUT_HERE_VALUE>
+                  key: database-username
+            - name: FLYWAY_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgresql
-                  key: postgresql-password
+                  name: <PUT_HERE_VALUE>
+                  key: database-password
