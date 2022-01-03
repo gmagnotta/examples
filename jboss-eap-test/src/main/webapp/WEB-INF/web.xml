@@ -75,6 +75,16 @@
     </auth-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Users</web-resource-name>
+      <url-pattern>/cartcontroller</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>user</role-name>
+    </auth-constraint>
+  </security-constraint>
+
   <login-config>
     <auth-method>KEYCLOAK</auth-method>
     <realm-name>myrealm</realm-name>
@@ -82,6 +92,10 @@
 
   <security-role>
     <role-name>admin</role-name>
+  </security-role>
+
+  <security-role>
+    <role-name>user</role-name>
   </security-role>
 
 </web-app>
