@@ -15,7 +15,6 @@ objects:
     name: "${APPLICATION_NAME}"
   data:
     sso-hostname: "${SSO_HOSTNAME}"
-    sso-realm: "${SSO_REALM}"
     db-jndi: "${DB_JNDI}"
     db-min-pool-size: "${DB_MIN_POOL_SIZE}"
     db-max-pool-size: "${DB_MAX_POOL_SIZE}"
@@ -28,8 +27,8 @@ objects:
     database-username: c3Nv
     database-password: c3Nv
     database-database: c3Nv
-    sso-admin-username: YWRtaW4=
-    sso-admin-password: cmVkaGF0
+    sso-admin-username: ${SSO_ADMIN_USERNAME}
+    sso-admin-password: ${SSO_ADMIN_PASSWORD}
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
@@ -162,15 +161,6 @@ objects:
                   secretKeyRef:
                     name: "${APPLICATION_NAME}"
                     key: sso-admin-password
-              - name: SSO_REALM
-                valueFrom:
-                  configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
-                    key: sso-realm
-              - name: SSO_SERVICE_USERNAME
-                value: "${SSO_SERVICE_USERNAME}"
-              - name: SSO_SERVICE_PASSWORD
-                value: "${SSO_SERVICE_PASSWORD}"
               - name: SSO_TRUSTSTORE
                 value: "${SSO_TRUSTSTORE}"
               - name: SSO_TRUSTSTORE_DIR
@@ -353,17 +343,17 @@ parameters:
 - displayName: Server Certificate Name
   description: The name associated with the server certificate (e.g. jboss)
   name: HTTPS_NAME
-  value: ''
+  value: 'jboss'
   required: false
 - displayName: Server Keystore Password
   description: The password for the keystore and certificate (e.g. mykeystorepass)
   name: HTTPS_PASSWORD
-  value: ''
+  value: 'password'
   required: false
 - displayName: JGroups Secret Name
   description: The name of the secret containing the keystore file
   name: JGROUPS_ENCRYPT_SECRET
-  value: "sso-app-secret"
+  value: sso-app-secret
   required: false
 - displayName: Server Keystore Secret Name
   description: The name of the secret containing the keystore file
@@ -373,17 +363,17 @@ parameters:
 - displayName: JGroups Keystore Filename
   description: The name of the keystore file within the secret
   name: JGROUPS_ENCRYPT_KEYSTORE
-  value: "jgroups.jceks"
+  value: jgroups.jceks
   required: false
 - displayName: JGroups Certificate Name
   description: The name associated with the server certificate (e.g. secret-key)
   name: JGROUPS_ENCRYPT_NAME
-  value: ''
+  value: 'secret-key'
   required: false
 - displayName: JGroups Keystore Password
   description: The password for the keystore and certificate (e.g. password)
   name: JGROUPS_ENCRYPT_PASSWORD
-  value: ''
+  value: 'password'
   required: false
 - displayName: JGroups Cluster Password
   description: JGroups cluster password
@@ -391,31 +381,15 @@ parameters:
   from: "[a-zA-Z0-9]{8}"
   generate: expression
   required: true
-- displayName: RH-SSO Realm
-  description: Realm to be created in the RH-SSO server (e.g. demorealm).
-  name: SSO_REALM
-  value: ''
-  required: false
-- displayName: RH-SSO Service Username
-  description: The username used to access the RH-SSO service. This is used by clients
-    to create the appliction client(s) within the specified RH-SSO realm.
-  name: SSO_SERVICE_USERNAME
-  value: ''
-  required: false
-- displayName: RH-SSO Service Password
-  description: The password for the RH-SSO service user.
-  name: SSO_SERVICE_PASSWORD
-  value: ''
-  required: false
 - displayName: RH-SSO Trust Store
   description: The name of the truststore file within the secret (e.g. truststore.jks)
   name: SSO_TRUSTSTORE
-  value: ''
+  value: 'truststore.jks'
   required: false
 - displayName: RH-SSO Trust Store Password
   description: The password for the truststore and certificate (e.g. mykeystorepass)
   name: SSO_TRUSTSTORE_PASSWORD
-  value: ''
+  value: 'password'
   required: false
 - displayName: Container Memory Limit
   description: Container memory limit.
@@ -426,6 +400,17 @@ parameters:
   description: The name of the secret containing the truststore file (e.g. truststore-secret).
     Used for volume secretName
   name: SSO_TRUSTSTORE_SECRET
-  value: sso-app-secret
+  value: "sso-app-secret"
   required: false
-
+- displayName: RH-SSO Administrator Username
+  description: RH-SSO Server administrator username
+  name: SSO_ADMIN_USERNAME
+  from: "[a-zA-Z0-9]{8}"
+  generate: expression
+  required: true
+- displayName: RH-SSO Administrator Password
+  description: RH-SSO Server administrator password
+  name: SSO_ADMIN_PASSWORD
+  from: "[a-zA-Z0-9]{8}"
+  generate: expression
+  required: true
