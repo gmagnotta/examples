@@ -16,6 +16,10 @@ import com.mycompany.app.service.OrderService;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
+
 public class OrdersServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
@@ -56,8 +60,10 @@ public class OrdersServlet extends HttpServlet {
 			order.setAmount(sum);
 			order.setCreationDate(new Date());
 
-			if (request.getUserPrincipal() != null) {
-				order.setUser(request.getUserPrincipal().getName());
+			KeycloakSecurityContext context = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+			if (context != null) {
+				order.setUser(context.getToken().getPreferredUsername());
+				//order.setUser(request.getUserPrincipal().getName());
 			}
 
 			orderService.createOrder(order);
