@@ -36,9 +36,9 @@ CREATE TABLE line_items
 CREATE SEQUENCE hibernate_sequence
   START 1;
   
-INSERT INTO items(id, description, price) VALUES (0, 'item0', 1.0);
-INSERT INTO items(id, description, price) VALUES (1, 'item1', 2.0);
-INSERT INTO items(id, description, price) VALUES (2, 'item2', 3.0);
-INSERT INTO items(id, description, price) VALUES (3, 'item3', 4.0);
-INSERT INTO items(id, description, price) VALUES (4, 'item4', 5.0);
-INSERT INTO items(id, description, price) VALUES (5, 'item5', 6.0);
+INSERT INTO items(id, description, price) VALUES (0, 'Bacon King', 1.0);
+INSERT INTO items(id, description, price) VALUES (1, 'Whopper', 2.0);
+INSERT INTO items(id, description, price) VALUES (2, 'Hamburger', 3.0);
+INSERT INTO items(id, description, price) VALUES (3, 'Cheeseburger', 4.0);
+INSERT INTO items(id, description, price) VALUES (4, 'Double Cheeseburger', 5.0);
+INSERT INTO items(id, description, price) VALUES (5, 'Double Whopper', 6.0);
