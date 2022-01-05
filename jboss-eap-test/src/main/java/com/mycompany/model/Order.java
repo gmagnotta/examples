@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "orders")
 @XmlRootElement(name="order")
 @NamedQueries({
-		@NamedQuery(name = "getAllOrders", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems ORDER BY o.id DESC"),
+		@NamedQuery(name = "getAllOrders", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems ORDER BY o.id ASC"),
 })
 public class Order implements Serializable {
 	
