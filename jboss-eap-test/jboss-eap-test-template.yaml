@@ -297,7 +297,10 @@ objects:
         securityContext: {}
         schedulerName: default-scheduler
     strategy:
-      type: Recreate
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
     revisionHistoryLimit: 10
     progressDeadlineSeconds: 600
 - apiVersion: v1
