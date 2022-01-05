@@ -200,14 +200,13 @@ objects:
                 - "/bin/bash"
                 - "-c"
                 - "/opt/eap/bin/livenessProbe.sh"
-              initialDelaySeconds: 120
+              initialDelaySeconds: 60
             readinessProbe:
               exec:
                 command:
                 - "/bin/bash"
                 - "-c"
                 - "/opt/eap/bin/readinessProbe.sh"
-              initialDelaySeconds: 120
         restartPolicy: Always
         terminationGracePeriodSeconds: 75
         dnsPolicy: ClusterFirst
