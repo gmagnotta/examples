@@ -33,7 +33,7 @@ objects:
     enable-generate-default-datasource: ${ENABLE_GENERATE_DEFAULT_DATASOURCE}
     sso-url: ${SSO_URL}
     sso-realm: ${SSO_REALM}
-    sso-client: ${APPLICATION_NAME}
+    sso-client: ${SSO_CLIENT}
     sso-disable-ssl-certificate-validation: ${SSO_DISABLE_SSL_CERTIFICATE_VALIDATION}
     hostname-http: ${HOSTNAME_HTTP}
     hostname-https: ${HOSTNAME_HTTPS}
@@ -113,6 +113,10 @@ parameters:
 - description: Name of the realm to be created in the Red Hat Single Sign-On server if this environment variable is provided
   name: SSO_REALM
   value: demo
+  required: false
+- description: Client name of this application inside the realm
+  name: SSO_CLIENT
+  value: jboss-eap
   required: false
 - description: Disable certificate validation of SSO Server
   name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
