@@ -32,7 +32,7 @@ keytool -import -file sso.crt -alias jboss -keystore keystore.jks -storepass $PA
 # Generate a secure key for the JGroups keystore:
 
 keytool -genseckey \
--alias secret-key \
+-alias jgroups \
 -storepass $PASSWORD \
 -keypass $PASSWORD \
 -storetype JCEKS \
@@ -61,7 +61,7 @@ oc process \
  -p HTTPS_PASSWORD=$PASSWORD \
  -p JGROUPS_ENCRYPT_SECRET="sso-app-secret" \
  -p JGROUPS_ENCRYPT_KEYSTORE="jgroups.jceks" \
- -p JGROUPS_ENCRYPT_NAME="secret-key" \
+ -p JGROUPS_ENCRYPT_NAME="jgroups" \
  -p JGROUPS_ENCRYPT_PASSWORD=$PASSWORD \
  -p SSO_ADMIN_USERNAME=$(echo -n $SSO_ADMIN_USERNAME| base64) \
  -p SSO_ADMIN_PASSWORD=$(echo -n $SSO_ADMIN_PASSWORD| base64) \
