@@ -2,7 +2,7 @@ apiVersion: template.openshift.io/v1
 kind: Template
 labels:
   template: jboss-eap
-  application: "${APPLICATION_NAME}"
+  application: ${APPLICATION_NAME}
 message: This is an OpenShift template to deploy jboss-eap based applications.
 metadata:
   name: jboss-eap
@@ -12,55 +12,54 @@ objects:
 - apiVersion: v1
   kind: Secret
   metadata:
-    name: "${APPLICATION_NAME}"
+    name: ${APPLICATION_NAME}
   data:
-    database-username: amJvc3M=
-    database-password: amJvc3M=
-    database-database: amJvc3M=
+    database-username: ${DATABASE_USERNAME}
+    database-password: ${DATABASE_PASSWORD}
+    database-name: ${DATABASE_NAME}
     sso-public-key: ${SSO_PUBLIC_KEY}
     sso-username: ${SSO_USERNAME}
     sso-password: ${SSO_PASSWORD}
     sso-secret: ${SSO_SECRET}
     https-password: ${HTTPS_PASSWORD}
     jgroups-encrypt-password: ${JGROUPS_ENCRYPT_PASSWORD}
+    jgroups-cluster-password: ${JGROUPS_CLUSTER_PASSWORD}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: "${APPLICATION_NAME}"
+    name: ${APPLICATION_NAME}
   data:
-    ENABLE_GENERATE_DEFAULT_DATASOURCE: 'false'
-    DB_SERVICE_PREFIX_MAPPING: 'ocp-postgresql=DS1'
-    OCP_POSTGRESQL_SERVICE_HOST: 'postgresql'
-    OCP_POSTGRESQL_SERVICE_PORT: '5432'
-    DS1_CONNECTION_CHECKER: 'org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker'
-    DS1_DRIVER: 'postgresql'
-    DS1_EXCEPTION_SORTER: 'org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter'
-    DS1_MAX_POOL_SIZE: '20'
-    DS1_MIN_POOL_SIZE: '20'
-    DS1_NONXA: 'true'
-    MIGRATION_JDBC: 'jdbc:postgresql://postgresql:5432/sample'
-    AB_PROMETHEUS_ENABLE: 'true'
+    enable-generate-default-datasource: ${ENABLE_GENERATE_DEFAULT_DATASOURCE}
     sso-url: ${SSO_URL}
     sso-realm: ${SSO_REALM}
-    sso-client: "${APPLICATION_NAME}"
-    sso-disable-ssl-certificate-validation: 'false'
-    hostname-http: ''
-    hostname-https: ''
+    sso-client: ${APPLICATION_NAME}
+    sso-disable-ssl-certificate-validation: ${SSO_DISABLE_SSL_CERTIFICATE_VALIDATION}
+    hostname-http: ${HOSTNAME_HTTP}
+    hostname-https: ${HOSTNAME_HTTPS}
+    ocp-postgresql-service-host: ${OCP_POSTGRESQL_SERVICE_HOST}
+    ocp-postgresql-service-port: ${OCP_POSTGRESQL_SERVICE_PORT}
+    ds1-connection-checker: ${DS1_CONNECTION_CHECKER}
+    ds1-driver: ${DS1_DRIVER}
+    ds1-exception-sorter: ${DS1_EXCEPTION_SORTER}
+    ds1-max-pool-size: ${DS1_MAX_POOL_SIZE}
+    ds1-min-pool-size: ${DS1_MIN_POOL_SIZE}
+    ds1-nonxa: ${DS1_NONXA}
+    ab-prometheus-enable: ${AB_PROMETHEUS_ENABLE}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: "${APPLICATION_NAME}"
+    name: ${APPLICATION_NAME}
     labels:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: "${APPLICATION_NAME}"
+        app: ${APPLICATION_NAME}
     template:
       metadata:
         labels:
-          app: "${APPLICATION_NAME}"
+          app: ${APPLICATION_NAME}
         annotations:
           kubernetes.io/change-cause: ${CAUSE}
           gitcommit: ${CAUSE}
@@ -69,10 +68,10 @@ objects:
         volumes:
           - name: eap-keystore-volume
             secret:
-              secretName: "${HTTPS_SECRET}"
+              secretName: ${HTTPS_SECRET}
           - name: eap-jgroups-keystore-volume
             secret:
-              secretName: "${JGROUPS_ENCRYPT_SECRET}"
+              secretName: ${JGROUPS_ENCRYPT_SECRET}
         containers:
           - name: jboss-eap
             image: ${IMAGE}
@@ -80,117 +79,169 @@ objects:
               - name: HOSTNAME_HTTP
                 valueFrom:
                   configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: hostname-http
               - name: HOSTNAME_HTTPS
                 valueFrom:
                   configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: hostname-https
               - name: JGROUPS_PING_PROTOCOL
-                value: "dns.DNS_PING"
+                value: dns.DNS_PING
               - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-                value: "${APPLICATION_NAME}-ping"
+                value: ${APPLICATION_NAME}-ping
               - name: OPENSHIFT_DNS_PING_SERVICE_PORT
                 value: "8888"
               - name: HTTPS_KEYSTORE_DIR
-                value: "/etc/eap-secret-volume"
+                value: /etc/eap-secret-volume
               - name: HTTPS_KEYSTORE
-                value: "${HTTPS_KEYSTORE}"
+                value: ${HTTPS_KEYSTORE}
               - name: HTTPS_KEYSTORE_TYPE
-                value: "${HTTPS_KEYSTORE_TYPE}"
+                value: ${HTTPS_KEYSTORE_TYPE}
               - name: HTTPS_NAME
-                value: "${HTTPS_NAME}"
+                value: ${HTTPS_NAME}
               - name: HTTPS_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: https-password
               - name: MQ_CLUSTER_PASSWORD
-                value: "${MQ_CLUSTER_PASSWORD}"
+                value: ${MQ_CLUSTER_PASSWORD}
               - name: MQ_QUEUES
-                value: "${MQ_QUEUES}"
+                value: ${MQ_QUEUES}
               - name: MQ_TOPICS
-                value: "${MQ_TOPICS}"
+                value: ${MQ_TOPICS}
               - name: JGROUPS_ENCRYPT_SECRET
-                value: "${JGROUPS_ENCRYPT_SECRET}"
+                value: ${JGROUPS_ENCRYPT_SECRET}
               - name: JGROUPS_ENCRYPT_KEYSTORE_DIR
-                value: "/etc/jgroups-encrypt-secret-volume"
+                value: /etc/jgroups-encrypt-secret-volume
               - name: JGROUPS_ENCRYPT_KEYSTORE
-                value: "${JGROUPS_ENCRYPT_KEYSTORE}"
+                value: ${JGROUPS_ENCRYPT_KEYSTORE}
               - name: JGROUPS_ENCRYPT_NAME
-                value: "${JGROUPS_ENCRYPT_NAME}"
+                value: ${JGROUPS_ENCRYPT_NAME}
               - name: JGROUPS_ENCRYPT_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: jgroups-encrypt-password
               - name: JGROUPS_CLUSTER_PASSWORD
-                value: "${JGROUPS_CLUSTER_PASSWORD}"
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: jgroups-cluster-password
               - name: AUTO_DEPLOY_EXPLODED
-                value: "${AUTO_DEPLOY_EXPLODED}"
+                value: ${AUTO_DEPLOY_EXPLODED}
               - name: DS1_DATABASE
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
-                    key: database-database
+                    name: ${APPLICATION_NAME}
+                    key: database-name
               - name: DS1_USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: database-username
               - name: DS1_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: database-password
               - name: SSO_URL
                 valueFrom:
                   configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-url
               - name: SSO_REALM
                 valueFrom:
                   configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-realm
               - name: SSO_PUBLIC_KEY
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-public-key
               - name: SSO_USERNAME
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-username
               - name: SSO_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-password
               - name: SSO_BEARER_ONLY
                 value: "false"
               - name: SSO_CLIENT
                 valueFrom:
                   configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-client
               - name: SSO_ENABLE_CORS
                 value: "false"
               - name: SSO_SECRET
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-secret
               - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
                 valueFrom:
                   configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: sso-disable-ssl-certificate-validation
-            envFrom:
-            - configMapRef:
-                name: "${APPLICATION_NAME}"
+              - name: ENABLE_GENERATE_DEFAULT_DATASOURCE
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: enable-generate-default-datasource
+              - name: DB_SERVICE_PREFIX_MAPPING
+                value: ocp-postgresql=DS1
+              - name: OCP_POSTGRESQL_SERVICE_HOST
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ocp-postgresql-service-host
+              - name: OCP_POSTGRESQL_SERVICE_PORT
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ocp-postgresql-service-port
+              - name: DS1_CONNECTION_CHECKER
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ds1-connection-checker
+              - name: DS1_DRIVER
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ds1-driver
+              - name: DS1_EXCEPTION_SORTER
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ds1-exception-sorter
+              - name: DS1_MAX_POOL_SIZE
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ds1-max-pool-size
+              - name: DS1_MIN_POOL_SIZE
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ds1-min-pool-size
+              - name: DS1_NONXA
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ds1-nonxa
+              - name: AB_PROMETHEUS_ENABLE
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ab-prometheus-enable
             livenessProbe:
               exec:
                 command:
@@ -222,34 +273,46 @@ objects:
                 memory: "128Mi"
               limits:
                 cpu: "1000m"
-                memory: "${MEMORY_LIMIT}"
+                memory: ${MEMORY_LIMIT}
             imagePullPolicy: IfNotPresent
             volumeMounts:
               - name: eap-keystore-volume
-                mountPath: "/etc/eap-secret-volume"
+                mountPath: /etc/eap-secret-volume
                 readOnly: true
               - name: eap-jgroups-keystore-volume
-                mountPath: "/etc/jgroups-encrypt-secret-volume"
+                mountPath: /etc/jgroups-encrypt-secret-volume
                 readOnly: true
         initContainers:
-          - name: "${APPLICATION_NAME}-wait-migration"
+          - name: ${APPLICATION_NAME}-wait-migration
             image: ${MIGRATION_IMAGE}
             env:
-              - name: FLYWAY_URL
-                valueFrom:
-                  configMapKeyRef:
-                    name: "${APPLICATION_NAME}"
-                    key: MIGRATION_JDBC
               - name: FLYWAY_USER
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: database-username
               - name: FLYWAY_PASSWORD
                 valueFrom:
                   secretKeyRef:
-                    name: "${APPLICATION_NAME}"
+                    name: ${APPLICATION_NAME}
                     key: database-password
+              - name: DATABASE_NAME
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: database-name
+              - name: DATABASE_HOST
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ocp-postgresql-service-host
+              - name: DATABASE_PORT
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: ocp-postgresql-service-port
+              - name: FLYWAY_URL
+                value: jdbc:postgresql://$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)
               - name: FLYWAY_PARAMS
                 value: 'validate'
         restartPolicy: Always
@@ -264,9 +327,9 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    name: "${APPLICATION_NAME}"
+    name: ${APPLICATION_NAME}
     labels:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
   spec:
     ports:
       - name: 8080-tcp
@@ -278,15 +341,15 @@ objects:
         port: 9799
         targetPort: 9799
     selector:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
     type: ClusterIP
     sessionAffinity: None
 - apiVersion: v1
   kind: Service
   metadata:
-    name: "secure-${APPLICATION_NAME}"
+    name: secure-${APPLICATION_NAME}
     labels:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
   spec:
     ports:
       - name: 8443-tcp
@@ -294,17 +357,17 @@ objects:
         port: 8443
         targetPort: 8443
     selector:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
     type: ClusterIP
     sessionAffinity: None
 - apiVersion: v1
   kind: Service
   metadata:
-    name: "${APPLICATION_NAME}-ping"
+    name: ${APPLICATION_NAME}-ping
     labels:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
     annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: true
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
       description: "The JGroups ping port for clustering"
   spec:
     publishNotReadyAddresses: true
@@ -315,17 +378,17 @@ objects:
         port: 8888
         targetPort: 8888
     selector:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
-    name: "${APPLICATION_NAME}"
+    name: ${APPLICATION_NAME}
     labels:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
   spec:
     to:
       kind: Service
-      name: "${APPLICATION_NAME}"
+      name: ${APPLICATION_NAME}
       weight: 100
     port:
       targetPort: 8080-tcp
@@ -333,13 +396,13 @@ objects:
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
-    name: "secure-${APPLICATION_NAME}"
+    name: secure-${APPLICATION_NAME}
     labels:
-      app: "${APPLICATION_NAME}"
+      app: ${APPLICATION_NAME}
   spec:
     to:
       kind: Service
-      name: "secure-${APPLICATION_NAME}"
+      name: secure-${APPLICATION_NAME}
     port:
       targetPort: 8443-tcp
     tls:
@@ -351,18 +414,18 @@ parameters:
   name: APPLICATION_NAME
   value: jboss-eap
   required: true
-- displayName: Enable ExampleDS datasource
+- displayName: Optional. When included with the value true, the server is provisioned with the default datasource. Otherwise, the default datasource is not included
   description: Enable ExampleDS datasource
   name: ENABLE_GENERATE_DEFAULT_DATASOURCE
-  value: "false"
+  value: 'false'
   required: false
 - description: Queue names, separated by commas. These queues will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all queues used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.
   name: MQ_QUEUES
-  value: ""
+  value: ''
   required: false
 - description: Topic names, separated by commas. These topics will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all topics used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.
   name: MQ_TOPICS
-  value: ""
+  value: ''
   required: false
 - displayName: Server Keystore Secret Name
   description: The name of the secret containing the keystore file
@@ -377,12 +440,12 @@ parameters:
 - displayName: Server Keystore Type
   description: The type of the keystore file (JKS or JCEKS)
   name: HTTPS_KEYSTORE_TYPE
-  value: 'JKS'
+  value: JKS
   required: false
 - displayName: Server Certificate Name
   description: The name associated with the server certificate
   name: HTTPS_NAME
-  value: 'https'
+  value: https
   required: false
 - displayName: Server Keystore Password
   description: The password for the keystore and certificate
@@ -391,64 +454,63 @@ parameters:
   required: false
 - description: AMQ cluster admin password
   name: MQ_CLUSTER_PASSWORD
-  value: "mqpassword"
+  value: mqpassword
   required: false
 - description: The name of the secret containing the keystore file
   displayName: JGroups Secret Name
   name: JGROUPS_ENCRYPT_SECRET
-  value: "eap-jgroup-secret"
+  value: eap-jgroup-secret
   required: false
-- description: The name of the keystore file within the secret
+- description: Name of the keystore file within the secret specified via JGROUPS_ENCRYPT_SECRET variable, when using SYM_ENCRYPT JGroups cluster traffic encryption protocol. If not set, cluster communication is not encrypted and a warning is issued
   displayName: JGroups Keystore Filename
   name: JGROUPS_ENCRYPT_KEYSTORE
-  value: "eapjgroups.jceks"
+  value: eapjgroups.jceks
   required: false
-- description: The name associated with the server certificate
+- description: Name associated with the server’s certificate, when using SYM_ENCRYPT JGroups cluster traffic encryption protocol. If not set, cluster communication is not encrypted and a warning is issued
   displayName: JGroups Certificate Name
   name: JGROUPS_ENCRYPT_NAME
-  value: "jgroups"
+  value: jgroups
   required: false
-- description: The password for the keystore and certificate
+- description: Password used to access the keystore and the certificate, when using SYM_ENCRYPT JGroups cluster traffic encryption protocol. If not set, cluster communication is not encrypted and a warning is issued
   displayName: JGroups Keystore Password
   name: JGROUPS_ENCRYPT_PASSWORD
-  value: "cGFzc3dvcmQ="
+  value: 'cGFzc3dvcmQ='
   required: false
-- description: JGroups cluster password
+- description: Password used to authenticate the node so it is allowed to join the JGroups cluster. Required, when using ASYM_ENCRYPT JGroups cluster traffic encryption protocol. If not set, authentication is disabled, cluster communication is not encrypted and a warning is issued. Optional, when using SYM_ENCRYPT JGroups cluster traffic encryption protocol
   name: JGROUPS_CLUSTER_PASSWORD
-  from: "[a-zA-Z0-9]{8}"
-  generate: expression
-  required: true
-- description: Auto Deploy exploded
+  value: 'cGFzc3dvcmQ='
+  required: false
+- description: Controls whether exploded deployment content should be automatically deployed
   name: AUTO_DEPLOY_EXPLODED
-  value: "false"
+  value: 'false'
   required: false
 - description: Memory Limit
   name: MEMORY_LIMIT
-  value: "1Gi"
+  value: '1Gi'
   required: false
-- description: SSO URL
+- description: Red Hat Single Sign-On server location
   name: SSO_URL
-  value: "https://secure-sso/auth"
+  value: https://secure-sso/auth
   required: false
-- description: SSO Realm
+- description: Name of the realm to be created in the Red Hat Single Sign-On server if this environment variable is provided
   name: SSO_REALM
-  value: "demo"
+  value: demo
   required: false
-- description: SSO Public Key
+- description: Red Hat Single Sign-On public key. Public key is recommended to be passed into the template to avoid man-in-the-middle security attacks
   name: SSO_PUBLIC_KEY
-  value: ""
+  value: ''
   required: false
-- description: SSO Username
+- description: The username used to access the Red Hat Single Sign-On service. This is used to create the application client(s) within the specified Red Hat Single Sign-On realm
   name: SSO_USERNAME
-  value: ""
+  value: ''
   required: false
-- description: SSO Password
+- description: The password for the Red Hat Single Sign-On service user
   name: SSO_PASSWORD
-  value: ""
+  value: ''
   required: false
-- description: SSO Secret
+- description: The Red Hat Single Sign-On client secret for confidential access
   name: SSO_SECRET
-  value: "cGFzc3dvcmQ="
+  value: 'cGFzc3dvcmQ='
   required: false
 - description: Container image to use
   name: IMAGE
@@ -458,3 +520,63 @@ parameters:
   required: true
 - description: Description of this deployment
   name: CAUSE
+- description: Defines the username for the datasource
+  name: DATABASE_USERNAME
+  value: 'amJvc3M='
+  required: false
+- description: Defines the password for the datasource
+  name: DATABASE_PASSWORD
+  value: 'amJvc3M='
+  required: false
+- description: Defines the database name for the datasource
+  name: DATABASE_NAME
+  value: 'amJvc3M='
+  required: false
+- description: Defines the database server’s host name or IP address to be used in the datasource’s connection-url property
+  name: OCP_POSTGRESQL_SERVICE_HOST
+  value: postgresql
+  required: false
+- description: Defines the database server’s port for the datasource
+  name: OCP_POSTGRESQL_SERVICE_PORT
+  value: '5432'
+  required: false
+- description: Specifies a connection checker class that is used to validate connections for the particular database in use
+  name: DS1_CONNECTION_CHECKER
+  value: org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker
+  required: false
+- description: Defines Java database driver for the datasource
+  name: DS1_DRIVER
+  value: postgresql
+  required: false
+- description: Specifies the exception sorter class that is used to properly detect and clean up after fatal database connection exceptions
+  name: DS1_EXCEPTION_SORTER
+  value: org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter
+  required: false
+- description: Defines the maximum pool size option for the datasource
+  name: DS1_MAX_POOL_SIZE
+  value: '20'
+  required: false
+- description: Defines the minimum pool size option for the datasource
+  name: DS1_MIN_POOL_SIZE
+  value: '20'
+  required: false
+- description: Defines the datasource as a non-XA datasource
+  name: DS1_NONXA
+  value: 'true'
+  required: false
+- description: If set to true, this variable activates the jmx-exporter java agent that exposes Prometheus format metrics
+  name: AB_PROMETHEUS_ENABLE
+  value: 'true'
+  required: false
+- description: Disable certificate validation of SSO Server
+  name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+  value: 'false'
+  required: false
+- description: Custom host name for http service route. Leave blank for default host name, e.g. <application-name>.<project>.<default-domain-suffix>
+  name: HOSTNAME_HTTP
+  value: ''
+  required: false
+- description: Custom host name for https service route. Leave blank for default host name, e.g. <application-name>.<project>.<default-domain-suffix>
+  name: HOSTNAME_HTTPS
+  value: ''
+  required: false
