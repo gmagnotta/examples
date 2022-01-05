@@ -1,0 +1,27 @@
+This project has goal to demonstrate how is possible to migrate a legacy monolith JavaEE application in OpenShift with the help of OpenShift Pipelines and adopting DevOps practices.
+
+The application is a simple JakartaEE store application.
+
+It requires:
+- PostgreSQL database
+- Red Hat Single Sign On (Keycloak) to manage user authentication/authorization
+
+The idea is to use Red Hat JBoss EAP OpenShift Container image, inside an OpenShift Pipeline (tekton)
+
+The pipeline will download source code, then will start the compilation phase with S2I and container image creation. Plus, flyway is used to show how is possible to manage database migrations in the process.
+
+----------
+How to try
+
+First you need to deploy PostgreSQL database (see the template in infra-components project) and then create an user and a database to dedicate to this JavaEE application.
+Then you need to deploy Red Hat SSO (see the template in infra-components). The SSO can use the same PostgreSQL instance you deployed before, but make sure to provision a separate user and database.
+After you have a working SSO then create a new Realm for this JavaEE application and then create a new application that identify this JavaEE.
+The client must be of type 'openid-connect' and have 'confidential' access type. You need to take note the public sig key of the realm and the Secret Credential of the client. They will be needed when deployng the configuration for the application.
+
+Then modify the configure.sh script in order to fill it with all the required values and finally execute it.
+
+The script will generate the certificates needed for https and then will create a kubernetes Secret and a Configmap to store application data.
+
+You can import the OpenShift pipeline. Remember to update the configmap with the correct imagepath.
+
+Finally start the pipeline and enjoy the monolith built and started inside OpenShift
