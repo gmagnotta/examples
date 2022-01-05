@@ -3,6 +3,10 @@ set -e
 
 export PASSWORD="password"
 export APPLICATION_NAME="sso"
+export DNAME="CN=secure-sso-project-domain"
+export SSO_ADMIN_USERNAME="admin"
+export SSO_ADMIN_PASSWORD="changeme!"
+export SSO_HOSTNAME="secure-sso-project-domain"
 
 # Create the HTTPS keystore:
 
@@ -11,7 +15,7 @@ openssl req -new -newkey rsa:4096 -x509 -keyout xpaas.key -out xpaas.crt -days 3
 keytool -genkeypair -keyalg RSA -keysize 2048 \
 -storepass $PASSWORD \
 -keypass $PASSWORD \
--dname "CN=secure-sso-..." \
+-dname $DNAME \
 -alias jboss \
 -storetype JKS \
 -keystore keystore.jks
@@ -49,25 +53,20 @@ oc create secret generic sso-app-secret --from-file=keystore.jks --from-file=jgr
 oc secrets link default sso-app-secret
 
 
-# Other OCP
-
-#oc apply -f registry.redhat.io-sa-secret.yaml
-
-#oc secrets link default registry.redhat.io-sa-pull-secret --for=pull
-
+# Deploy template
 oc process \
  -p HTTPS_SECRET="sso-app-secret" \
  -p HTTPS_KEYSTORE="keystore.jks" \
  -p HTTPS_NAME="jboss" \
- -p HTTPS_PASSWORD="password" \
+ -p HTTPS_PASSWORD=$PASSWORD \
  -p JGROUPS_ENCRYPT_SECRET="sso-app-secret" \
  -p JGROUPS_ENCRYPT_KEYSTORE="jgroups.jceks" \
  -p JGROUPS_ENCRYPT_NAME="secret-key" \
- -p JGROUPS_ENCRYPT_PASSWORD="password" \
- -p SSO_ADMIN_USERNAME="base64string" \
- -p SSO_ADMIN_PASSWORD="base64string" \
+ -p JGROUPS_ENCRYPT_PASSWORD=$PASSWORD \
+ -p SSO_ADMIN_USERNAME=$(echo -n $SSO_ADMIN_USERNAME| base64) \
+ -p SSO_ADMIN_PASSWORD=$(echo -n $SSO_ADMIN_PASSWORD| base64) \
  -p SSO_TRUSTSTORE="truststore.jks" \
- -p SSO_TRUSTSTORE_PASSWORD="password" \
+ -p SSO_TRUSTSTORE_PASSWORD=$PASSWORD \
  -p SSO_TRUSTSTORE_SECRET="sso-app-secret" \
- -p SSO_HOSTNAME="secure-sso-..." \
+ -p SSO_HOSTNAME=$SSO_HOSTNAME \
 -f template-sso.yaml | oc apply -f -
