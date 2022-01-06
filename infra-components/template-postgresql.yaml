@@ -118,7 +118,7 @@ objects:
                 - "/bin/sh"
                 - "-i"
                 - "-c"
-                - psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'
+                - psql -h 127.0.0.1 -U $PGUSER -q -d $PGUSER -c 'SELECT 1'
             livenessProbe:
               timeoutSeconds: 10
               initialDelaySeconds: 90
