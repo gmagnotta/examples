@@ -31,6 +31,11 @@
     <servlet-class>com.mycompany.app.servlet.CartServlet</servlet-class>
   </servlet>
 
+  <servlet>
+    <servlet-name>LogoutServlet</servlet-name>
+    <servlet-class>com.mycompany.app.servlet.LogoutServlet</servlet-class>
+  </servlet>
+
 
   <servlet-mapping>
     <servlet-name>ItemServlet</servlet-name>
@@ -61,6 +66,11 @@
   <servlet-mapping>
     <servlet-name>AdminItemsServlet</servlet-name>
     <url-pattern>/admin/itemcontroller</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>LogoutServlet</servlet-name>
+    <url-pattern>/logoutcontroller</url-pattern>
   </servlet-mapping>
 
   <distributable />
