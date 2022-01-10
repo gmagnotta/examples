@@ -3,10 +3,15 @@ set -e
 
 export PASSWORD="password"
 export APPLICATION_NAME="sso"
-export DNAME="CN=secure-sso-project-domain"
+export DNAME="CN=secure-sso-project.domain"
 export SSO_ADMIN_USERNAME="admin"
 export SSO_ADMIN_PASSWORD="changeme!"
-export SSO_HOSTNAME="secure-sso-project-domain"
+export SSO_HOSTNAME="secure-sso-project.domain"
+export DATABASE_USERNAME="sso"
+export DATABASE_PASSWORD="changeme!"
+export DATABASE_NAME="sso"
+export SSO_POSTGRESQL_SERVICE_HOST="postgresql"
+export SSO_POSTGRESQL_SERVICE_PORT="5432"
 
 # Create the HTTPS keystore:
 
@@ -58,7 +63,7 @@ oc process \
  -p HTTPS_SECRET="sso-app-secret" \
  -p HTTPS_KEYSTORE="keystore.jks" \
  -p HTTPS_NAME="jboss" \
- -p HTTPS_PASSWORD=$PASSWORD \
+ -p HTTPS_PASSWORD=$(echo -n $PASSWORD| base64) \
  -p JGROUPS_ENCRYPT_SECRET="sso-app-secret" \
  -p JGROUPS_ENCRYPT_KEYSTORE="jgroups.jceks" \
  -p JGROUPS_ENCRYPT_NAME="jgroups" \
@@ -66,7 +71,12 @@ oc process \
  -p SSO_ADMIN_USERNAME=$(echo -n $SSO_ADMIN_USERNAME| base64) \
  -p SSO_ADMIN_PASSWORD=$(echo -n $SSO_ADMIN_PASSWORD| base64) \
  -p SSO_TRUSTSTORE="truststore.jks" \
- -p SSO_TRUSTSTORE_PASSWORD=$PASSWORD \
+ -p SSO_TRUSTSTORE_PASSWORD=$(echo -n $PASSWORD| base64) \
  -p SSO_TRUSTSTORE_SECRET="sso-app-secret" \
  -p SSO_HOSTNAME=$SSO_HOSTNAME \
+ -p DATABASE_USERNAME=$(echo -n $DATABASE_USERNAME| base64) \
+ -p DATABASE_PASSWORD=$(echo -n $DATABASE_PASSWORD| base64) \
+ -p DATABASE_NAME=$(echo -n $DATABASE_NAME| base64) \
+ -p SSO_POSTGRESQL_SERVICE_HOST=$SSO_POSTGRESQL_SERVICE_HOST \
+ -p SSO_POSTGRESQL_SERVICE_PORT=$SSO_POSTGRESQL_SERVICE_PORT \
 -f template-sso.yaml | oc apply -f -

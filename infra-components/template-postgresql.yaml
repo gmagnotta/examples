@@ -35,20 +35,6 @@ objects:
     postgresql-database: ${POSTGRESQL_DATABASE}
     postgresql-user: ${POSTGRESQL_USER}
     postgresql-password: ${POSTGRESQL_PASSWORD}
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    name: postgresql-10
-  spec:
-    lookupPolicy:
-      local: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: registry.redhat.io/rhel8/postgresql-10
-      name: latest
-      referencePolicy:
-        type: Source
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -73,7 +59,7 @@ objects:
               claimName: ${APPLICATION_NAME}-pvc
         containers:
           - name: postgresql
-            image: postgresql-10:latest
+            image: postgresql-10:10-el8
             ports:
               - containerPort: 5432
                 protocol: TCP

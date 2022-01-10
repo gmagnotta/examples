@@ -19,30 +19,21 @@ objects:
     db-min-pool-size: ${DB_MIN_POOL_SIZE}
     db-max-pool-size: ${DB_MAX_POOL_SIZE}
     db-tx-isolation: ${DB_TX_ISOLATION}
+    sso-postgresql-service-host: ${SSO_POSTGRESQL_SERVICE_HOST}
+    sso-postgresql-service-port: ${SSO_POSTGRESQL_SERVICE_PORT}
 - apiVersion: v1
   kind: Secret
   metadata:
     name: ${APPLICATION_NAME}
   data:
-    database-username: c3Nv
-    database-password: c3Nv
-    database-database: c3Nv
+    database-username: ${DATABASE_USERNAME}
+    database-password: ${DATABASE_PASSWORD}
+    database-name: ${DATABASE_NAME}
     sso-admin-username: ${SSO_ADMIN_USERNAME}
     sso-admin-password: ${SSO_ADMIN_PASSWORD}
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    name: sso75-openshift-rhel8
-  spec:
-    lookupPolicy:
-      local: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: registry.redhat.io/rh-sso-7/sso75-openshift-rhel8:7.5
-      name: latest
-      referencePolicy:
-        type: Source
+    https-password: ${HTTPS_PASSWORD}
+    jgroups-cluster-password: ${JGROUPS_CLUSTER_PASSWORD}
+    sso-truststore-password: ${SSO_TRUSTSTORE_PASSWORD}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -83,9 +74,15 @@ objects:
               - name: DB_SERVICE_PREFIX_MAPPING
                 value: sso-postgresql=DB
               - name: SSO_POSTGRESQL_SERVICE_HOST
-                value: postgresql
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sso-postgresql-service-host
               - name: SSO_POSTGRESQL_SERVICE_PORT
-                value: "5432"
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sso-postgresql-service-port
               - name: DB_JNDI
                 valueFrom:
                   configMapKeyRef:
@@ -105,7 +102,7 @@ objects:
                 valueFrom:
                   secretKeyRef:
                     name: ${APPLICATION_NAME}
-                    key: database-database
+                    key: database-name
               - name: TX_DATABASE_PREFIX_MAPPING
                 value: sso-postgresql=DB
               - name: DB_MIN_POOL_SIZE
@@ -138,7 +135,10 @@ objects:
               - name: HTTPS_NAME
                 value: ${HTTPS_NAME}
               - name: HTTPS_PASSWORD
-                value: ${HTTPS_PASSWORD}
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: https-password
               - name: JGROUPS_ENCRYPT_SECRET
                 value: ${JGROUPS_ENCRYPT_SECRET}
               - name: JGROUPS_ENCRYPT_KEYSTORE_DIR
@@ -150,7 +150,10 @@ objects:
 #              - name: JGROUPS_ENCRYPT_PASSWORD
 #                value: ${JGROUPS_ENCRYPT_PASSWORD}
               - name: JGROUPS_CLUSTER_PASSWORD
-                value: ${JGROUPS_CLUSTER_PASSWORD}
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: jgroups-cluster-password
               - name: SSO_ADMIN_USERNAME
                 valueFrom:
                   secretKeyRef:
@@ -166,7 +169,10 @@ objects:
               - name: SSO_TRUSTSTORE_DIR
                 value: /etc/sso-secret-volume
               - name: SSO_TRUSTSTORE_PASSWORD
-                value: ${SSO_TRUSTSTORE_PASSWORD}
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sso-truststore-password
             ports:
               - name: jolokia
                 containerPort: 8778
@@ -347,7 +353,7 @@ parameters:
 - displayName: Server Keystore Password
   description: The password for the keystore and certificate (e.g. mykeystorepass)
   name: HTTPS_PASSWORD
-  value: password
+  value: 'cGFzc3dvcmQ='
   required: false
 - displayName: JGroups Secret Name
   description: The name of the secret containing the keystore file
@@ -377,8 +383,7 @@ parameters:
 - displayName: JGroups Cluster Password
   description: JGroups cluster password
   name: JGROUPS_CLUSTER_PASSWORD
-  from: "[a-zA-Z0-9]{8}"
-  generate: expression
+  value: 'amdyb3Vwc3Bhc3N3b3Jk'
   required: true
 - displayName: RH-SSO Trust Store
   description: The name of the truststore file within the secret (e.g. truststore.jks)
@@ -388,7 +393,7 @@ parameters:
 - displayName: RH-SSO Trust Store Password
   description: The password for the truststore and certificate (e.g. mykeystorepass)
   name: SSO_TRUSTSTORE_PASSWORD
-  value: password
+  value: 'cGFzc3dvcmQ='
   required: false
 - displayName: Container Memory Limit
   description: Container memory limit.
@@ -404,12 +409,30 @@ parameters:
 - displayName: RH-SSO Administrator Username
   description: RH-SSO Server administrator username
   name: SSO_ADMIN_USERNAME
-  from: "[a-zA-Z0-9]{8}"
-  generate: expression
+  value: 'YWRtaW4='
   required: true
 - displayName: RH-SSO Administrator Password
   description: RH-SSO Server administrator password
   name: SSO_ADMIN_PASSWORD
-  from: "[a-zA-Z0-9]{8}"
-  generate: expression
+  value: 'cmVkaGF0'
   required: true
+- description: Defines the username for the datasource
+  name: DATABASE_USERNAME
+  value: 'c3Nv'
+  required: false
+- description: Defines the password for the datasource
+  name: DATABASE_PASSWORD
+  value: 'c3Nv'
+  required: false
+- description: Defines the database name for the datasource
+  name: DATABASE_NAME
+  value: 'c3Nv'
+  required: false
+- description: Defines the database server’s host name or IP address to be used in the datasource’s connection-url property
+  name: SSO_POSTGRESQL_SERVICE_HOST
+  value: postgresql
+  required: false
+- description: Defines the database server’s port for the datasource
+  name: SSO_POSTGRESQL_SERVICE_PORT
+  value: '5432'
+  required: false

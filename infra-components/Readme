@@ -1,0 +1,5 @@
+This is a collection of OpenShift resources needed used to provision demos contained in the parent project.
+
+In order to access the images available on registry.redhat.io you need to have a valid secret in place.
+
+You can import the imagestreams to have local images.
