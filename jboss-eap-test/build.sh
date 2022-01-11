@@ -2,9 +2,15 @@
 set -e
 
 CUSTOM_INSTALL_DIRECTORIES=extensions
+GALLEON_PROVISION_LAYERS=""
+GALLEON_PROVISION_DEFAULT_FAT_SERVER=true
+
 
 INCREMENTAL=true
+
+#ENVIRONMENTS="CUSTOM_INSTALL_DIRECTORIES,GALLEON_PROVISION_DEFAULT_FAT_SERVER"
 ENVIRONMENTS="CUSTOM_INSTALL_DIRECTORIES"
+
 
 builder=$(buildah from registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8)
 
@@ -60,3 +66,14 @@ fi
 buildah commit $builder myjbosseap
 
 buildah rm $builder
+
+# Build lightweight image
+#runner=$(buildah from registry.redhat.io/jboss-eap-7/eap74-openjdk11-runtime-openshift-rhel8)
+
+#buildah copy --from $builder $runner /s2i-output/server /opt/eap
+
+#buildah run --user 0:0 $runner -- /bin/bash -c 'chown -R jboss:root /opt/eap && chmod -R ug+rwX /opt/eap'
+
+#buildah config --user jboss --cmd /opt/eap/bin/openshift-launch.sh $runner
+
+#buildah commit $runner myjbosseap
