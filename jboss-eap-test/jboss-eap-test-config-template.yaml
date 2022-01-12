@@ -25,6 +25,8 @@ objects:
     jgroups-encrypt-password: ${JGROUPS_ENCRYPT_PASSWORD}
     jgroups-cluster-password: ${JGROUPS_CLUSTER_PASSWORD}
     mq-cluster-password: ${MQ_CLUSTER_PASSWORD}
+    mq-username: ${MQ_USERNAME}
+    mq-password: ${MQ_PASSWORD}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -49,6 +51,10 @@ objects:
     auto-deploy-exploded: ${AUTO_DEPLOY_EXPLODED}
     mq-queues: ${MQ_QUEUES}
     mq-topics: ${MQ_TOPICS}
+    mq-jndi: ${MQ_JNDI}
+    mq-serializable-packages: ${MQ_SERIALIZABLE_PACKAGES}
+    amq-service-host: ${AMQ_SERVICE_HOST}
+    amq-service-port: ${AMQ_SERVICE_PORT}
 parameters:
 - displayName: Application Name
   description: The name for the application.
@@ -177,4 +183,32 @@ parameters:
 - description: Topic names, separated by commas. These topics will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all topics used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.
   name: MQ_TOPICS
   value: ''
+  required: false
+- description: "JNDI name for connection factory used by applications to connect to the broker, e.g. java:jboss/DefaultJMSConnectionFactory"
+  displayName: JMS Connection Factory JNDI Name
+  name: MQ_JNDI
+  value: 'java:jboss/DefaultJMSConnectionFactory'
+  required: false
+- displayName: AMQ Username
+  description: "User name for standard broker user. It is required for connecting to the broker. If left empty, it will be generated."
+  name: MQ_USERNAME
+  value: 'dXNlcg=='
+  required: true
+- displayName: AMQ Password
+  description: "Password for standard broker user. It is required for connecting to the broker. If left empty, it will be generated."
+  name: MQ_PASSWORD
+  value: 'cGFzc3dvcmQ='
+  required: true
+- displayName: AMQ Serializable Packages
+  description: List of packages that are allowed to be serialized for use in ObjectMessage, separated by commas. If your app doesn't use ObjectMessages, leave this blank. This is a security enforcement. For the rationale, see http://activemq.apache.org/objectmessage.html"
+  name: MQ_SERIALIZABLE_PACKAGES
+  value: ''
+  required: false
+- description: Defines the amq broker server’s host name or IP address to be used
+  name: AMQ_SERVICE_HOST
+  value: amqbroker
+  required: false
+- description: Defines the amq broker server’s port
+  name: AMQ_SERVICE_PORT
+  value: '61616'
   required: false

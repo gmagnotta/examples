@@ -218,6 +218,40 @@ objects:
                   configMapKeyRef:
                     name: ${APPLICATION_NAME}
                     key: ab-prometheus-enable
+              - name: MQ_SERVICE_PREFIX_MAPPING
+                value: "${APPLICATION_NAME}-amq7=MQ"
+              - name: MQ_JNDI
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: mq-jndi
+              - name: MQ_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: mq-username
+              - name: MQ_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: mq-password
+              - name: MQ_PROTOCOL
+                value: "tcp"
+              - name: MQ_SERIALIZABLE_PACKAGES
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: mq-serializable-packages
+              - name: JBOSS_EAP_AMQ_TCP_SERVICE_HOST
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: mq-service-host
+              - name: JBOSS_EAP_AMQ_TCP_SERVICE_PORT
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: mq-service-port
             livenessProbe:
               exec:
                 command:
