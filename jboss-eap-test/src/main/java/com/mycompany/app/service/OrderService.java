@@ -7,6 +7,8 @@ import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
+import javax.jms.JMSDestinationDefinition;
+import javax.jms.JMSDestinationDefinitions;
 import javax.jms.Queue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -21,6 +23,16 @@ import javax.ws.rs.core.MediaType;
 
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
+
+@JMSDestinationDefinitions(
+    value = {
+        @JMSDestinationDefinition(
+            name = "java:/queue/HELLOWORLDMDBQueue",
+            interfaceName = "javax.jms.Queue",
+            destinationName = "HelloWorldMDBQueue"
+        ),
+    }
+)
 
 /**
  * Hello world!
