@@ -3,7 +3,11 @@ package com.mycompany.app.service;
 
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.jms.JMSContext;
+import javax.jms.Queue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -30,6 +34,12 @@ public class OrderService
 {
     @PersistenceContext(unitName = "store")
 	private EntityManager entityManager;
+
+    @Inject
+    private JMSContext context;
+
+    @Resource(lookup = "java:/queue/HelloWorldMDBQueue")
+    private Queue queue;
     
     @GET
     public List<Order> getOrders() {
@@ -49,6 +59,9 @@ public class OrderService
     		entityManager.persist(i);
     		
     	}
+
+        String text = "Created order " + order.getId();
+        context.createProducer().send(queue, text);
     	
     }
     
