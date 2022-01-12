@@ -56,9 +56,6 @@ public class OrderService
     @GET
     public List<Order> getOrders() {
 
-        String text = "Hello world!";
-        context.createProducer().send(queue, text);
-
     	Query query = entityManager.createNamedQuery("getAllOrders", Order.class);
     	
     	return query.getResultList();
@@ -75,6 +72,13 @@ public class OrderService
     		
     	}
     	
+    }
+
+    public void notifyOrder(Order order) {
+
+        String text = "Order created with id: " + order.getId();
+        context.createProducer().send(queue, text);
+
     }
     
 }
