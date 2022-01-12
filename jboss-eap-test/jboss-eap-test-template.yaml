@@ -246,12 +246,12 @@ objects:
                 valueFrom:
                   configMapKeyRef:
                     name: ${APPLICATION_NAME}
-                    key: mq-service-host
+                    key: amq-service-host
               - name: JBOSS_EAP_AMQ_TCP_SERVICE_PORT
                 valueFrom:
                   configMapKeyRef:
                     name: ${APPLICATION_NAME}
-                    key: mq-service-port
+                    key: amq-service-port
             livenessProbe:
               exec:
                 command:
