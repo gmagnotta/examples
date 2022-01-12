@@ -50,7 +50,7 @@ public class OrderService
     @Inject
     private JMSContext context;
 
-    @Resource(lookup = "java:/queue/HelloWorldMDBQueue")
+    @Resource(lookup = "java:/queue/HELLOWORLDMDBQueue")
     private Queue queue;
     
     @GET
