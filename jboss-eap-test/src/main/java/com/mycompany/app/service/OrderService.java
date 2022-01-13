@@ -49,7 +49,6 @@ public class OrderService
 	private EntityManager entityManager;
 
     @Inject
-    //@JMSConnectionFactory("java:jboss/DefaultJMSConnectionFactory")
     private JMSContext context;
 
     @Resource(lookup = "java:/queue/HELLOWORLDMDBQueue")
@@ -73,14 +72,15 @@ public class OrderService
     		entityManager.persist(i);
     		
     	}
-    	
+
+        Destination destination = queue;
+        String text = "Order created with id " + order.getId();
+        context.createProducer().send(destination, text);
     }
 
     @Transactional
-    public void notifyOrder() {
-        Destination destination = queue;
-        String text = "Order created with!";
-        context.createProducer().send(destination, text);
+    public void notifyOrder(Order order) {
+
 
     }
     
