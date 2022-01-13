@@ -69,11 +69,6 @@ objects:
                   secretKeyRef:
                     name: ${APPLICATION_NAME}
                     key: https-password
-              - name: MQ_CLUSTER_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: ${APPLICATION_NAME}
-                    key: mq-cluster-password
               - name: MQ_QUEUES
                 valueFrom:
                   configMapKeyRef:

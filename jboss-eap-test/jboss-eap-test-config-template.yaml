@@ -24,7 +24,6 @@ objects:
     https-password: ${HTTPS_PASSWORD}
     jgroups-encrypt-password: ${JGROUPS_ENCRYPT_PASSWORD}
     jgroups-cluster-password: ${JGROUPS_CLUSTER_PASSWORD}
-    mq-cluster-password: ${MQ_CLUSTER_PASSWORD}
     mq-username: ${MQ_USERNAME}
     mq-password: ${MQ_PASSWORD}
 - apiVersion: v1
@@ -102,10 +101,6 @@ parameters:
 - description: Password used to authenticate the node so it is allowed to join the JGroups cluster. Required, when using ASYM_ENCRYPT JGroups cluster traffic encryption protocol. If not set, authentication is disabled, cluster communication is not encrypted and a warning is issued. Optional, when using SYM_ENCRYPT JGroups cluster traffic encryption protocol
   name: JGROUPS_CLUSTER_PASSWORD
   value: 'cGFzc3dvcmQ='
-  required: false
-- description: AMQ cluster admin password
-  name: MQ_CLUSTER_PASSWORD
-  value: 'bXFwYXNzd29yZA=='
   required: false
 - displayName: Optional. When included with the value true, the server is provisioned with the default datasource. Otherwise, the default datasource is not included
   description: Enable ExampleDS datasource
