@@ -63,10 +63,13 @@ public class OrdersServlet extends HttpServlet {
 			KeycloakSecurityContext context = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
 			if (context != null) {
 				order.setUser(context.getToken().getPreferredUsername());
+				//httpGet.addHeader("Authorization", "Bearer " + context.getTokenString());
 				//order.setUser(request.getUserPrincipal().getName());
 			}
 
 			orderService.createOrder(order);
+
+			orderService.notifyOrder(order);
 
 			request.getSession().invalidate();
 
