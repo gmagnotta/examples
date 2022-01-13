@@ -74,7 +74,6 @@ public class OrderService
     	
     }
 
-    @Transactional
     public void notifyOrder(Order order) {
 
         String text = "Order created with id: " + order.getId();
