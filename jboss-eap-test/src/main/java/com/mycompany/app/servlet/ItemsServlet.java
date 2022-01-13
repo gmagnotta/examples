@@ -31,6 +31,8 @@ public class ItemsServlet extends HttpServlet {
 		}
 		
 		request.setAttribute("items", items);
+
+		response.setHeader("cache-control", "no-cache");
 		
 		String nextURL = "/WEB-INF/items.jsp";
 		
