@@ -3,6 +3,8 @@ package com.mycompany.app.service;
 
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -22,12 +24,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
 import org.gmagnotta.jaxb.Lineitemtype;
 import org.gmagnotta.jaxb.ObjectFactory;
+import org.gmagnotta.jaxb.OrderCommandRequest;
+import org.gmagnotta.jaxb.OrderCommandRequestEnum;
 import org.gmagnotta.jaxb.Ordertype;
 
 /**
@@ -68,26 +74,37 @@ public class OrderService
     		
     	}
 
-        JAXBContext jaxbContext = JAXBContext.newInstance(Ordertype.class);
+        JAXBContext jaxbContext = JAXBContext.newInstance(OrderCommandRequest.class);
         Marshaller mar = jaxbContext.createMarshaller();
 
-        Ordertype ordertype = new Ordertype();
-        ordertype.setOrderid(order.getId() + "");
+        org.gmagnotta.jaxb.Order jaxbOrder = new org.gmagnotta.jaxb.Order();
+        
+        GregorianCalendar c = new GregorianCalendar();
+        c.setTime(new Date());
+        XMLGregorianCalendar date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+        jaxbOrder.setCreationDate(date2);
+        jaxbOrder.setExternalOrderId(order.getId() + "");
 
         for (LineItem i : order.getLineItems()) {
         
-            Lineitemtype lineItemtype = new Lineitemtype();
-            lineItemtype.setItemid(String.valueOf(i.getItem().getId()));
-            lineItemtype.setNote("none");
-            lineItemtype.setQuantity(BigInteger.valueOf(i.getQuantity()));
+            org.gmagnotta.jaxb.Item item = new org.gmagnotta.jaxb.Item();
+			item.setId(Integer.valueOf(i.getItem().getId()));
+            
+            org.gmagnotta.jaxb.LineItem jaxbLineItem = new org.gmagnotta.jaxb.LineItem();
+            jaxbLineItem.setItem(item);
+            jaxbLineItem.setQuantity(i.getQuantity());
 
-            ordertype.getLineitem().add(lineItemtype);
+            jaxbOrder.getLineItem().add(jaxbLineItem);
         
         }
 
+        OrderCommandRequest request = new OrderCommandRequest();
+        request.setOrder(jaxbOrder);
+        request.setOrderCommandEnum(OrderCommandRequestEnum.ORDER_RECEIVED);
+
         mar.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         StringWriter sw = new StringWriter();
-        mar.marshal(new ObjectFactory().createOrder(ordertype), sw);
+        mar.marshal(new ObjectFactory().createOrderCommandRequest(request), sw);
 
         Destination destination = queue;
         //String text = "Order created with id " + order.getId();
