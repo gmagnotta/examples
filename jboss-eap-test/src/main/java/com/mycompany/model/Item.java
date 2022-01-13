@@ -16,7 +16,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "items")
 @XmlRootElement(name="oggetto")
 @NamedQueries({
-@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.id"),
+//@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.id"),
+@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.price DESC"),
 @NamedQuery(name = "getItemsByDescription", query = "SELECT i FROM Item i where lower(i.description) LIKE lower(concat('%', :desc, '%')) ORDER BY i.id")
 })
 public class Item implements Serializable{
