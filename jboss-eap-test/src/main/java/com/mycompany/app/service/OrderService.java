@@ -1,6 +1,8 @@
 package com.mycompany.app.service;
 
 
+import java.io.StringWriter;
+import java.math.BigInteger;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -18,9 +20,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
 
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
+
+import org.gmagnotta.jaxb.Lineitemtype;
+import org.gmagnotta.jaxb.ObjectFactory;
+import org.gmagnotta.jaxb.Ordertype;
 
 /**
  * Hello world!
@@ -50,7 +58,7 @@ public class OrderService
     }
     
     @Transactional
-    public void createOrder(Order order) {
+    public void createOrder(Order order) throws Exception {
     	
     	entityManager.persist(order);
     	
@@ -60,15 +68,30 @@ public class OrderService
     		
     	}
 
+        JAXBContext jaxbContext = JAXBContext.newInstance(Ordertype.class);
+        Marshaller mar = jaxbContext.createMarshaller();
+
+        Ordertype ordertype = new Ordertype();
+        ordertype.setOrderid(order.getId() + "");
+
+        for (LineItem i : order.getLineItems()) {
+        
+            Lineitemtype lineItemtype = new Lineitemtype();
+            lineItemtype.setItemid(String.valueOf(i.getItem().getId()));
+            lineItemtype.setNote("none");
+            lineItemtype.setQuantity(BigInteger.valueOf(i.getQuantity()));
+
+            ordertype.getLineitem().add(lineItemtype);
+        
+        }
+
+        mar.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        StringWriter sw = new StringWriter();
+        mar.marshal(new ObjectFactory().createOrder(ordertype), sw);
+
         Destination destination = queue;
-        String text = "Order created with id " + order.getId();
-        context.createProducer().send(destination, text);
-    }
-
-    @Transactional
-    public void notifyOrder(Order order) {
-
-
+        //String text = "Order created with id " + order.getId();
+        context.createProducer().send(destination, sw.toString());
     }
     
 }

@@ -67,9 +67,11 @@ public class OrdersServlet extends HttpServlet {
 				//order.setUser(request.getUserPrincipal().getName());
 			}
 
-			orderService.createOrder(order);
-
-			//orderService.notifyOrder();
+			try {
+				orderService.createOrder(order);
+			} catch (Exception ex) {
+				throw new ServletException("exception", ex);
+			}
 
 			request.getSession().invalidate();
 
