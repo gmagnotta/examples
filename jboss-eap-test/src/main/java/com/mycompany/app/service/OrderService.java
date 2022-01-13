@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.jms.Destination;
 import javax.jms.JMSConnectionFactory;
 import javax.jms.JMSContext;
 import javax.jms.JMSDestinationDefinition;
@@ -18,7 +19,6 @@ import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -49,7 +49,7 @@ public class OrderService
 	private EntityManager entityManager;
 
     @Inject
-    @JMSConnectionFactory("java:jboss/DefaultJMSConnectionFactory")
+    //@JMSConnectionFactory("java:jboss/DefaultJMSConnectionFactory")
     private JMSContext context;
 
     @Resource(lookup = "java:/queue/HELLOWORLDMDBQueue")
@@ -78,9 +78,9 @@ public class OrderService
 
     @Transactional
     public void notifyOrder() {
-
+        Destination destination = queue;
         String text = "Order created with!";
-        context.createProducer().send(queue, text);
+        context.createProducer().send(destination, text);
 
     }
     
