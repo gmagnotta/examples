@@ -69,7 +69,7 @@ public class OrdersServlet extends HttpServlet {
 
 			//orderService.createOrder(order);
 
-			orderService.notifyOrder(order);
+			orderService.notifyOrder();
 
 			request.getSession().invalidate();
 

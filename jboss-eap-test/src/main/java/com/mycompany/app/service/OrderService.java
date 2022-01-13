@@ -76,9 +76,10 @@ public class OrderService
     	
     }
 
-    public void notifyOrder(Order order) {
+    @Transactional
+    public void notifyOrder() {
 
-        String text = "Order created with id: " + order.getId();
+        String text = "Order created with!";
         context.createProducer().send(queue, text);
 
     }
