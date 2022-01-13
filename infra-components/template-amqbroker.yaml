@@ -176,26 +176,14 @@ objects:
     labels:
       app: ${APPLICATION_NAME}
     annotations:
-      description: The broker's Http port.
+      description: The broker's exposed ports.
   spec:
     ports:
-      - port: 8161
+      - name: 8161-tcp
+        port: 8161
         targetPort: 8161
-    selector:
-      app: ${APPLICATION_NAME}
-    type: ClusterIP
-    sessionAffinity: None
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: ${APPLICATION_NAME}-amq-tcp
-    labels:
-      app: ${APPLICATION_NAME}
-    annotations:
-      description: The broker's OpenWire port.
-  spec:
-    ports:
-      - port: 61616
+      - name: 61616-tcp
+        port: 61616
         targetPort: 61616
     selector:
       app: ${APPLICATION_NAME}
@@ -227,6 +215,8 @@ objects:
   spec:
     to:
       name: ${APPLICATION_NAME}
+    port:
+      targetPort: 8161-tcp
 parameters:
 - displayName: Application Name
   description: The name for the application.
