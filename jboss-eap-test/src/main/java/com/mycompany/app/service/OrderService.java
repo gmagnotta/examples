@@ -25,15 +25,15 @@ import javax.ws.rs.core.MediaType;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
-@JMSDestinationDefinitions(
-    value = {
-        @JMSDestinationDefinition(
-            name = "java:/queue/HELLOWORLDMDBQueue",
-            interfaceName = "javax.jms.Queue",
-            destinationName = "HelloWorldMDBQueue"
-        ),
-    }
-)
+// @JMSDestinationDefinitions(
+//     value = {
+//         @JMSDestinationDefinition(
+//             name = "java:/queue/HELLOWORLDMDBQueue",
+//             interfaceName = "javax.jms.Queue",
+//             destinationName = "HelloWorldMDBQueue"
+//         ),
+//     }
+// )
 
 /**
  * Hello world!
