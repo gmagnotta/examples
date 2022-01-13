@@ -29,7 +29,7 @@ public class OrderService
     @Inject
     private JMSContext context;
 
-    @Resource(lookup="java:global/remoteContext/HelloWorldMDBQueue")
+    @Resource(lookup="java:global/remoteContext/orderCommand")
     private Queue queue;
     
     public List<Order> getOrders() {
