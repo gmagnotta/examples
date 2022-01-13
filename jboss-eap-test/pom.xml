@@ -158,5 +158,29 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>xjc</id>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- The package of your generated sources -->
+					<packageName>org.gmagnotta.jaxb</packageName>
+					<sources>
+						<source>src/main/resources/order.xsd</source>
+						<source>src/main/resources/aggregated.xsd</source>
+						<source>src/main/resources/ordercommandrequest.xsd</source>
+						<source>src/main/resources/ordercommandresponse.xsd</source>
+					</sources>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 </project>
