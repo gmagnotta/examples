@@ -7,10 +7,7 @@ import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.jms.Destination;
-import javax.jms.JMSConnectionFactory;
 import javax.jms.JMSContext;
-import javax.jms.JMSDestinationDefinition;
-import javax.jms.JMSDestinationDefinitions;
 import javax.jms.Queue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -25,16 +22,6 @@ import javax.ws.rs.core.MediaType;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
-// @JMSDestinationDefinitions(
-//     value = {
-//         @JMSDestinationDefinition(
-//             name = "java:/queue/HELLOWORLDMDBQueue",
-//             interfaceName = "javax.jms.Queue",
-//             destinationName = "HelloWorldMDBQueue"
-//         ),
-//     }
-// )
-
 /**
  * Hello world!
  *
@@ -43,7 +30,7 @@ import com.mycompany.model.Order;
 @Path("order")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class OrderService 
+public class OrderService
 {
     @PersistenceContext(unitName = "store")
 	private EntityManager entityManager;
@@ -51,7 +38,7 @@ public class OrderService
     @Inject
     private JMSContext context;
 
-    @Resource(name = "java:/HelloWorldMDBQueue")
+    @Resource(lookup="java:global/remoteContext/HelloWorldMDBQueue")
     private Queue queue;
     
     @GET
