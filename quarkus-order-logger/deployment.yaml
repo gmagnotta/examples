@@ -34,6 +34,10 @@ spec:
               value: INFO
             - name: quarkus_log_file_path
               value: /tmp/quarkus.log
+            - name: TELEGRAM_TOKEN
+              value: '12345'
+            - name: TELEGRAM_CHATID
+              value: '12345'
           ports:
             - containerPort: 8080
               protocol: TCP
