@@ -3,9 +3,11 @@ set -e
 
 INCREMENTAL=true
 
-S2I_SOURCE_DEPLOYMENTS_FILTER="\"*-runner.jar lib\""
+MAVEN_S2I_ARTIFACT_DIRS="\"target/quarkus-app\""
+S2I_SOURCE_DEPLOYMENTS_FILTER="\"app lib quarkus quarkus-run.jar\""
 MAVEN_S2I_GOALS="\"package test\""
-ENVIRONMENTS="S2I_SOURCE_DEPLOYMENTS_FILTER,MAVEN_S2I_GOALS"
+JAVA_APP_JAR="\"/deployments/quarkus-run.jar\""
+ENVIRONMENTS="MAVEN_S2I_ARTIFACT_DIRS,S2I_SOURCE_DEPLOYMENTS_FILTER,MAVEN_S2I_GOALS,JAVA_APP_JAR"
 
 builder=$(buildah from registry.access.redhat.com/ubi8/openjdk-11)
 

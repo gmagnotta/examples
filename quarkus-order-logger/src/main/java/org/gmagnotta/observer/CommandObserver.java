@@ -1,8 +1,5 @@
 package org.gmagnotta.observer;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -17,9 +14,8 @@ import javax.jms.Queue;
 import javax.jms.TextMessage;
 import javax.transaction.Transactional;
 
-import org.eclipse.microprofile.opentracing.Traced;
-import org.gmagnotta.jaxb.Item;
-import org.gmagnotta.jaxb.LineItem;
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
 import org.gmagnotta.jaxb.OrderCommandRequest;
 import org.gmagnotta.jaxb.OrderCommandRequestEnum;
 import org.gmagnotta.utils.Utils;
@@ -46,6 +42,9 @@ public class CommandObserver implements MessageListener {
 	JMSConsumer consumer;
 
 	Queue invalidMessageQueue;
+
+	@Produce("direct:telegram")
+    ProducerTemplate producer;
 
 	@PostConstruct
 	void init() {
@@ -82,7 +81,6 @@ public class CommandObserver implements MessageListener {
 
 	@Override
 	@Transactional
-	@Traced
 	public void onMessage(Message message) {
 
 		try {
@@ -108,9 +106,7 @@ public class CommandObserver implements MessageListener {
 
 					org.gmagnotta.jaxb.Order jaxbOrder = orderCommandRequest.getOrder();
 
-					org.gmagnotta.model.Order jpaOrder = convertoToJpaOrder(jaxbOrder);
-
-					logger.info("Received Order: " + jpaOrder.toString());
+					producer.sendBody("Order received " + jaxbOrder.getExternalOrderId() + ", creationDate " + jaxbOrder.getCreationDate());
 
 				}  else {
 
@@ -127,37 +123,6 @@ public class CommandObserver implements MessageListener {
 			logger.error("An exception occurred during message processing", e);
 
 		}
-
-	}
-
-	private org.gmagnotta.model.Order convertoToJpaOrder(org.gmagnotta.jaxb.Order order) {
-
-		long sum = 0;
-
-		org.gmagnotta.model.Order jpaOrder = new org.gmagnotta.model.Order();
-
-		jpaOrder.setCreationDate(order.getCreationDate().toGregorianCalendar().getTime());
-		jpaOrder.setExternalOrderId(order.getExternalOrderId());
-
-		List<LineItem> lineItems = order.getLineItem();
-
-		for (LineItem l : lineItems) {
-
-			org.gmagnotta.model.Item i = new org.gmagnotta.model.Item();
-			i.setId(l.getItem().getId());
-
-			org.gmagnotta.model.LineItem jpaLineItem = new org.gmagnotta.model.LineItem();
-			jpaLineItem.setItem(i);
-			jpaLineItem.setOrder(jpaOrder);
-			jpaLineItem.setQuantity(l.getQuantity());
-			jpaLineItem.setPrice(null);
-
-			jpaOrder.addLineItem(jpaLineItem);
-
-		}
-
-		jpaOrder.setAmount(BigDecimal.valueOf(sum));
-		return jpaOrder;
 
 	}
 
