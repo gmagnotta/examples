@@ -90,7 +90,7 @@ spec:
           value: "dev-image-path"
     - name: build
       taskRef:
-        name: image-from-buildah2
+        name: buildah-s2i
       runAfter:
         - get-dev-path
       workspaces:

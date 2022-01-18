@@ -236,13 +236,13 @@ parameters:
 - displayName: Queues
   description: "Queue names, separated by commas. These queues will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all queues used by the application *must* be specified here in order to be created automatically on the remote AMQ broker."
   name: MQ_QUEUES
-  value: HelloWorldMDBQueue
-  required: true
+  value: ''
+  required: false
 - displayName: Topics
   description: "Topic names, separated by commas. These topics will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all topics used by the application *must* be specified here in order to be created automatically on the remote AMQ broker."
   name: MQ_TOPICS
-  value: HelloWorldMDBTopic
-  required: true
+  value: ''
+  required: false
 - displayName: AMQ Serializable Packages
   description: List of packages that are allowed to be serialized for use in ObjectMessage, separated by commas. If your app doesn't use ObjectMessages, leave this blank. This is a security enforcement. For the rationale, see http://activemq.apache.org/objectmessage.html"
   name: MQ_SERIALIZABLE_PACKAGES

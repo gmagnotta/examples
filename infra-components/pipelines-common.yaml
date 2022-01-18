@@ -260,7 +260,7 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: image-from-buildah2
+  name: buildah-s2i
 spec:
   params:
     - name: BUILDAH_IMAGE
