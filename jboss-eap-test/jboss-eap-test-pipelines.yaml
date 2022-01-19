@@ -163,11 +163,27 @@ spec:
         - name: SCRIPT
           value: |
             oc process -p IMAGE=$(tasks.get-dev-path.results.VALUE)@$(tasks.build.results.IMAGE_DIGEST) -p MIGRATION_IMAGE=$(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f jboss-eap-test-template.yaml | oc apply -f -
+    - name: migrate
+      taskRef:
+        name: openshift-actions
+      runAfter:
+        - build
+        - build-migrate
+      workspaces:
+        - name: source
+          workspace: src
+      params:
+        - name: CONTEXT
+          value: "jboss-eap-test"
+        - name: SCRIPT
+          value: |
+            oc process -p MIGRATION_IMAGE=$(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST) -f jboss-eap-test-migration.yaml | oc apply -f -
     - name: update-built-image
       taskRef:
         name: set-configmap-value
       runAfter:
         - deploy
+        - migrate
       params:
         - name: CONFIGMAP-NAME
           value: "jboss-eap-test-pipelineconfig"
@@ -180,6 +196,7 @@ spec:
         name: set-configmap-value
       runAfter:
         - deploy
+        - migrate
       params:
         - name: CONFIGMAP-NAME
           value: "jboss-eap-test-pipelineconfig"
