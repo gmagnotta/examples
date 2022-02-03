@@ -9,6 +9,74 @@ metadata:
   annotations:
     description: "datagrid template"
 objects:
+- apiVersion: v1
+  data:
+    config.yaml: |
+      infinispan:
+        authorization:
+          enabled: true
+          roleMapper: cluster
+        clusterName: infinispan
+        zeroCapacityNode: false
+        locks:
+          owners: -1
+          reliability: consistent
+      endpoints:
+        dedicatedAdmin: false
+        auth: true
+        clientCert: none # none | validate | authenticate
+        hotrod:
+          enabled: true
+          qop: auth
+          serverName: infinispan
+        memcached:
+          enabled: false
+        rest:
+          enabled: true
+      jgroups:
+        diagnostics: false
+        encrypt: false
+        transport: tcp
+        bindPort: 7800
+        dnsPing:
+          query: "datagrid-nodes.dg.svc.cluster.local"
+          address: "172.30.0.10"
+          recordType: A
+        relay:
+          bindPort: 7900
+      keystore:
+        alias: server
+        selfSignCert: false
+        type: pkcs12
+      xsite:
+        masterCandidate: true
+        maxSiteMasters: 1
+        transport: tcp
+
+      logging:
+        console:
+          level: trace
+          pattern: '%d{HH:mm:ss,SSS} %-5p (%t) [%c] %m%throwable%n'
+        file:
+          level: trace
+          path: '${sys:infinispan.server.log.path}/server.log'
+          pattern: '%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p (%t) [%c] %m%throwable%n'
+        categories:
+          com.arjuna: warn
+          org.infinispan: info
+          org.jgroups: warn
+          # No need to warn about not being able to TLS/SSL handshake
+          io.netty.handler.ssl.ApplicationProtocolNegotiationHandler: error
+  kind: ConfigMap
+  metadata:
+    name: config
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${APPLICATION_NAME}
+  data:
+    user: ${USER}
+    password: ${PASSWORD}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -45,11 +113,17 @@ objects:
                 protocol: TCP
             env:
               - name: CONFIG_PATH
-                value: '/tmp/config/config.yaml'
+                value: '/opt/infinispan/server/conf/config.yaml'
               - name: USER
-                value: 'admin'
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: user
               - name: PASS
-                value: 'pass'
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: password
             resources:
               requests:
                 cpu: "500m"
@@ -60,7 +134,8 @@ objects:
             imagePullPolicy: Always
             volumeMounts:
               - name: config
-                mountPath: /tmp/config
+                mountPath: /opt/infinispan/server/conf/config.yaml
+                subPath: config.yaml
         volumes:
           - name: config
             configMap:
@@ -151,4 +226,14 @@ parameters:
   description: The name for the application.
   name: APPLICATION_NAME
   value: datagrid
+  required: true
+- displayName: User account in base64
+  description: User name to be created.
+  name: USER
+  value: 'YWRtaW4='
+  required: true
+- displayName: Password in base64
+  description: Password for the user account.
+  name: PASSWORD
+  value: 'cGFzc3dvcmQ='
   required: true
