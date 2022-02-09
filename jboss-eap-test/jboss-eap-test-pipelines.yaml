@@ -204,3 +204,49 @@ spec:
           value: "dev-latest-migration-image"
         - name: VALUE
           value: $(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: jboss-eap-test-release-pipeline
+spec:
+  params:
+    - name: image-tag
+  workspaces:
+    - name: empty
+  tasks:
+    - name: get-image-built
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "jboss-eap-test-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "dev-latest-built-image"
+    - name: getpushpath
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "jboss-eap-test-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "release-image-path"
+    - name: copy
+      taskRef:
+        name: skopeo-copy
+        kind: ClusterTask
+      runAfter:
+        - getpushpath
+        - get-image-built
+      workspaces:
+        - name: images-url
+          workspace: empty
+      params:
+        - name: srcImageURL
+          value: "docker://$(tasks.get-image-built.results.VALUE)"
+        - name: destImageURL
+          value: "docker://$(tasks.getpushpath.results.VALUE):$(params.image-tag)"
+        - name: srcTLSverify
+          value: "false"
+        - name: destTLSverify
+          value: "false"
