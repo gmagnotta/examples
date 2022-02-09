@@ -39,6 +39,7 @@ data:
   dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test'
   dev-image-migration-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test-migration'
   release-image-path: 'quay.io/gmagnotta/helloservlet'
+  release-image-path-migration: 'quay.io/gmagnotta/helloservlet'
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -231,6 +232,22 @@ spec:
           value: "jboss-eap-test-pipelineconfig"
         - name: CONFIGMAP-KEY
           value: "release-image-path"
+    - name: get-image-built-migration
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "jboss-eap-test-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "dev-latest-migration-image"
+    - name: getpushpath-migration
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "jboss-eap-test-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "release-image-path-migration"
     - name: copy
       taskRef:
         name: skopeo-copy
@@ -246,6 +263,25 @@ spec:
           value: "docker://$(tasks.get-image-built.results.VALUE)"
         - name: destImageURL
           value: "docker://$(tasks.getpushpath.results.VALUE):$(params.image-tag)"
+        - name: srcTLSverify
+          value: "false"
+        - name: destTLSverify
+          value: "false"
+    - name: copy-migration
+      taskRef:
+        name: skopeo-copy
+        kind: ClusterTask
+      runAfter:
+        - getpushpath-migration
+        - get-image-built-migration
+      workspaces:
+        - name: images-url
+          workspace: empty
+      params:
+        - name: srcImageURL
+          value: "docker://$(tasks.get-image-built-migration.results.VALUE)"
+        - name: destImageURL
+          value: "docker://$(tasks.getpushpath-migration.results.VALUE):$(params.image-tag)"
         - name: srcTLSverify
           value: "false"
         - name: destTLSverify
