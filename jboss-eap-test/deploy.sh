@@ -15,6 +15,8 @@ HOSTNAME_HTTP="jboss-eap-project.domain"
 HOSTNAME_HTTPS="secure-jboss-eap-project.domain"
 OCP_POSTGRESQL_SERVICE_HOST="postgresql.project"
 OCP_POSTGRESQL_SERVICE_PORT="5432"
+AMQ_BROKER="amqbroker.project"
+MQ_QUEUES="orderCommand"
 
 # Add view role to serviceaccount
 oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
@@ -65,4 +67,6 @@ oc process \
  -p SSO_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
  -p OCP_POSTGRESQL_SERVICE_HOST=$OCP_POSTGRESQL_SERVICE_HOST \
  -p OCP_POSTGRESQL_SERVICE_PORT=$OCP_POSTGRESQL_SERVICE_PORT \
+ -p AMQ_SERVICE_HOST=$AMQ_BROKER \
+ -p MQ_QUEUES=$MQ_QUEUES \
  -f jboss-eap-test-config-template.yaml | oc apply -f -
