@@ -13,11 +13,15 @@ SSO_REALM="demo"
 SSO_CLIENT="jboss-eap"
 HOSTNAME_HTTP="jboss-eap-project.domain"
 HOSTNAME_HTTPS="secure-jboss-eap-project.domain"
-OCP_POSTGRESQL_SERVICE_HOST="postgresql"
+OCP_POSTGRESQL_SERVICE_HOST="postgresql.project"
 OCP_POSTGRESQL_SERVICE_PORT="5432"
 
 # Add view role to serviceaccount
 oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
+
+TEMPDIR=`mktemp -d`
+
+echo "Using temp directory $TEMPDIR"
 
 # Generate https certificate
 keytool -genkeypair \
@@ -26,7 +30,7 @@ keytool -genkeypair \
 -dname "CN=$HOSTNAME_HTTPS" \
 -alias https \
 -storetype JKS \
--keystore eapkeystore.jks
+-keystore $TEMPDIR/eapkeystore.jks
 
 # Generate jgroups key
 keytool -genseckey \
@@ -34,13 +38,13 @@ keytool -genseckey \
 -storepass $PASSWORD \
 -keypass $PASSWORD \
 -storetype JCEKS \
--keystore eapjgroups.jceks
+-keystore $TEMPDIR/eapjgroups.jceks
 
 # Import https certificate in OpenShift
-oc create secret generic eap-ssl-secret --from-file=eapkeystore.jks
+oc create secret generic eap-ssl-secret --from-file=$TEMPDIR/eapkeystore.jks
 
 # Import jgroups key in OpenShift
-oc create secret generic eap-jgroup-secret --from-file=eapjgroups.jceks
+oc create secret generic eap-jgroup-secret --from-file=$TEMPDIR/eapjgroups.jceks
 
 # Link secrets to default service account
 oc secrets link default eap-ssl-secret eap-jgroup-secret

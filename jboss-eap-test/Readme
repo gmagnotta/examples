@@ -1,10 +1,10 @@
-This project has goal to demonstrate how is possible to migrate a legacy monolith JavaEE application in OpenShift with the help of OpenShift Pipelines and adopting DevOps practices.
+This project has goal to demonstrate how is possible to migrate a legacy monolith Java Enterprise application as a container running in OpenShift Container Platform by adopting DevOps practices.
 
-The application is a simple JakartaEE store application.
+The application is a simple JakartaEE web store application.
 
 It requires:
 - PostgreSQL database
-- Red Hat Single Sign On (Keycloak) to manage user authentication/authorization
+- Red Hat Single Sign On (Keycloak) to manage user authentication and authorization
 
 The idea is to use Red Hat JBoss EAP OpenShift Container image, inside an OpenShift Pipeline (tekton)
 
@@ -14,14 +14,40 @@ The pipeline will download source code, then will start the compilation phase wi
 How to try
 
 First you need to deploy PostgreSQL database (see the template in infra-components project) and then create an user and a database to dedicate to this JavaEE application.
-Then you need to deploy Red Hat SSO (see the template in infra-components). The SSO can use the same PostgreSQL instance you deployed before, but make sure to provision a separate user and database.
-After you have a working SSO then create a new Realm for this JavaEE application and then create a new application that identify this JavaEE.
-The client must be of type 'openid-connect' and have 'confidential' access type. You need to take note the public sig key of the realm and the Secret Credential of the client. They will be needed when deployng the configuration for the application.
 
-Then modify the configure.sh script in order to fill it with all the required values and finally execute it.
+Then you need to deploy Red Hat SSO (see the template in infra-components). The SSO can use the same PostgreSQL instance you deployed before, but make sure to provision a separate user and database dedicated to sso.
+
+After you have a working SSO then create a new Realm for this JavaEE application and then create a new application that identify this JavaEE.
+
+The client must be of type 'openid-connect' and have 'confidential' access type. You need to take note the public sig key of the realm and the Secret Credential of the client. They will be needed when deployng the configuration for the application (passed as env variables in deply.sh)
+
+Then modify the deploy.sh script in order to fill it with all the required values and finally execute it.
 
 The script will generate the certificates needed for https and then will create a kubernetes Secret and a Configmap to store application data.
 
 You can import the OpenShift pipeline. Remember to update the configmap with the correct imagepath.
 
 Finally start the pipeline and enjoy the monolith built and started inside OpenShift
+
+
+----
+
+Create quay.io credentials
+
+oc secrets link default quay
+oc secrets link pipeline quay --for=pull,mount
+
+oc secrets link default registry-redhat-io-sa-pull-secret
+oc secrets link pipeline registry-redhat-io-sa-pull-secret --for=pull,mount
+
+oc apply -f pipelines-common.yaml
+
+oc apply -f jboss-eap-test-pipelines.yaml
+
+sh-4.4$ psql -U postgres
+postgres=# create database jboss;
+postgres=# create user jboss with encrypted password 'jboss';
+postgres=# grant all privileges on database jboss to jboss;
+
+
+./deploy.sh
