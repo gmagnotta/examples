@@ -15,7 +15,11 @@ export SSO_POSTGRESQL_SERVICE_PORT="5432"
 
 # Create the HTTPS keystore:
 
-openssl req -new -newkey rsa:4096 -x509 -keyout xpaas.key -out xpaas.crt -days 365 -subj "/CN=xpaas-sso-demo.ca" -passin env:PASSWORD -passout env:PASSWORD
+TEMPDIR=`mktemp -d`
+
+echo "Using temp directory $TEMPDIR"
+
+openssl req -new -newkey rsa:4096 -x509 -keyout $TEMPDIR/xpaas.key -out $TEMPDIR/xpaas.crt -days 365 -subj "/CN=xpaas-sso-demo.ca" -passin env:PASSWORD -passout env:PASSWORD
 
 keytool -genkeypair -keyalg RSA -keysize 2048 \
 -storepass $PASSWORD \
@@ -23,15 +27,15 @@ keytool -genkeypair -keyalg RSA -keysize 2048 \
 -dname $DNAME \
 -alias jboss \
 -storetype JKS \
--keystore keystore.jks
+-keystore $TEMPDIR/keystore.jks
 
-keytool -certreq -keyalg rsa -alias jboss -keystore keystore.jks -file sso.csr -storepass $PASSWORD
+keytool -certreq -keyalg rsa -alias jboss -keystore $TEMPDIR/keystore.jks -file $TEMPDIR/sso.csr -storepass $PASSWORD
 
-openssl x509 -req -CA xpaas.crt -CAkey xpaas.key -in sso.csr -out sso.crt -days 365 -CAcreateserial -passin env:PASSWORD
+openssl x509 -req -CA $TEMPDIR/xpaas.crt -CAkey $TEMPDIR/xpaas.key -in $TEMPDIR/sso.csr -out $TEMPDIR/sso.crt -days 365 -CAcreateserial -passin env:PASSWORD
 
-keytool -import -file xpaas.crt -alias xpaas.ca -keystore keystore.jks -storepass $PASSWORD 
+keytool -import -file $TEMPDIR/xpaas.crt -alias xpaas.ca -keystore $TEMPDIR/keystore.jks -storepass $PASSWORD
 
-keytool -import -file sso.crt -alias jboss -keystore keystore.jks -storepass $PASSWORD 
+keytool -import -file $TEMPDIR/sso.crt -alias jboss -keystore $TEMPDIR/keystore.jks -storepass $PASSWORD
 
 
 # Generate a secure key for the JGroups keystore:
@@ -41,19 +45,19 @@ keytool -genseckey \
 -storepass $PASSWORD \
 -keypass $PASSWORD \
 -storetype JCEKS \
--keystore jgroups.jceks
+-keystore $TEMPDIR/jgroups.jceks
 
 
 # Import the CA certificate into a new Red Hat Single Sign-On server truststore:
 
-keytool -import -file xpaas.crt -alias xpaas.ca -keystore truststore.jks -storepass $PASSWORD
+keytool -import -file $TEMPDIR/xpaas.crt -alias xpaas.ca -keystore $TEMPDIR/truststore.jks -storepass $PASSWORD
 
 
 # OCP Secrets
 
 oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
 
-oc create secret generic sso-app-secret --from-file=keystore.jks --from-file=jgroups.jceks --from-file=truststore.jks
+oc create secret generic sso-app-secret --from-file=$TEMPDIR/keystore.jks --from-file=$TEMPDIR/jgroups.jceks --from-file=$TEMPDIR/truststore.jks
 
 oc secrets link default sso-app-secret
 

@@ -1,5 +1,26 @@
-This is a collection of OpenShift resources needed used to provision demos contained in the parent project.
+This is a collection of resources common to many projects.
 
-In order to access the images available on registry.redhat.io you need to have a valid secret in place.
+There are OpenShift image streams, templates and pipelines.
 
-You can import the imagestreams to have local images.
+Many applications are located in registry.redhat.io, so you need a valid secret in place. Please see https://access.redhat.com/RegistryAuthentication#registry-service-accounts-for-shared-environments-4
+
+----
+
+oc apply -f <registry-credentials>.yaml
+
+oc secrets link default <registry-credentials>
+
+oc secrets link pipeline <registry-credentials> --for=pull,mount
+
+oc apply -f imagestream-postgresql.yaml
+
+oc process -p POSTGRESQL_DATABASE="c3Nv" -p POSTGRESQL_USER="c3Nv" -p POSTGRESQL_PASSWORD="c3Nv" -f template-postgresql.yaml | oc apply -f -
+
+oc apply -f imagestream-amqbroker.yaml
+
+oc process -p MQ_QUEUES="orderCommand" -p MQ_TOPICS="" -f template-amqbroker.yaml | oc apply -f -
+
+oc apply -f imagestream-sso.yaml
+
+# change variables in deploysso.sh
+./deploysso.sh
