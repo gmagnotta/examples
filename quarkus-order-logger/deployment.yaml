@@ -19,7 +19,10 @@ spec:
           name: quarkus-order-logger
           env:
             - name: quarkus_artemis_url
-              value: 'tcp://amqbroker.project:61616'
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-logger
+                  key: amq-broker
             - name: quarkus_artemis_username
               valueFrom:
                 secretKeyRef:
@@ -35,9 +38,15 @@ spec:
             - name: quarkus_log_file_path
               value: /tmp/quarkus.log
             - name: TELEGRAM_TOKEN
-              value: '12345'
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-logger
+                  key: telegram-token
             - name: TELEGRAM_CHATID
-              value: '12345'
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-logger
+                  key: telegram-chatid
           ports:
             - containerPort: 8080
               protocol: TCP
