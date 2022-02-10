@@ -339,7 +339,7 @@ objects:
     labels:
       app: ${APPLICATION_NAME}
     annotations:
-      prometheus.io/port: '9799'
+      prometheus.io/scrape_port: '9799'
       prometheus.io/scrape: 'true'
   spec:
     ports:
