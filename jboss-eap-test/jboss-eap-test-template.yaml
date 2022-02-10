@@ -338,6 +338,9 @@ objects:
     name: ${APPLICATION_NAME}
     labels:
       app: ${APPLICATION_NAME}
+    annotations:
+      prometheus.io/port: '9799'
+      prometheus.io/scrape: 'true'
   spec:
     ports:
       - name: 8080-tcp
