@@ -174,6 +174,21 @@ objects:
     port:
       targetPort: 16686-tcp
     wildcardPolicy: None
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: prometheus
+- apiVersion: rbac.authorization.k8s.io/v1beta1
+  kind: RoleBinding
+  metadata:
+    name: prometheus
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: view
+  subjects:
+  - kind: ServiceAccount
+    name: prometheus
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -193,7 +208,7 @@ objects:
         containers:
           - name: prometheus
             image: quay.io/gmagnotta/prometheus
-            args: ["--config.file=/opt/prometheus/config/prometheus.yml"]
+            args: ["--config.file=/opt/prometheus/prometheus.yml"]
             ports:
               - containerPort: 9090
                 protocol: TCP
@@ -207,7 +222,9 @@ objects:
             imagePullPolicy: IfNotPresent
             volumeMounts:
               - name: config-volume
-                mountPath: /opt/prometheus/config
+                mountPath: /opt/prometheus/prometheus.yml
+                subPath: prometheus.yml
+        serviceAccountName: prometheus
         volumes:
           - name: config-volume
             configMap:
@@ -263,40 +280,26 @@ objects:
     name: prometheus
   data:
     prometheus.yaml: |-
-      # my global config
       global:
-        scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-        # evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
-        # scrape_timeout is set to the global default (10s).
+        scrape_interval: 15s
         external_labels:
           monitor: 'codelab-monitor'
-
-      # Alertmanager configuration
       alerting:
         alertmanagers:
           - static_configs:
               - targets:
-                # - alertmanager:9093
-
-      # Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
-      rule_files:
-        # - "first_rules.yml"
-        # - "second_rules.yml"
-
-      # A scrape configuration containing exactly one endpoint to scrape:
-      # Here it's Prometheus itself.
       scrape_configs:
-        # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
         - job_name: "kubernetes-service-endpoints"
 
           kubernetes_sd_configs:
             - role: endpoints
+              namespaces:
+                names:
+                  - 'eap-demo'
 
           tls_config:
             ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-            insecure_skip_verify: true
-          authorization:
-            credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
           relabel_configs:
 
@@ -312,8 +315,4 @@ objects:
               regex: ([^:]+)(?::\d+)?;(\d+)
               replacement: $1:$2
               target_label: __address__
-        - job_name: "prometheus"
-
-          static_configs:
-            - targets: ["localhost:8080"]
 parameters:
