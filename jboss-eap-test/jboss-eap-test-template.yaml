@@ -393,20 +393,6 @@ objects:
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
-    name: ${APPLICATION_NAME}
-    labels:
-      app: ${APPLICATION_NAME}
-  spec:
-    to:
-      kind: Service
-      name: ${APPLICATION_NAME}
-      weight: 100
-    port:
-      targetPort: 8080-tcp
-    wildcardPolicy: None
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
     name: secure-${APPLICATION_NAME}
     labels:
       app: ${APPLICATION_NAME}
@@ -418,6 +404,7 @@ objects:
       targetPort: 8443-tcp
     tls:
       termination: passthrough
+      insecureEdgeTerminationPolicy: Redirect
     wildcardPolicy: None
 parameters:
 - displayName: Application Name
