@@ -290,21 +290,13 @@ objects:
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
-    name: ${APPLICATION_NAME}
-    labels:
-      app: ${APPLICATION_NAME}
-  spec:
-    to:
-      name: ${APPLICATION_NAME}
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
     name: secure-${APPLICATION_NAME}
     labels:
       app: ${APPLICATION_NAME}
   spec:
     to:
       name: secure-${APPLICATION_NAME}
+      insecureEdgeTerminationPolicy: Redirect
     tls:
       termination: passthrough
 parameters:
