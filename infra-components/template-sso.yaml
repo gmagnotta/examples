@@ -9,6 +9,22 @@ metadata:
   annotations:
     description: "sso template"
 objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: sso75-openshift-rhel8
+  spec:
+    lookupPolicy:
+      local: true
+    tags:
+    - annotations:
+        description: Red Hat Single Sign-On 7.5 image
+      from:
+        kind: DockerImage
+        name: registry.redhat.io/rh-sso-7/sso75-openshift-rhel8:7.5
+      name: latest
+      referencePolicy:
+        type: Local
 - apiVersion: v1
   kind: ConfigMap
   metadata:
