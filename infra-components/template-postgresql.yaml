@@ -9,6 +9,22 @@ metadata:
   annotations:
     description: "postgresql template"
 objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: postgresql-10
+  spec:
+    lookupPolicy:
+      local: true
+    tags:
+    - annotations:
+        description: Provides a PostgreSQL 10 database on RHEL 8. For more information about using this database image, including OpenShift considerations, see https://github.com/sclorg/postgresql-container/blob/master/README.md.
+      from:
+        kind: DockerImage
+        name: registry.redhat.io/rhel8/postgresql-10:latest
+      name: 10-el8
+      referencePolicy:
+        type: Local
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
