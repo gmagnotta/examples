@@ -163,8 +163,8 @@ objects:
                 value: ${JGROUPS_ENCRYPT_KEYSTORE}
               - name: JGROUPS_ENCRYPT_NAME
                 value: ${JGROUPS_ENCRYPT_NAME}
-#              - name: JGROUPS_ENCRYPT_PASSWORD
-#                value: ${JGROUPS_ENCRYPT_PASSWORD}
+              - name: JGROUPS_ENCRYPT_PASSWORD
+                value: ${JGROUPS_ENCRYPT_PASSWORD}
               - name: JGROUPS_CLUSTER_PASSWORD
                 valueFrom:
                   secretKeyRef:
