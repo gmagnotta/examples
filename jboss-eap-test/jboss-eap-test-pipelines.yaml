@@ -38,8 +38,8 @@ metadata:
 data:
   dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test'
   dev-image-migration-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test-migration'
-  release-image-path: 'quay.io/gmagnotta/helloservlet'
-  release-image-path-migration: 'quay.io/gmagnotta/helloservlet'
+  release-image-path: 'quay.io/gmagnotta/jboss-eap-test'
+  release-image-path-migration: 'quay.io/gmagnotta/jboss-eap-test-migration'
 ---
 kind: ConfigMap
 apiVersion: v1
