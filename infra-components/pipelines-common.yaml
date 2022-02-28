@@ -291,18 +291,9 @@ spec:
     - name: INCREMENTAL
       type: string
       default: "false"
-    - name: ENVIRONMENTS
-      type: string
-      default: ""
     - name: USER
       type: string
       default: "jboss"
-    - name: S2I_ENVIRONMENT
-      type: string
-      default: "s2ienvironment"
-    - name: S2I_SECRETS
-      type: string
-      default: "s2isecrets"
     - name: S2I_SCRIPTS_URL
       type: string
       default: "/usr/local/s2i"
@@ -321,8 +312,6 @@ spec:
       env:
         - name: INCREMENTAL
           value: $(params.INCREMENTAL)
-        - name: ENVIRONMENTS
-          value: $(params.ENVIRONMENTS)
         - name: BUILDER_IMAGE
           value: $(params.S2I_IMAGE)
         - name: ASSEMBLE_USER
@@ -333,11 +322,6 @@ spec:
           value: $(params.S2I_SCRIPTS_URL)
         - name: OUTPUT_IMAGE
           value: $(params.IMAGE)
-      envFrom:
-        - configMapRef:
-            name: $(params.S2I_ENVIRONMENT)
-        - secretRef:
-            name: $(params.S2I_SECRETS)
       script: |
         #!/usr/bin/env bash
         set -e
