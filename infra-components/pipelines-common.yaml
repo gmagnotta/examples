@@ -322,6 +322,16 @@ spec:
           value: $(params.INCREMENTAL)
         - name: ENVIRONMENTS
           value: $(params.ENVIRONMENTS)
+        - name: BUILDER_IMAGE
+          value: $(params.S2I_IMAGE)
+        - name: ASSEMBLE_USER
+          value: $(params.USER)
+        - name: CONTEXT_DIR
+          value: $(params.CONTEXT)
+        - name: SCRIPTS_URL
+          value: $(params.S2I_SCRIPTS_URL)
+        - name: OUTPUT_IMAGE
+          value: $(params.IMAGE)
       envFrom:
         - configMapRef:
             name: $(params.S2I_ENVIRONMENT)
@@ -331,15 +341,16 @@ spec:
         #!/usr/bin/env bash
         set -e
 
-        builder=$(buildah from $(params.S2I_IMAGE))
+        echo "Start"
+        builder=$(buildah from $BUILDER_IMAGE)
 
-        buildah add --chown $(params.USER):0 $builder $(workspaces.source.path)/$(params.CONTEXT) /tmp/src
+        buildah add --chown $ASSEMBLE_USER:0 $builder $(workspaces.source.path)/$CONTEXT_DIR /tmp/src
 
         if [ "$INCREMENTAL" = "true" ]; then
 
           if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
-           echo "restoring artifacts"
-           buildah add --chown $(params.USER):0 $builder $(workspaces.artifacts.path)/artifacts.tar /tmp/artifacts
+           echo "Restoring artifacts"
+           buildah add --chown $ASSEMBLE_USER:0 $builder $(workspaces.artifacts.path)/artifacts.tar /tmp/artifacts
           fi
 
         fi
@@ -357,18 +368,19 @@ spec:
         fi
 
         if [ ! -z "$COMMAND" ]; then
-         #echo "executing $COMMAND"
+         echo "Executing $COMMAND"
 
          eval "$COMMAND"
         fi
 
-        buildah config --cmd $(params.S2I_SCRIPTS_URL)/run $builder
+        buildah config --cmd $SCRIPTS_URL/run $builder
 
-        if [ -x "$(workspaces.source.path)/$(params.CONTEXT)/.s2i/bin/assemble" ]; then
+        if [ -x "$(workspaces.source.path)/$CONTEXT_DIR/.s2i/bin/assemble" ]; then
           echo "Using assemble from .s2i"
           buildah run $builder -- /tmp/src/.s2i/bin/assemble
         else
-          buildah run $builder -- $(params.S2I_SCRIPTS_URL)/assemble
+          echo "Using assemble from image"
+          buildah run $builder -- $SCRIPTS_URL/assemble
         fi
 
         if [ "$INCREMENTAL" = "true" ]; then
@@ -378,11 +390,11 @@ spec:
             rm $(workspaces.artifacts.path)/artifacts.tar
           fi
 
-          buildah run $builder -- /bin/bash -c 'if [ -x "/usr/local/s2i/save-artifacts" ]; then /usr/local/s2i/save-artifacts ; fi' > $(workspaces.artifacts.path)/artifacts.tar
+          buildah run $builder -- /bin/bash -c "if [ -x \"$SCRIPTS_URL/save-artifacts\" ]; then $SCRIPTS_URL/save-artifacts ; fi" > $(workspaces.artifacts.path)/artifacts.tar
 
         fi
 
-        buildah commit $builder $(params.IMAGE)
+        buildah commit $builder $OUTPUT_IMAGE
 
         buildah rm $builder
       securityContext:
