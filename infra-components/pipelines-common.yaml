@@ -314,6 +314,7 @@ spec:
     - name: artifacts
     - name: varlibcontainers
       mountPath: /var/lib/containers
+    - name: s2ienv
   steps:
     - name: build
       image: $(params.BUILDAH_IMAGE)
@@ -355,22 +356,34 @@ spec:
 
         fi
 
-        COMMAND=""
+        if [ -f "$(workspaces.source.path)/$CONTEXT_DIR/.s2i/environment" ]; then
+            COMMAND="buildah config "
 
-        if [ -n "$ENVIRONMENTS" ]; then
+            while IFS="" read -r line || [ -n "$line" ]
+            do
+              COMMAND+="--env $line "
+            done < $(workspaces.source.path)/$CONTEXT_DIR/.s2i/environment
 
-          COMMAND+="buildah config "
+            COMMAND+='$builder'
+            echo "Executing $COMMAND"
 
-          IFS=','; for word in $ENVIRONMENTS; do COMMAND+="--env $word=${!word} "; done
-
-          COMMAND+='$builder'
+            eval "$COMMAND"
 
         fi
 
-        if [ ! -z "$COMMAND" ]; then
-         echo "Executing $COMMAND"
+        if [ -f "$(workspaces.s2ienv.path)/environment" ]; then
+            COMMAND="buildah config "
 
-         eval "$COMMAND"
+            while IFS="" read -r line || [ -n "$line" ]
+            do
+              COMMAND+="--env $line "
+            done < $(workspaces.s2ienv.path)/environment
+
+            COMMAND+='$builder'
+            echo "Executing $COMMAND"
+
+            eval "$COMMAND"
+
         fi
 
         buildah config --cmd $SCRIPTS_URL/run $builder
