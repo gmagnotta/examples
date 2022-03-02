@@ -3,7 +3,7 @@
 # This script emulates an s2i build process performed exclusively with buildah.
 # Currently only builder images are supported.
 #
-# Version 0.0.3
+# Version 0.0.4
 #
 set -e
 
@@ -28,18 +28,15 @@ if [ "$INCREMENTAL" = "true" ]; then
 
 fi
 
+EVN=""
 if [ -f "$CONTEXT_DIR/.s2i/environment" ]; then
-    COMMAND="buildah config "
 
-    while IFS="" read -r line || [ -n "$line" ]
+    while IFS="" read -r line
     do
-      COMMAND+="--env $line "
+      ENV+="-e $line "
     done < $CONTEXT_DIR/.s2i/environment
 
-    COMMAND+='$builder'
-    echo "Executing $COMMAND"
-
-    eval "$COMMAND"
+    echo "ENV is $ENV"
 
 fi
 
@@ -47,10 +44,10 @@ buildah config --cmd $SCRIPTS_URL/run $builder
 
 if [ -x "$CONTEXT_DIR/.s2i/bin/assemble" ]; then
     echo "Using assemble from .s2i"
-    buildah run $builder -- /tmp/src/.s2i/bin/assemble
+    eval buildah run $ENV $builder -- /tmp/src/.s2i/bin/assemble
 else
     echo "Using assemble from image"
-    buildah run $builder -- $SCRIPTS_URL/assemble
+    eval buildah run $ENV $builder -- $SCRIPTS_URL/assemble
 fi
 
 if [ "$INCREMENTAL" = "true" ]; then
