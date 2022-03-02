@@ -340,33 +340,26 @@ spec:
 
         fi
 
+        ENV=""
         if [ -f "$(workspaces.source.path)/$CONTEXT_DIR/.s2i/environment" ]; then
-            COMMAND="buildah config "
 
-            while IFS="" read -r line || [ -n "$line" ]
+            while IFS="" read -r line
             do
-              COMMAND+="--env $line "
+              ENV+="-e $line "
             done < $(workspaces.source.path)/$CONTEXT_DIR/.s2i/environment
 
-            COMMAND+='$builder'
-            echo "Executing $COMMAND"
-
-            eval "$COMMAND"
+            echo "ENV is $ENV"
 
         fi
 
         if [ -f "$(workspaces.s2ienv.path)/environment" ]; then
-            COMMAND="buildah config "
 
-            while IFS="" read -r line || [ -n "$line" ]
+            while IFS="" read -r line
             do
-              COMMAND+="--env $line "
+              ENV+="-e $line "
             done < $(workspaces.s2ienv.path)/environment
 
-            COMMAND+='$builder'
-            echo "Executing $COMMAND"
-
-            eval "$COMMAND"
+            echo "ENV is $ENV"
 
         fi
 
@@ -374,10 +367,10 @@ spec:
 
         if [ -x "$(workspaces.source.path)/$CONTEXT_DIR/.s2i/bin/assemble" ]; then
           echo "Using assemble from .s2i"
-          buildah run $builder -- /tmp/src/.s2i/bin/assemble
+          eval buildah run $ENV $builder -- /tmp/src/.s2i/bin/assemble
         else
           echo "Using assemble from image"
-          buildah run $builder -- $SCRIPTS_URL/assemble
+          eval buildah run $ENV $builder -- $SCRIPTS_URL/assemble
         fi
 
         if [ "$INCREMENTAL" = "true" ]; then
