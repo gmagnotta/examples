@@ -327,7 +327,7 @@ spec:
         set -e
 
         echo "Start"
-        builder=$(buildah from $BUILDER_IMAGE)
+        builder=$(buildah from --tls-verify=$(params.TLSVERIFY) $BUILDER_IMAGE)
 
         buildah add --chown $ASSEMBLE_USER:0 $builder $(workspaces.source.path)/$CONTEXT_DIR /tmp/src
 
@@ -345,6 +345,7 @@ spec:
 
             while IFS="" read -r line
             do
+              [[ "$line" =~ ^#.*$ ]] && continue
               ENV+="-e $line "
             done < $(workspaces.source.path)/$CONTEXT_DIR/.s2i/environment
 
@@ -356,6 +357,7 @@ spec:
 
             while IFS="" read -r line
             do
+              [[ "$line" =~ ^#.*$ ]] && continue
               ENV+="-e $line "
             done < $(workspaces.s2ienv.path)/environment
 
