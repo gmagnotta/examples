@@ -28,11 +28,12 @@ if [ "$INCREMENTAL" = "true" ]; then
 
 fi
 
-EVN=""
+ENV=""
 if [ -f "$CONTEXT_DIR/.s2i/environment" ]; then
 
     while IFS="" read -r line
     do
+      [[ "$line" =~ ^#.*$ ]] && continue
       ENV+="-e $line "
     done < $CONTEXT_DIR/.s2i/environment
 
