@@ -106,7 +106,11 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    name: quarkus-datagrid-api
+    annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/scrape_port: '8080'
+      prometheus.io/path: /q/metrics
+    name: quarkus-order-processor-api
     labels:
       app: quarkus-datagrid-api
   spec:
