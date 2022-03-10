@@ -9,67 +9,22 @@ metadata:
   annotations:
     description: "datagrid template"
 objects:
-- apiVersion: v1
-  data:
-    config.yaml: |
-      infinispan:
-        authorization:
-          enabled: true
-          roleMapper: cluster
-        clusterName: infinispan
-        zeroCapacityNode: false
-        locks:
-          owners: -1
-          reliability: consistent
-      endpoints:
-        dedicatedAdmin: false
-        auth: true
-        clientCert: none # none | validate | authenticate
-        hotrod:
-          enabled: true
-          qop: auth
-          serverName: infinispan
-        memcached:
-          enabled: false
-        rest:
-          enabled: true
-      jgroups:
-        diagnostics: false
-        encrypt: false
-        transport: tcp
-        bindPort: 7800
-        dnsPing:
-          query: "datagrid-nodes.dg.svc.cluster.local"
-          address: "172.30.0.10"
-          recordType: A
-        relay:
-          bindPort: 7900
-      keystore:
-        alias: server
-        selfSignCert: false
-        type: pkcs12
-      xsite:
-        masterCandidate: true
-        maxSiteMasters: 1
-        transport: tcp
-
-      logging:
-        console:
-          level: trace
-          pattern: '%d{HH:mm:ss,SSS} %-5p (%t) [%c] %m%throwable%n'
-        file:
-          level: trace
-          path: '${sys:infinispan.server.log.path}/server.log'
-          pattern: '%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p (%t) [%c] %m%throwable%n'
-        categories:
-          com.arjuna: warn
-          org.infinispan: info
-          org.jgroups: warn
-          # No need to warn about not being able to TLS/SSL handshake
-          io.netty.handler.ssl.ApplicationProtocolNegotiationHandler: error
-  kind: ConfigMap
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
   metadata:
-    name: config
+    name: datagrid-8-rhel8
+  spec:
+    lookupPolicy:
+      local: true
+    tags:
+    - annotations:
+        description: Red Hat Datagrid 8
+      from:
+        kind: DockerImage
+        name: registry.redhat.io/datagrid/datagrid-8-rhel8
+      name: latest
+      referencePolicy:
+        type: Local
 - apiVersion: v1
   kind: Secret
   metadata:
@@ -84,7 +39,7 @@ objects:
     labels:
       app: ${APPLICATION_NAME}
   spec:
-    replicas: 3
+    replicas: 1
     selector:
       matchLabels:
         app: ${APPLICATION_NAME}
@@ -112,8 +67,6 @@ objects:
               - containerPort: 7800
                 protocol: TCP
             env:
-              - name: CONFIG_PATH
-                value: '/opt/infinispan/server/conf/config.yaml'
               - name: USER
                 valueFrom:
                   secretKeyRef:
@@ -132,17 +85,6 @@ objects:
                 cpu: "1000m"
                 memory: "1Gi"
             imagePullPolicy: Always
-            volumeMounts:
-              - name: config
-                mountPath: /opt/infinispan/server/conf/config.yaml
-                subPath: config.yaml
-        volumes:
-          - name: config
-            configMap:
-              name: config
-              items:
-                - key: config.yaml
-                  path: config.yaml
         restartPolicy: Always
         terminationGracePeriodSeconds: 60
         dnsPolicy: ClusterFirst
@@ -181,30 +123,10 @@ objects:
     publishNotReadyAddresses: true
     clusterIP: None
     ports:
-      - name: 11221-tcp
-        protocol: TCP
-        port: 11221
-        targetPort: 11221
       - name: 11222-tcp
         protocol: TCP
         port: 11222
         targetPort: 11222
-      - name: 2157-tcp
-        protocol: TCP
-        port: 2157
-        targetPort: 2157
-      - name: 47500-tcp
-        protocol: TCP
-        port: 47500
-        targetPort: 47500
-      - name: 57600-tcp
-        protocol: TCP
-        port: 57600
-        targetPort: 57600
-      - name: 7800-tcp
-        protocol: TCP
-        port: 7800
-        targetPort: 7800
     selector:
       app: ${APPLICATION_NAME}
 - apiVersion: route.openshift.io/v1
