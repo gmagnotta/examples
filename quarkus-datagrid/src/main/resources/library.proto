@@ -1,0 +1,109 @@
+// File name: library.proto
+// Generated from : org.gmagnotta.protobuf.OrderInitializer
+
+syntax = "proto2";
+
+package library;
+
+
+
+/**
+ * @Indexed
+ */
+message Order {
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)
+    */
+   required int32 id = 1;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)
+    */
+   required fixed64 creationDate = 2;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)
+    */
+   required BigDecimal amount = 3;
+   
+   repeated LineItem lineItems = 4;
+   
+   optional string externalOrderId = 5;
+}
+
+
+message BigDecimal {
+   
+   optional bytes unscaledValue = 1;
+   
+   optional int32 scale = 2 [default = 0];
+}
+
+
+message Item {
+   
+   required int32 id = 1;
+   
+   required string description = 2;
+   
+   required BigDecimal price = 3;
+}
+
+
+/**
+ * @Indexed
+ */
+message LineItem {
+   
+   required int32 id = 1;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)
+    */
+   required BigDecimal price = 2;
+   
+   required int32 quantity = 3;
+   
+   required Item item = 4;
+   
+   required int32 orderid = 5;
+}
+
+
+message BigInteger {
+   
+   optional bytes bytes = 1;
+}
+
+
+/**
+ * @Indexed
+ */
+message DenormalizedLineItem {
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.NO, store = Store.NO)
+    */
+   required int32 id = 1;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.NO, store = Store.NO)
+    */
+   required int32 price = 2;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.NO, store = Store.NO)
+    */
+   required int32 quantity = 3;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.NO, store = Store.NO)
+    */
+   required int32 orderid = 4;
+   
+   /**
+    * @Field(index=Index.YES, analyze = Analyze.NO, store = Store.NO)
+    */
+   required int32 itemId = 5;
+}
