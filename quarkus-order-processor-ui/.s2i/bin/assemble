@@ -5,7 +5,7 @@ set -e
 echo "Before assembling"
 
 echo "Deleting /deployments/ROOT.war"
-rm /deployments/ROOT.war
+rm -rf /deployments/ROOT.war
 
 echo "invoking assemble"
 /usr/local/s2i/assemble
