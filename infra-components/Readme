@@ -10,17 +10,21 @@ oc apply -f <registry-credentials>.yaml
 
 oc secrets link default <registry-credentials>
 
-oc secrets link pipeline <registry-credentials> --for=pull,mount
+----
 
-oc apply -f imagestream-postgresql.yaml
+Provision PostgreSQL
 
 oc process -p POSTGRESQL_DATABASE="c3Nv" -p POSTGRESQL_USER="c3Nv" -p POSTGRESQL_PASSWORD="c3Nv" -f template-postgresql.yaml | oc apply -f -
 
-oc apply -f imagestream-amqbroker.yaml
+----
+
+Provision AMQ Broker
 
 oc process -p MQ_QUEUES="orderCommand" -p MQ_TOPICS="" -f template-amqbroker.yaml | oc apply -f -
 
-oc apply -f imagestream-sso.yaml
+----
+
+Provision Red Hat Single Sign-On
 
 # change variables in deploysso.sh
 ./deploysso.sh
