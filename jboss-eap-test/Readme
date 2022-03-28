@@ -5,6 +5,7 @@ The application is a simple JakartaEE web store application.
 It requires:
 - PostgreSQL database
 - Red Hat Single Sign On (Keycloak) to manage user authentication and authorization
+- AMQ Broker to integrate with other applications
 
 The idea is to use Red Hat JBoss EAP OpenShift Container image, inside an OpenShift Pipeline (tekton)
 
@@ -15,7 +16,9 @@ How to try
 
 First you need to deploy PostgreSQL database (see the template in infra-components project) and then create an user and a database to dedicate to this JavaEE application.
 
-Then you need to deploy Red Hat SSO (see the template in infra-components). The SSO can use the same PostgreSQL instance you deployed before, but make sure to provision a separate user and database dedicated to sso.
+Second you need to deploy Red Hat SSO (see the template in infra-components). The SSO can use the same PostgreSQL instance you deployed before, but make sure to provision a separate user and database dedicated to sso.
+
+Then you need to deploy Red Hat AMQ Broker 
 
 After you have a working SSO then create a new Realm for this JavaEE application and then create a new application that identify this JavaEE.
 
