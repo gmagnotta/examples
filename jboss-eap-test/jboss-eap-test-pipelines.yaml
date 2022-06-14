@@ -60,7 +60,7 @@ spec:
     local: true
   tags:
   - annotations:
-      description: Red Hat AMQ Broker 7 image
+      description: Red Hat JBoss EAP 7 Image
     from:
       kind: DockerImage
       name: registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8
