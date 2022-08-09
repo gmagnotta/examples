@@ -20,9 +20,9 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 /**
- * Hello world!
+ * Example Kafka Consumer
  */
-public class Consumer implements Runnable
+public class Consumer
 {
 	public static final Logger LOGGER = LoggerFactory.getLogger(Consumer.class);
 
@@ -34,7 +34,7 @@ public class Consumer implements Runnable
 
     public static void main( String[] args )
     {
-        LOGGER.info( "Hello World!" );
+        LOGGER.info( "Hello Kafka Consumer!" );
 
         Properties kafkaProps = new Properties();
 		kafkaProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "prova-cajgta-qu--fu--oaf-a.bf2.kafka.rhcloud.com:443");
@@ -42,6 +42,7 @@ public class Consumer implements Runnable
 		kafkaProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
 		kafkaProps.put(ConsumerConfig.GROUP_ID_CONFIG, "my-application");
 		kafkaProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
 		//kafkaProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 		//kafkaProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
 		//kafkaProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "ABSOLUTE_PATH_TO_YOUR_WORKSPACE_FOLDER/truststore.jks");
@@ -49,29 +50,6 @@ public class Consumer implements Runnable
 		kafkaProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
 		kafkaProps.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
 		kafkaProps.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"srvc-acct-d08d53d2-edce-4840-a6e5-9af700998ce6\" password=\"ff073215-080b-4e5e-aed1-53c316faed3b\";");
-
-		KafkaConsumer<Integer, Long> consumer = new KafkaConsumer<Integer, Long>(kafkaProps);
-
-		consumer.subscribe(Collections.singletonList("output"));
-
-		try {
-			while (true) {
-				ConsumerRecords<Integer, Long> records = consumer.poll(Duration.ofMillis(1000));
-				
-				for (ConsumerRecord<Integer, Long> record : records) {
-					LOGGER.info("read: " + record.key() + "; " + record.value());
-				}
-			}
-		} catch (Exception e) {
-			// If the producer encountered errors before sending the message to Kafka.
-			e.printStackTrace();
-		} finally {
-			consumer.close();
-		}
-    }
-
-	@Override
-	public void run() {
 
 		KafkaConsumer<Integer, Integer> consumer = new KafkaConsumer<Integer, Integer>(kafkaProps);
 
@@ -87,11 +65,11 @@ public class Consumer implements Runnable
 			}
 		} catch (Exception e) {
 			// If the producer encountered errors before sending the message to Kafka.
-			LOGGER.error("Exception", e);
+			e.printStackTrace();
 			Thread.currentThread().interrupt(); 
 		} finally {
 			consumer.close();
 		}
-		
-	}
+    }
+	
 }

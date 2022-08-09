@@ -85,17 +85,6 @@
           <version>3.0.0</version>
         </plugin>
 
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <configuration>
-            <archive>
-              <manifest>
-                <mainClass>com.mycompany.app.Stream</mainClass>
-              </manifest>
-            </archive>
-          </configuration>
-        </plugin>
       </plugins>
     </pluginManagement>
   </build>

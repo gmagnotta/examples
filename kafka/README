@@ -1,0 +1,5 @@
+Sample Kafka examples
+
+Build with mvn clean packages
+
+Run with mvn exec:java -Dexec.mainClass="org.gmagnotta.kafkaexamples.Consumer"

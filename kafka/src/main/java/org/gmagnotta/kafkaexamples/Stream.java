@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public class Stream {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Stream.class);
 
     public static void main(String[] args) throws InterruptedException {
 

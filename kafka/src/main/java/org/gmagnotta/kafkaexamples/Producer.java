@@ -15,14 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Hello world!
+ * Example Kafka Producer
  */
-public class Producer implements Runnable
+public class Producer
 {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Producer.class);
-
-	private final Random RAND = new Random();
 
 	private Properties kafkaProps;
 
@@ -31,12 +29,13 @@ public class Producer implements Runnable
 	}
     public static void main( String[] args )
     {
-        LOGGER.info( "Hello World!" );
+        LOGGER.info( "Hello Kafka Producer!" );
 
         Properties kafkaProps = new Properties();
 		kafkaProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "peppe-cahlmg-qu--fu--mv-bg.bf2.kafka.rhcloud.com:443");
 		kafkaProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 		kafkaProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  StringSerializer.class.getName());
+		
 		//kafkaProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
 		//kafkaProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "ABSOLUTE_PATH_TO_YOUR_WORKSPACE_FOLDER/truststore.jks");
 		//kafkaProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
@@ -44,34 +43,9 @@ public class Producer implements Runnable
 		kafkaProps.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
 		kafkaProps.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"srvc-acct-aea9fb23-d3b4-4f5f-b123-86ce7cdb8c1b\" password=\"55f3b951-f64a-4caf-9828-36b73753b364\";");
 
-		try {
-			while (!Thread.currentThread().isInterrupted()) {
-
-				KafkaProducer<String, String> producer = new KafkaProducer<String, String>(kafkaProps);
-
-				ProducerRecord<String, String> record = new ProducerRecord<String, String>("first_topic", "hello world!");
-
-				try {
-					producer.send(record);
-				} catch (Exception e) {
-					// If the producer encountered errors before sending the message to Kafka.
-					LOGGER.error("Exception", e);
-				} finally {
-					producer.flush();
-					producer.close();
-				}
-
-				Thread.sleep(1000);
-			}
-		} catch (InterruptedException ex) {
-			Thread.currentThread().interrupt(); 
-		}
-    }
-
-	@Override
-	public void run() {
-
 		KafkaProducer<Integer, Integer> producer = new KafkaProducer<Integer, Integer>(kafkaProps);
+
+		Random RAND = new Random();
 
 		try {
 			while (!Thread.currentThread().isInterrupted()) {
@@ -97,5 +71,7 @@ public class Producer implements Runnable
 			producer.flush();
 			producer.close();
 		}
-	}
+
+    }
+	
 }
