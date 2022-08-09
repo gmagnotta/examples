@@ -37,9 +37,9 @@ public class Consumer
         LOGGER.info( "Hello Kafka Consumer!" );
 
         Properties kafkaProps = new Properties();
-		kafkaProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "prova-cajgta-qu--fu--oaf-a.bf2.kafka.rhcloud.com:443");
+		kafkaProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "put-here-the-server:443");
 		kafkaProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class.getName());
-		kafkaProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
+		kafkaProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class.getName());
 		kafkaProps.put(ConsumerConfig.GROUP_ID_CONFIG, "my-application");
 		kafkaProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
@@ -49,7 +49,7 @@ public class Consumer
 		//kafkaProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "password");
 		kafkaProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
 		kafkaProps.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-		kafkaProps.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"srvc-acct-d08d53d2-edce-4840-a6e5-9af700998ce6\" password=\"ff073215-080b-4e5e-aed1-53c316faed3b\";");
+		kafkaProps.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"put-here-clientid\" password=\"put-here-the-secret\";");
 
 		KafkaConsumer<Integer, Integer> consumer = new KafkaConsumer<Integer, Integer>(kafkaProps);
 
