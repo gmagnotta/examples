@@ -1,5 +1,5 @@
-# quarkus-order-processor
+# quarkus-order-logger
 
 Example Quarkus application that:
 
-* receives commands via messaging channel and show them on screen
+* receives Order events from Kafka and send them to Telegram
