@@ -1,4 +1,4 @@
-This project has goal to demonstrate how is possible to migrate a legacy monolith Java Enterprise application as a container running in OpenShift Container Platform by adopting DevOps practices.
+This project has goal to demonstrate how is possible to migrate a legacy monolith Java Enterprise application as a container running in OpenShift Container Platform by adopting DevOps practices and how to extend it by using the transaction outbox pattern.
 
 The application is a simple JakartaEE web store application.
 
