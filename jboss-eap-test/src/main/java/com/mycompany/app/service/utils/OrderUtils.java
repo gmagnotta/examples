@@ -1,61 +1,63 @@
 package com.mycompany.app.service.utils;
 
-import java.io.StringWriter;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-
+import com.google.protobuf.ByteString;
+import com.mycompany.model.Item;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
-import org.gmagnotta.jaxb.ObjectFactory;
-import org.gmagnotta.jaxb.OrderCommandRequest;
-import org.gmagnotta.jaxb.OrderCommandRequestEnum;
-
 public class OrderUtils {
 
-    public static String marshallOrder(Order order) throws JAXBException, DatatypeConfigurationException {
-        
-        JAXBContext jaxbContext = JAXBContext.newInstance(OrderCommandRequest.class);
-        Marshaller mar = jaxbContext.createMarshaller();
+    // Helper methods to serialize to Protobuf
 
-        org.gmagnotta.jaxb.Order jaxbOrder = new org.gmagnotta.jaxb.Order();
-        
-        GregorianCalendar c = new GregorianCalendar();
-        c.setTime(new Date());
-        XMLGregorianCalendar date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-        jaxbOrder.setCreationDate(date2);
-        jaxbOrder.setExternalOrderId(order.getId() + "");
+    public static org.gmagnotta.model.event.OrderOuterClass.BigDecimal convertToProtobuf(BigDecimal bigDecimal) {
+		
+		return org.gmagnotta.model.event.OrderOuterClass.BigDecimal.newBuilder()
+				.setScale(bigDecimal.scale())
+				.setPrecision(bigDecimal.precision())
+				.setValue(ByteString.copyFrom(bigDecimal.unscaledValue().toByteArray()))
+				.build();
+	
+	}
+	
+	public static org.gmagnotta.model.event.OrderOuterClass.Item convertToProtobuf(Item item) {
+		
+		return org.gmagnotta.model.event.OrderOuterClass.Item.newBuilder()
+				.setId(item.getId())
+				.setDescription(item.getDescription())
+				.setPrice(convertToProtobuf(item.getPrice()))
+				.build();
+	}
+	
+	public static org.gmagnotta.model.event.OrderOuterClass.LineItem convertToProtobuf(LineItem lineItem) {
+		
+		return org.gmagnotta.model.event.OrderOuterClass.LineItem.newBuilder()
+				.setId(lineItem.getId())
+				.setPrice(convertToProtobuf(lineItem.getPrice()))
+				.setQuantity(lineItem.getQuantity())
+				.setItem(convertToProtobuf(lineItem.getItem()))
+				.build();
+	}
+	
+	public static org.gmagnotta.model.event.OrderOuterClass.Order convertToProtobuf(Order order) {
 
-        for (LineItem i : order.getLineItems()) {
-        
-            org.gmagnotta.jaxb.Item item = new org.gmagnotta.jaxb.Item();
-			item.setId(Integer.valueOf(i.getItem().getId()));
-            
-            org.gmagnotta.jaxb.LineItem jaxbLineItem = new org.gmagnotta.jaxb.LineItem();
-            jaxbLineItem.setItem(item);
-            jaxbLineItem.setQuantity(i.getQuantity());
+		List<org.gmagnotta.model.event.OrderOuterClass.LineItem> pLineItems = new ArrayList<org.gmagnotta.model.event.OrderOuterClass.LineItem>();
+		
+		for (LineItem lineItem : order.getLineItems()) {
+			pLineItems.add(convertToProtobuf(lineItem));
+		}
+		
+		return org.gmagnotta.model.event.OrderOuterClass.Order.newBuilder()
+				.setId(order.getId())
+				.setCreationDate(order.getCreationDate().getTime())
+				.setAmount(convertToProtobuf(order.getAmount()))
+				.addAllLineItems(pLineItems)
+				.setUser(order.getUser())
+				.build();
 
-            jaxbOrder.getLineItem().add(jaxbLineItem);
-        
-        }
-
-        OrderCommandRequest request = new OrderCommandRequest();
-        request.setOrder(jaxbOrder);
-        request.setOrderCommandEnum(OrderCommandRequestEnum.ORDER_RECEIVED);
-
-        mar.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        StringWriter sw = new StringWriter();
-        mar.marshal(new ObjectFactory().createOrderCommandRequest(request), sw);
-
-        return sw.toString();
-
-    }
+	}
     
 }

@@ -9,22 +9,16 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Table(name = "items")
-@XmlRootElement(name="oggetto")
 @NamedQueries({
 //@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.id"),
 @NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.price DESC"),
 @NamedQuery(name = "getItemsByDescription", query = "SELECT i FROM Item i where lower(i.description) LIKE lower(concat('%', :desc, '%')) ORDER BY i.id")
 })
-public class Item implements Serializable{
+public class Item implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -43,7 +37,6 @@ public class Item implements Serializable{
 		this.id = id;
 	}
 
-	@XmlElement(name= "desc")
 	public String getDescription() {
 		return description;
 	}

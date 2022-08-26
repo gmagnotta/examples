@@ -74,12 +74,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.3.1</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
@@ -104,6 +98,11 @@
 			<version>15.1.1</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>3.21.5</version>
+		  </dependency>
 
 	</dependencies>
 
@@ -160,28 +159,32 @@
 		</pluginManagement>
 		<plugins>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>jaxb2-maven-plugin</artifactId>
-				<version>2.5.0</version>
-				<executions>
-					<execution>
-						<id>xjc</id>
-						<goals>
-							<goal>xjc</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<!-- The package of your generated sources -->
-					<packageName>org.gmagnotta.jaxb</packageName>
-					<sources>
-						<source>src/main/resources/order.xsd</source>
-						<source>src/main/resources/aggregated.xsd</source>
-						<source>src/main/resources/ordercommandrequest.xsd</source>
-						<source>src/main/resources/ordercommandresponse.xsd</source>
-					</sources>
-				</configuration>
-			</plugin>
+					<groupId>com.github.os72</groupId>
+					<artifactId>protoc-jar-maven-plugin</artifactId>
+					<version>3.11.4</version>
+					<executions>
+						<execution>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<inputDirectories>
+									<include>${project.basedir}/src/main/proto</include>
+								</inputDirectories>
+								<outputTargets>
+									<outputTarget>
+										<type>java</type>
+										<addSources>main</addSources>
+										<outputDirectory>
+										  ${project.basedir}/target/generated-sources/protobuf
+									  </outputDirectory>
+									</outputTarget>
+								</outputTargets>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
 		</plugins>
 	</build>
 </project>

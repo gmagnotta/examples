@@ -1,0 +1,57 @@
+syntax = "proto2";
+
+package org.gmagnotta.model.event;
+
+message Order {
+   
+   required int32 id = 1;
+   
+   required fixed64 creationDate = 2;
+   
+   required BigDecimal amount = 3;
+   
+   repeated LineItem lineItems = 4;
+   
+   optional string user = 5;
+}
+
+
+message BigDecimal {
+   
+   required uint32 scale = 1;
+
+   required uint32 precision = 2;
+
+   required bytes value = 3;
+
+}
+
+
+message Item {
+   
+   required int32 id = 1;
+   
+   required string description = 2;
+   
+   required BigDecimal price = 3;
+}
+
+
+message LineItem {
+   
+   required int32 id = 1;
+   
+   required BigDecimal price = 2;
+   
+   required int32 quantity = 3;
+   
+   required Item item = 4;
+
+}
+
+
+message BigInteger {
+   
+   optional bytes bytes = 1;
+}
+

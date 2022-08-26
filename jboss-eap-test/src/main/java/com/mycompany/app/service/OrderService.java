@@ -11,8 +11,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
+import javax.enterprise.event.Event;
 
-import com.mycompany.app.service.utils.OrderUtils;
+import com.mycompany.event.ExportedEvent;
+import com.mycompany.event.impl.OrderCreatedEvent;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
@@ -31,6 +33,9 @@ public class OrderService
 
     @Resource(lookup="java:global/remoteContext/orderCommand")
     private Queue queue;
+
+    @Inject
+    Event<ExportedEvent> event;
     
     public List<Order> getOrders() {
 
@@ -50,9 +55,9 @@ public class OrderService
     		
     	}
 
-        String string = OrderUtils.marshallOrder(order);
+        // fire order created event
+        event.fire(OrderCreatedEvent.of(order));
 
-        context.createProducer().send(queue, string);
     }
     
 }

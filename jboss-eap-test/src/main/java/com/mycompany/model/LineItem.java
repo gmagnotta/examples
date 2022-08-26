@@ -14,9 +14,6 @@ import javax.persistence.Table;
 @Table(name =  "line_items")
 public class LineItem implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id
