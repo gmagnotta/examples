@@ -5,7 +5,7 @@ metadata:
 spec:
   params:
     - name: BUILDAH_IMAGE
-      default: registry.access.redhat.com/ubi8/buildah:8.5-4
+      default: registry.access.redhat.com/ubi8/buildah:8.5-14
       description: The location of the buildah builder image.
       type: string
     - name: S2I_IMAGE
