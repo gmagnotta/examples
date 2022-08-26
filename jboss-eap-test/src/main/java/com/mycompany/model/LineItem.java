@@ -11,7 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name =  "line_items")
+@Table(name = "line_items")
 public class LineItem implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -19,17 +19,17 @@ public class LineItem implements Serializable {
 	@Id
 	@GeneratedValue
 	private int id;
-	
+
 	private BigDecimal price;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "ord")
 	private Order order;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "item")
 	private Item Item;
-	
+
 	private int quantity;
 
 	public int getId() {
@@ -71,5 +71,5 @@ public class LineItem implements Serializable {
 	public void setQuantity(int quantity) {
 		this.quantity = quantity;
 	}
-	
+
 }

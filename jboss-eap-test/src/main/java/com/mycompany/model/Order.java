@@ -11,6 +11,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -23,20 +25,23 @@ import javax.persistence.TemporalType;
 @NamedQueries({
 		@NamedQuery(name = "getAllOrders", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems ORDER BY o.id ASC"),
 })
+@NamedNativeQueries({
+		@NamedNativeQuery(name = "getTopOrders", query = "select sum(quantity) as item, ord from line_items group by ord order by item desc, ord asc")
+})
 public class Order implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue
 	private int id;
-	
+
 	@Column(name = "creation_date")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creationDate;
-	
+
 	private BigDecimal amount;
-	
+
 	@OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
 	private Set<LineItem> lineItems;
 
@@ -47,7 +52,7 @@ public class Order implements Serializable {
 		this.lineItems = new HashSet<>();
 		this.creationDate = new Date();
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -89,23 +94,26 @@ public class Order implements Serializable {
 	}
 
 	@Override
-    public int hashCode() {
-        return java.util.Objects.hashCode(id) ;
-    }
-	
+	public int hashCode() {
+		return java.util.Objects.hashCode(id);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
-		
-		if (this == obj) return true;
-		
-		if (obj == null) return false;
-		
+
+		if (this == obj)
+			return true;
+
+		if (obj == null)
+			return false;
+
 		if (obj instanceof Order) {
-			
-			if ( ((Order) obj).getId() == id ) return true;
-		
+
+			if (((Order) obj).getId() == id)
+				return true;
+
 		}
-		
+
 		return false;
 	}
 

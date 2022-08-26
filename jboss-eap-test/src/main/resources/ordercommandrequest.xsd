@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:comm="http://gmagnotta.org/CommonTypes"
+	xmlns:cmd="http://gmagnotta.org/CommandRequestTypes"
+	targetNamespace="http://gmagnotta.org/CommandRequestTypes">
+
+	<xs:import schemaLocation="ordercommon.xsd"
+		namespace="http://gmagnotta.org/CommonTypes" />
+
+	<xs:complexType name="orderCommandRequest">
+		<xs:sequence>
+			<xs:element name="order" type="comm:order" minOccurs="0" />
+			<xs:element name="orderCommandEnum"
+				type="cmd:orderCommandRequestEnum" minOccurs="1" />
+			<xs:element name="parameter" type="xs:anyType"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="orderCommandRequestEnum">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ORDER_RECEIVED" />
+			<xs:enumeration value="GET_TOP_ORDERS" />
+			<xs:enumeration value="GET_TOP_ITEMS" />
+			<xs:enumeration value="REBUILD" />
+			<xs:enumeration value="RESET" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:element name="orderCommandRequest"
+		type="cmd:orderCommandRequest" />
+
+</xs:schema>
+

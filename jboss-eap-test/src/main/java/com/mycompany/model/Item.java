@@ -13,9 +13,10 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "items")
 @NamedQueries({
-//@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.id"),
-@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.price DESC"),
-@NamedQuery(name = "getItemsByDescription", query = "SELECT i FROM Item i where lower(i.description) LIKE lower(concat('%', :desc, '%')) ORDER BY i.id")
+		// @NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY
+		// i.id"),
+		@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.price DESC"),
+		@NamedQuery(name = "getItemsByDescription", query = "SELECT i FROM Item i where lower(i.description) LIKE lower(concat('%', :desc, '%')) ORDER BY i.id")
 })
 public class Item implements Serializable {
 
@@ -24,9 +25,9 @@ public class Item implements Serializable {
 	@Id
 	@GeneratedValue
 	private int id;
-	
+
 	private String description;
-	
+
 	private BigDecimal price;
 
 	public int getId() {
@@ -52,25 +53,28 @@ public class Item implements Serializable {
 	public void setPrice(BigDecimal price) {
 		this.price = price;
 	}
-	
+
 	@Override
-    public int hashCode() {
-        return java.util.Objects.hashCode(description);
-    }
-	
+	public int hashCode() {
+		return java.util.Objects.hashCode(description);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		
-		if (obj == null) return false;
-		
+		if (this == obj)
+			return true;
+
+		if (obj == null)
+			return false;
+
 		if (obj instanceof Item) {
-			
-			if ( ((Item) obj).getDescription().equals(description) &&
-					((Item) obj).getPrice().equals(price)) return true;
-		
+
+			if (((Item) obj).getDescription().equals(description) &&
+					((Item) obj).getPrice().equals(price))
+				return true;
+
 		}
-		
+
 		return false;
 	}
 }

@@ -21,12 +21,14 @@ import com.mycompany.event.ExportedEvent;
 /**
  * The outbox event entity.
  *
- * The contents of the {@link ExportedEvent} will be replicated to this entity definition and persisted to
+ * The contents of the {@link ExportedEvent} will be replicated to this entity
+ * definition and persisted to
  * the database in order for Debezium to capture the event.
  *
  * @author Chris Cranford
  * 
- * This class was adapted from https://github.com/Naros/debezium-quarkus/blob/master/extensions/outbox/runtime/src/main/java/io/debezium/quarkus/outbox/OutboxEvent.java
+ *         This class was adapted from
+ *         https://github.com/Naros/debezium-quarkus/blob/master/extensions/outbox/runtime/src/main/java/io/debezium/quarkus/outbox/OutboxEvent.java
  */
 @Entity
 public class OutboxEvent {
@@ -42,10 +44,10 @@ public class OutboxEvent {
     private String type;
 
     @Column(name = "creation_date")
-	@Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
-    @Column(columnDefinition="BLOB")
+    @Column(columnDefinition = "BLOB")
     private byte[] payload;
 
     public OutboxEvent(String aggregateType, String aggregateId, String type, byte[] payload, Date timestamp) {

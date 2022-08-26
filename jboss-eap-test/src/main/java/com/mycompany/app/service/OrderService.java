@@ -2,11 +2,8 @@ package com.mycompany.app.service;
 
 import java.util.List;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.jms.JMSContext;
-import javax.jms.Queue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -20,44 +17,64 @@ import com.mycompany.model.Order;
 
 /**
  * Hello world!
- *
  */
 @Stateless
-public class OrderService
-{
+public class OrderService {
     @PersistenceContext(unitName = "store")
-	private EntityManager entityManager;
-
-    @Inject
-    private JMSContext context;
-
-    @Resource(lookup="java:global/remoteContext/orderCommand")
-    private Queue queue;
+    private EntityManager entityManager;
 
     @Inject
     Event<ExportedEvent> event;
-    
+
     public List<Order> getOrders() {
 
-    	Query query = entityManager.createNamedQuery("getAllOrders", Order.class);
-    	
-    	return query.getResultList();
+        Query query = entityManager.createNamedQuery("getAllOrders", Order.class);
+
+        return query.getResultList();
     }
-    
+
     @Transactional
     public void createOrder(Order order) throws Exception {
-    	
-    	entityManager.persist(order);
-    	
-    	for (LineItem i : order.getLineItems()) {
-    	
-    		entityManager.persist(i);
-    		
-    	}
+
+        entityManager.persist(order);
+
+        for (LineItem i : order.getLineItems()) {
+
+            entityManager.persist(i);
+
+        }
 
         // fire order created event
         event.fire(OrderCreatedEvent.of(order));
 
     }
-    
+
+    public List<Object> getTopOrders() throws Exception {
+
+        Query query = entityManager.createNativeQuery("getTopOrders", List.class);
+
+        List<Object> queryResult = query.setMaxResults(10).getResultList();
+
+        // Iterator<Object> iterator = queryResult.iterator();
+
+        // List<TopValue> result = new ArrayList<TopValue>();
+
+        // while (iterator.hasNext()) {
+
+        // Object obj = iterator.next();
+
+        // Object[] cast = (Object[]) obj;
+
+        // TopValue top = new TopValue();
+        // BigInteger b = (BigInteger) cast[0];
+        // Integer i = (Integer) cast[1];
+
+        // top.setId(b.intValue());
+        // top.setValue(i);
+        // result.add(top);
+        // }
+
+        return queryResult;
+    }
+
 }
