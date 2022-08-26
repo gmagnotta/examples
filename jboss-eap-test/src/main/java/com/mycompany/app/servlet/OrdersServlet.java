@@ -55,7 +55,7 @@ public class OrdersServlet extends HttpServlet {
 
 			order.setAmount(sum);
 			order.setCreationDate(new Date());
-			order.setUser(request.getUserPrincipal().getName());
+			order.setUser(request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "ANONYMOUS");
 
 			//KeycloakSecurityContext context = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
 			//if (context != null) {
