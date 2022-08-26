@@ -39,21 +39,11 @@ spec:
         - resources: {}
           name: quarkus-order-logger
           env:
-            - name: quarkus_artemis_url
+            - name: kafka_broker
               valueFrom:
                 configMapKeyRef:
                   name: quarkus-order-logger
-                  key: amq-broker
-            - name: quarkus_artemis_username
-              valueFrom:
-                secretKeyRef:
-                  name: jboss-eap
-                  key: mq-username
-            - name: quarkus_artemis_password
-              valueFrom:
-                secretKeyRef:
-                  name: jboss-eap
-                  key: mq-password
+                  key: kafka-broker
             - name: quarkus_log_level
               value: INFO
             - name: quarkus_log_file_path

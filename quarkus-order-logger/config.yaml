@@ -11,4 +11,4 @@ apiVersion: v1
 metadata:
   name: quarkus-order-logger
 data:
-  amq-broker: tcp://amqbroker.project:61616
+  kafka-broker: kafka:9092
