@@ -39,11 +39,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel.quarkus</groupId>
-      <artifactId>camel-quarkus-jaxb</artifactId>
+      <artifactId>camel-quarkus-direct</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.camel.quarkus</groupId>
-      <artifactId>camel-quarkus-direct</artifactId>
+      <artifactId>camel-quarkus-kafka</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.camel.quarkus</groupId>
@@ -55,16 +55,17 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-artemis-jms</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-metrics</artifactId>
-  </dependency>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>3.21.5</version>
+    </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
@@ -137,25 +138,31 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>jaxb2-maven-plugin</artifactId>
+        <groupId>com.github.os72</groupId>
+        <artifactId>protoc-jar-maven-plugin</artifactId>
+        <version>3.11.4</version>
         <executions>
           <execution>
-            <id>xjc</id>
+            <phase>generate-sources</phase>
             <goals>
-              <goal>xjc</goal>
+              <goal>run</goal>
             </goals>
+            <configuration>
+              <inputDirectories>
+                <include>${project.basedir}/src/main/proto</include>
+              </inputDirectories>
+              <outputTargets>
+                <outputTarget>
+                  <type>java</type>
+                  <addSources>main</addSources>
+                  <outputDirectory>
+                    ${project.basedir}/target/generated-sources/protobuf
+                  </outputDirectory>
+                </outputTarget>
+              </outputTargets>
+            </configuration>
           </execution>
         </executions>
-        <configuration>
-          <!-- The package of your generated sources -->
-          <packageName>org.gmagnotta.jaxb</packageName>
-          <sources>
-            <source>src/main/resources/aggregated.xsd</source>
-            <source>src/main/resources/ordercommandrequest.xsd</source>
-            <source>src/main/resources/ordercommandresponse.xsd</source>
-          </sources>
-        </configuration>
       </plugin>
     </plugins>
   </build>
