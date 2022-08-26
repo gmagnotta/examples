@@ -3,7 +3,7 @@ set -e
 
 podman run --rm -ti -p 8080:8080 \
 -e DB_SERVICE_PREFIX_MAPPING=ocp-postgresql=DS1 \
--e OCP_POSTGRESQL_SERVICE_HOST=192.168.3.225 \
+-e OCP_POSTGRESQL_SERVICE_HOST=192.168.1.6 \
 -e OCP_POSTGRESQL_SERVICE_PORT=5432 \
 -e DS1_CONNECTION_CHECKER=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker \
 -e DS1_DATABASE=db \
@@ -17,4 +17,4 @@ podman run --rm -ti -p 8080:8080 \
 -e DS1_DATABASE=db \
 -e DS1_USERNAME=user \
 -e DS1_PASSWORD=pass \
-myjbosseap
+localhost/jboss-test

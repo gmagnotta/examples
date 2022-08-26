@@ -3,22 +3,19 @@
 # This script emulates an s2i build process performed exclusively with buildah.
 # Currently only builder images are supported.
 #
-# Version 0.0.1
+# Version 0.0.4
 #
 set -e
 
 BUILDER_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8"
+RUNTIME_IMAGE=""
+#RUNTIME_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8"
 ASSEMBLE_USER="jboss"
 SCRIPTS_URL="/usr/local/s2i/"
 OUTPUT_IMAGE="jboss-test"
 INCREMENTAL=true
 CONTEXT_DIR="."
-
-#Define ENV variables that you want to inject, and list in ENVIRONMENTS separated by comma
-CUSTOM_INSTALL_DIRECTORIES=extensions
-GALLEON_PROVISION_LAYERS=""
-GALLEON_PROVISION_DEFAULT_FAT_SERVER=true
-ENVIRONMENTS="CUSTOM_INSTALL_DIRECTORIES"
+RUNTIME_ARTIFACT="/deployments/"
 
 echo "Start"
 builder=$(buildah from $BUILDER_IMAGE)
@@ -34,32 +31,27 @@ if [ "$INCREMENTAL" = "true" ]; then
 
 fi
 
-COMMAND=""
+ENV=""
+if [ -f "$CONTEXT_DIR/.s2i/environment" ]; then
 
-if [ -n "$ENVIRONMENTS" ]; then
+    while IFS="" read -r line
+    do
+      [[ "$line" =~ ^#.*$ ]] && continue
+      ENV+="-e $line "
+    done < $CONTEXT_DIR/.s2i/environment
 
-    COMMAND+="buildah config "
+    echo "ENV is $ENV"
 
-    IFS=','; for word in $ENVIRONMENTS; do COMMAND+="--env $word=${!word} "; done
-
-    COMMAND+='$builder'
-
-fi
-
-if [ ! -z "$COMMAND" ]; then
-    echo "Executing $COMMAND"
-
-    eval "$COMMAND"
 fi
 
 buildah config --cmd $SCRIPTS_URL/run $builder
 
 if [ -x "$CONTEXT_DIR/.s2i/bin/assemble" ]; then
     echo "Using assemble from .s2i"
-    buildah run $builder -- /tmp/src/.s2i/bin/assemble
+    eval buildah run $ENV $builder -- /tmp/src/.s2i/bin/assemble
 else
     echo "Using assemble from image"
-    buildah run $builder -- $SCRIPTS_URL/assemble
+    eval buildah run $ENV $builder -- $SCRIPTS_URL/assemble
 fi
 
 if [ "$INCREMENTAL" = "true" ]; then
@@ -69,10 +61,29 @@ if [ "$INCREMENTAL" = "true" ]; then
         rm ./artifacts.tar
     fi
 
-    buildah run $builder -- /bin/bash -c 'if [ -x "$SCRIPTS_URL/save-artifacts" ]; then $SCRIPTS_URL/save-artifacts ; fi' > ./artifacts.tar
+    buildah run $builder -- /bin/bash -c "if [ -x \"$SCRIPTS_URL/save-artifacts\" ]; then $SCRIPTS_URL/save-artifacts ; fi" > ./artifacts.tar
 
 fi
 
-buildah commit $builder $OUTPUT_IMAGE
+# RUNTIME IMAGE BUILD
+if [ ! -z "$RUNTIME_IMAGE" ]; then
+
+    echo "Creating Runtime Image"
+
+    runner=$(buildah from $RUNTIME_IMAGE)
+
+    buildah copy --chown $ASSEMBLE_USER:0 --from $builder $runner $RUNTIME_ARTIFACT $RUNTIME_ARTIFACT
+
+    buildah commit $runner $OUTPUT_IMAGE
+
+    buildah rm $runner
+
+else
+
+    echo "Not creating runtime image"
+
+    buildah commit $builder $OUTPUT_IMAGE
+
+fi
 
 buildah rm $builder
