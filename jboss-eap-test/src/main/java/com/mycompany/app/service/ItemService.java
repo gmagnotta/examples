@@ -1,6 +1,9 @@
 package com.mycompany.app.service;
 
+import java.math.BigInteger;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -11,6 +14,7 @@ import com.mycompany.model.Item;
 
 @Stateless
 public class ItemService {
+
     @PersistenceContext(unitName = "store")
     private EntityManager entityManager;
 
@@ -45,6 +49,25 @@ public class ItemService {
 
     public void deleteItem(Item item) {
         entityManager.remove(entityManager.contains(item) ? item : entityManager.merge(item));
+    }
+
+    public Map<Integer, Integer> getTopItems() {
+
+        Query query = entityManager.createNamedQuery("getTopItems");
+
+        List<Object[]> queryResult = query.setMaxResults(10).getResultList();
+
+        Map<Integer, Integer> values = new LinkedHashMap<>();
+
+        for (Object[] a : queryResult) {
+
+            Integer item = (Integer) a[0];
+            BigInteger qty = (BigInteger) a[1];
+
+            values.put(item, Integer.valueOf(qty.intValue()));
+        }
+
+        return values;
     }
 
 }

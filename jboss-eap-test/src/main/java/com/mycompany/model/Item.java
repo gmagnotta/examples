@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -17,6 +19,9 @@ import javax.persistence.Table;
 		// i.id"),
 		@NamedQuery(name = "getAllItems", query = "SELECT i FROM Item i ORDER BY i.price DESC"),
 		@NamedQuery(name = "getItemsByDescription", query = "SELECT i FROM Item i where lower(i.description) LIKE lower(concat('%', :desc, '%')) ORDER BY i.id")
+})
+@NamedNativeQueries({
+	@NamedNativeQuery(name = "getTopItems", query = "select item, sum(quantity) from line_items group by item order by sum(quantity) desc")
 })
 public class Item implements Serializable {
 

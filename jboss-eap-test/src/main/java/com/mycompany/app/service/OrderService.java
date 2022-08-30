@@ -1,6 +1,9 @@
 package com.mycompany.app.service;
 
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -49,32 +52,24 @@ public class OrderService {
 
     }
 
-    public List<Object> getTopOrders() throws Exception {
+    public Map<Integer, Double> getTopOrders() {
 
-        Query query = entityManager.createNativeQuery("getTopOrders", List.class);
+        Query query = entityManager.createNamedQuery("getTopOrders");
 
-        List<Object> queryResult = query.setMaxResults(10).getResultList();
+        List<Object[]> queryResult = query.setMaxResults(10).getResultList();
 
-        // Iterator<Object> iterator = queryResult.iterator();
+        Map<Integer, Double> values = new LinkedHashMap<>();
 
-        // List<TopValue> result = new ArrayList<TopValue>();
+        for (Object[] a : queryResult) {
 
-        // while (iterator.hasNext()) {
+            Integer id = (Integer) a[0];
+            BigDecimal amount = (BigDecimal) a[1];
 
-        // Object obj = iterator.next();
+            values.put(id, Double.valueOf(amount.doubleValue()));
+        }
 
-        // Object[] cast = (Object[]) obj;
+        return values;
 
-        // TopValue top = new TopValue();
-        // BigInteger b = (BigInteger) cast[0];
-        // Integer i = (Integer) cast[1];
-
-        // top.setId(b.intValue());
-        // top.setValue(i);
-        // result.add(top);
-        // }
-
-        return queryResult;
     }
 
 }
