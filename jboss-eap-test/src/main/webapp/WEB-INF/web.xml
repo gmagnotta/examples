@@ -36,6 +36,15 @@
     <servlet-class>com.mycompany.app.servlet.LogoutServlet</servlet-class>
   </servlet>
 
+  <servlet>
+    <servlet-name>TopItemsServlet</servlet-name>
+    <servlet-class>com.mycompany.app.servlet.TopItemsServlet</servlet-class>
+  </servlet>
+
+  <servlet>
+    <servlet-name>TopOrdersServlet</servlet-name>
+    <servlet-class>com.mycompany.app.servlet.TopOrdersServlet</servlet-class>
+  </servlet>
 
   <servlet-mapping>
     <servlet-name>ItemServlet</servlet-name>
@@ -57,7 +66,6 @@
     <url-pattern>/cartcontroller</url-pattern>
   </servlet-mapping>
 
-
   <servlet-mapping>
     <servlet-name>AdminOrdersServlet</servlet-name>
     <url-pattern>/admin/ordercontroller</url-pattern>
@@ -66,6 +74,16 @@
   <servlet-mapping>
     <servlet-name>AdminItemsServlet</servlet-name>
     <url-pattern>/admin/itemcontroller</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>TopItemsServlet</servlet-name>
+    <url-pattern>/admin/topItems</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>TopOrdersServlet</servlet-name>
+    <url-pattern>/admin/topOrders</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
