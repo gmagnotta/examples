@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.kafka.common.serialization.Deserializer;
+import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.event.OrderOuterClass.Order;
 
 import com.google.protobuf.InvalidProtocolBufferException;

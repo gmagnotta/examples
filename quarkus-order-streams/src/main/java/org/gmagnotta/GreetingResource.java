@@ -1,6 +1,5 @@
 package org.gmagnotta;
 
-import java.lang.Thread.State;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -15,12 +14,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.state.KeyValueIterator;
-import org.apache.kafka.streams.state.QueryableStoreType;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
+import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.event.OrderOuterClass.Order;
-import org.gmagnotta.serde.BiggestOrders;
 import org.jboss.logging.Logger;
 
 @Path("/api")
@@ -37,7 +36,8 @@ public class GreetingResource {
     public String getTopItems() {
 
         ReadOnlyKeyValueStore<Integer, Integer> keyValueStore =
-             streams.store("itemsQuantity", QueryableStoreTypes.keyValueStore());
+             //streams.store("itemsQuantity", QueryableStoreTypes.keyValueStore());
+             streams.store(StoreQueryParameters.fromNameAndType("itemsQuantity", QueryableStoreTypes.keyValueStore()));
 
         KeyValueIterator<Integer, Integer> all = keyValueStore.all();
 
@@ -59,6 +59,8 @@ public class GreetingResource {
         //.forEachOrdered(x -> sortedMap.put(x.getKey(), x.getValue()));
         .forEachOrdered(x -> stringBuffer.append("Item: " + x.getKey() + " quantity: " + x.getValue() + "\n"));
 
+        all.close();
+
         return stringBuffer.toString();
     }
 
@@ -68,9 +70,10 @@ public class GreetingResource {
     public String getTopOrders() {
 
         ReadOnlyKeyValueStore<String, BiggestOrders> keyValueStore =
-             streams.store("orderStateStore", QueryableStoreTypes.keyValueStore());
+             //streams.store("orderStateStore", QueryableStoreTypes.keyValueStore());
+             streams.store(StoreQueryParameters.fromNameAndType("orderStateStore", QueryableStoreTypes.keyValueStore()));
 
-        BiggestOrders biggest = keyValueStore.get("MAX_ORDER");
+        BiggestOrders biggest = keyValueStore.get(BiggestOrderTransformer.MAX_ORDER);
 
         Iterator<Order> iterator = biggest.iterator();
 

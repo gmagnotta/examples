@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.kafka.common.serialization.Serializer;
+import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.event.OrderOuterClass.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

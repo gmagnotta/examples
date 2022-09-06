@@ -1,4 +1,4 @@
-package org.gmagnotta.serde;
+package org.gmagnotta.model;
 
 import java.util.Iterator;
 import java.util.TreeSet;
