@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quarkus-order-streams
+  labels:
+    app: quarkus-order-streams
+  annotations:
+    prometheus.io/scrape_port: '8080'
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/q/metrics/'
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: quarkus-order-streams
+  type: ClusterIP
+  sessionAffinity: None
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: quarkus-order-streams
+  labels:
+    app: quarkus-order-streams
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-order-streams
+  template:
+    metadata:
+      labels:
+        app: quarkus-order-streams
+    spec:
+      containers:
+        - resources: {}
+          name: quarkus-order-streams
+          env:
+            - name: KAFKA_BROKER
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-streams
+                  key: kafka-broker
+            - name: QUARKUS_LOG_LEVEL
+              value: INFO
+            - name: QUARKUS_LOG_FILE_PATH
+              value: /tmp/quarkus.log
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          imagePullPolicy: Always
+          image: quay.io/gmagnotta/quarkus-order-streams
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: quarkus-order-streams
+  labels:
+    app: quarkus-order-streams
+spec:
+  to:
+    kind: Service
+    name: quarkus-order-streams
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
