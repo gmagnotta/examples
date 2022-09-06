@@ -39,14 +39,14 @@ spec:
         - resources: {}
           name: quarkus-order-logger
           env:
-            - name: kafka_broker
+            - name: KAFKA_BROKER
               valueFrom:
                 configMapKeyRef:
                   name: quarkus-order-logger
                   key: kafka-broker
-            - name: quarkus_log_level
+            - name: QUARKUS_LOG_LEVEL
               value: INFO
-            - name: quarkus_log_file_path
+            - name: QUARKUS_LOG_FILE_PATH
               value: /tmp/quarkus.log
             - name: TELEGRAM_TOKEN
               valueFrom:

@@ -38,9 +38,9 @@ public class TelegramRoute extends RouteBuilder {
 
         getContext().getTypeConverterRegistry().addTypeConverter(String.class, Order.class, new OrderStringConverter());
 
-        from("kafka:outbox.event.Order")
-            .log("Message received from Kafka!")
+        from("kafka:outbox.event.OrderCreated")
             .convertBodyTo(String.class)
+            .log("Message received from Kafka! ${body}")
             .to("direct:telegram");
 
         from("direct:telegram")
