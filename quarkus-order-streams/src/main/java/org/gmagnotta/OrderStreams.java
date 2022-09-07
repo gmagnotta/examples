@@ -31,10 +31,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.event.OrderOuterClass.LineItem;
 import org.gmagnotta.model.event.OrderOuterClass.Order;
-import org.gmagnotta.serde.OrderDeserializer;
 import org.gmagnotta.serde.BiggestOrdersDeserializer;
 import org.gmagnotta.serde.BiggestOrdersSerializer;
-import org.gmagnotta.serde.OrderSerializer;
+import org.gmagnotta.serde.QuarkusOrderStreamsSerdes;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
@@ -63,13 +62,11 @@ public class OrderStreams {
 
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        Serde<Order> orderSerde = Serdes.serdeFrom(new OrderSerializer(), new OrderDeserializer());
-
         StreamsBuilder builder = new StreamsBuilder();
 
         // Source stream from OrderCreated topics
         KStream<String, Order> ordersStream = builder
-			.stream("outbox.event.OrderCreated", Consumed.with(Serdes.String(), orderSerde));
+			.stream("outbox.event.OrderCreated", Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
         
         //ordersStream.print(Printed.<String,Order>toSysOut().withLabel("orders"));
           
@@ -101,13 +98,10 @@ public class OrderStreams {
              .withValueSerde(Serdes.Integer())
         );
 
-
-        Serde<BiggestOrders> biggestOrdersSerde = Serdes.serdeFrom(new BiggestOrdersSerializer(), new BiggestOrdersDeserializer(10));
-        
         // Find biggest Orders
         String orderStateStoreName = "orderStateStore";
         KeyValueBytesStoreSupplier orderSupplier = Stores.persistentKeyValueStore(orderStateStoreName);
-        StoreBuilder<KeyValueStore<String, BiggestOrders>> storeBuilder = Stores.keyValueStoreBuilder(orderSupplier, Serdes.String(), biggestOrdersSerde);
+        StoreBuilder<KeyValueStore<String, BiggestOrders>> storeBuilder = Stores.keyValueStoreBuilder(orderSupplier, Serdes.String(), QuarkusOrderStreamsSerdes.BiggestOrders(10));
         
         builder.addStateStore(storeBuilder);
 
