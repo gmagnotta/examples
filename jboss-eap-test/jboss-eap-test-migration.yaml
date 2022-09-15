@@ -2,7 +2,7 @@ apiVersion: template.openshift.io/v1
 kind: Template
 labels:
   template: jboss-eap-migration
-  application: ${APPLICATION_NAME}
+  application: ${APPLICATION_NAME}-migration
 message: This is an OpenShift template to deploy jboss-eap-migration to database.
 metadata:
   name: jboss-eap-migration
@@ -14,12 +14,12 @@ objects:
   metadata:
     name: jboss-eap-test-migrate
     labels:
-      app: ${APPLICATION_NAME}
+      app: ${APPLICATION_NAME}-migration
   spec:
     template:
       metadata:
         labels:
-          app: ${APPLICATION_NAME}
+          app: ${APPLICATION_NAME}-migration
       spec:
         restartPolicy: OnFailure
         containers:
