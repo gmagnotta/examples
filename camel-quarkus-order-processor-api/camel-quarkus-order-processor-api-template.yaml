@@ -49,6 +49,16 @@ objects:
                   configMapKeyRef:
                     name: quarkus-order-processor-api
                     key: quarkus-artemis-url
+              - name: QUARKUS_ARTEMIS_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: jboss-eap
+                    key: mq-username
+              - name: QUARKUS_ARTEMIS_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: jboss-eap
+                    key: mq-password
               - name: QUARKUS_LOG_LEVEL
                 valueFrom:
                   configMapKeyRef:
@@ -140,7 +150,7 @@ objects:
 parameters:
 - description: Artemis url
   name: ARTEMIS_URL
-  value: 'tcp://amqbroker:61616'
+  value: 'tcp://amqbroker.namespace:61616'
 - description: Container image to use
   name: IMAGE
   required: true
