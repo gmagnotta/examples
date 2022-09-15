@@ -12,9 +12,9 @@ import org.eclipse.microprofile.opentracing.Traced;
 import org.gmagnotta.jaxb.Aggregateditemtype;
 import org.gmagnotta.jaxb.Aggregatedordertype;
 import org.gmagnotta.jaxb.Aggregationtype;
-import org.gmagnotta.jaxb.OrderCommandRequest;
-import org.gmagnotta.jaxb.OrderCommandRequestEnum;
 import org.gmagnotta.jaxb.OrderCommandResponse;
+import org.gmagnotta.jaxb.TopItemsRequest;
+import org.gmagnotta.jaxb.TopOrdersRequest;
 import org.gmagnotta.jaxb.TopValue;
 import org.jboss.logging.Logger;
 
@@ -31,8 +31,7 @@ public class QueryUtils {
 	
 	public void prepareGetTopOrders(Exchange exchange) throws Exception {
 
-        OrderCommandRequest request = new OrderCommandRequest();
-        request.setOrderCommandEnum(OrderCommandRequestEnum.GET_TOP_ORDERS);
+		TopOrdersRequest request = new TopOrdersRequest();
         
         // replace the body of the exchange
         exchange.getIn().setBody(request);
@@ -72,8 +71,7 @@ public class QueryUtils {
 	
 	public void prepareGetTopItems(Exchange exchange) throws Exception {
 
-        OrderCommandRequest request = new OrderCommandRequest();
-        request.setOrderCommandEnum(OrderCommandRequestEnum.GET_TOP_ITEMS);
+        TopItemsRequest request = new TopItemsRequest();
         
         // replace the body of the exchange
         exchange.getIn().setBody(request);
@@ -115,11 +113,11 @@ public class QueryUtils {
 	
 	public void prepareReset(Exchange exchange) throws Exception {
 
-        OrderCommandRequest request = new OrderCommandRequest();
+        /*OrderCommandRequest request = new OrderCommandRequest();
         request.setOrderCommandEnum(OrderCommandRequestEnum.RESET);
         
         // replace the body of the exchange
-        exchange.getIn().setBody(request);
+        exchange.getIn().setBody(request);*/
 
 	}
 
@@ -137,11 +135,11 @@ public class QueryUtils {
 	
 	public void prepareRebuild(Exchange exchange) throws Exception {
 
-        OrderCommandRequest request = new OrderCommandRequest();
+        /*OrderCommandRequest request = new OrderCommandRequest();
         request.setOrderCommandEnum(OrderCommandRequestEnum.REBUILD);
         
         // replace the body of the exchange
-        exchange.getIn().setBody(request);
+        exchange.getIn().setBody(request);*/
 
 	}
 

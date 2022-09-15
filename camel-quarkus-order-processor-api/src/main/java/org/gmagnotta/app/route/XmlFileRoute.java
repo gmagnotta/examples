@@ -76,7 +76,7 @@ public class XmlFileRoute extends RouteBuilder {
           .to("bean://orderprocessor")
           .marshal(jaxbDataFormat)
           .transacted()
-           .to("activemq:queue:orderCommand?jmsMessageType=Text")
+           .to("activemq:queue:createOrderCommand?jmsMessageType=Text")
           .end()
          .log("done processing order ${headers.OrderEntity.id}");
         
