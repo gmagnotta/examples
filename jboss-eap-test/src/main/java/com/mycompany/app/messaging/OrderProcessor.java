@@ -16,8 +16,6 @@ import javax.transaction.Transactional;
 
 import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
-import org.gmagnotta.jaxb.OrderCommandRequest;
-import org.gmagnotta.jaxb.OrderCommandRequestEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +25,7 @@ import com.mycompany.app.service.OrderService;
 import com.mycompany.model.Order;
 
 @MessageDriven(name = "OrderProcessor", activationConfig = {
-		@ActivationConfigProperty(propertyName = "destinationLookup", propertyValue = "java:global/remoteContext/orderCommand"),
+		@ActivationConfigProperty(propertyName = "destinationLookup", propertyValue = "java:global/remoteContext/createOrderCommand"),
 		@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue")
 })
 public class OrderProcessor implements MessageListener {
@@ -36,9 +34,6 @@ public class OrderProcessor implements MessageListener {
 
 	@Inject
 	private JMSContext context;
-
-	@Resource(lookup = "java:global/remoteContext/orderChanged")
-	private Queue orderChangedQueue;
 
 	@Resource(lookup = "java:global/remoteContext/invalidMessage")
 	private Queue invalidMessageQueue;
@@ -66,32 +61,22 @@ public class OrderProcessor implements MessageListener {
 
 				// LOGGER.info("Received content " + requestMessage.getText());
 
-				OrderCommandRequest orderCommandRequest = UmarshallUtils.unmarshall(OrderCommandRequest.class,
+				org.gmagnotta.jaxb.CreateOrderRequest createOrder = UmarshallUtils.unmarshall(org.gmagnotta.jaxb.CreateOrderRequest.class,
 						requestMessage.getText());
 
 				LOGGER.info("Received message id " + message.getJMSMessageID());
 
-				if (orderCommandRequest.getOrderCommandEnum().equals(OrderCommandRequestEnum.ORDER_RECEIVED)) {
+				com.mycompany.model.Order jpaOrder = convertoToJpaOrder(createOrder.getOrder());
 
-					org.gmagnotta.jaxb.Order jaxbOrder = orderCommandRequest.getOrder();
-
-					com.mycompany.model.Order jpaOrder = convertoToJpaOrder(jaxbOrder);
-
-					orderService.createOrder(jpaOrder);
-
-				} else {
-
-					LOGGER.warn("Unknown operation");
-
-					context.createProducer().send(invalidMessageQueue, message);
-
-				}
+				orderService.createOrder(jpaOrder);
 
 			}
 
 		} catch (Exception e) {
 
 			LOGGER.error("An exception occurred during message processing", e);
+
+			context.createProducer().send(invalidMessageQueue, message);
 
 		}
 

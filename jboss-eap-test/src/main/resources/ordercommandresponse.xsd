@@ -8,16 +8,24 @@
 	<xs:import schemaLocation="ordercommon.xsd"
 		namespace="http://gmagnotta.org/CommonTypes" />
 
-	<xs:complexType name="orderCommandResponse">
+	<xs:complexType name="topOrdersResponse">
 		<xs:sequence>
 			<xs:element name="topvalue" type="comm:topValue" minOccurs="0"
 				maxOccurs="unbounded" />
-			<xs:element name="status" type="xs:string" minOccurs="0" />
+			<xs:element name="source" type="xs:string" minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:element name="orderCommandResponse"
-		type="cmd:orderCommandResponse" />
+	<xs:element name="topOrders" type="cmd:topOrdersResponse" />
+
+	<xs:complexType name="topItemsResponse">
+		<xs:sequence>
+			<xs:element name="topvalue" type="comm:topValue" minOccurs="0"
+				maxOccurs="unbounded" />
+			<xs:element name="source" type="xs:string" minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="topItemsResponse" type="cmd:topItemsResponse" />
 
 </xs:schema>
-
