@@ -320,6 +320,10 @@ objects:
                 value: jdbc:postgresql://$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)
               - name: FLYWAY_PARAMS
                 value: 'validate'
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
         restartPolicy: Always
         terminationGracePeriodSeconds: 75
         dnsPolicy: ClusterFirst
