@@ -1,2 +1,0 @@
-MAVEN_S2I_GOALS="package test"
-S2I_SOURCE_DEPLOYMENTS_FILTER="*-runner.jar lib"
