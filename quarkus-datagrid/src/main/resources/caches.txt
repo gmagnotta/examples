@@ -12,7 +12,6 @@
             <indexing enabled="true">
                 <indexed-entities>
                     <indexed-entity>library.Order</indexed-entity>
-                    <indexed-entity>library.LineItem</indexed-entity>
                 </indexed-entities>
             </indexing>
         </distributed-cache>

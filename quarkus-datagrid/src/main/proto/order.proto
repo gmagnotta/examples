@@ -2,19 +2,6 @@ syntax = "proto2";
 
 package org.gmagnotta.model.event;
 
-message OrderChangeEvent {
-
-	enum EventType {
-		ORDER_CREATED = 1;
-		ORDER_UPDATED = 2;
-		ORDER_DELETED = 3;
-	}
-
-	required EventType type = 1;
-
-	required Order order = 2;
-}
-
 message Order {
    
    required int32 id = 1;
@@ -25,15 +12,18 @@ message Order {
    
    repeated LineItem lineItems = 4;
    
-   optional string externalOrderId = 5;
+   optional string user = 5;
 }
 
 
 message BigDecimal {
    
-   optional bytes unscaledValue = 1;
-   
-   optional int32 scale = 2 [default = 0];
+   required uint32 scale = 1;
+
+   required uint32 precision = 2;
+
+   required bytes value = 3;
+
 }
 
 
@@ -56,8 +46,7 @@ message LineItem {
    required int32 quantity = 3;
    
    required Item item = 4;
-   
-   required int32 orderid = 5;
+
 }
 
 

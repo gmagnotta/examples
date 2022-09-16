@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.descriptors.Type;
 
 @ProtoDoc("@Indexed")
 public class LineItem implements Serializable {

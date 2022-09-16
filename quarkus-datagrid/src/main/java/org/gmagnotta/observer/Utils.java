@@ -3,7 +3,6 @@ package org.gmagnotta.observer;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Date;
 
 import javax.xml.bind.JAXBContext;
@@ -40,20 +39,22 @@ public class Utils {
     	
 	}
 	
-	public static org.gmagnotta.model.Order convertoToModel(org.gmagnotta.model.event.Orderchangeevent.Order order) {
+	public static org.gmagnotta.model.Order convertoToModel(org.gmagnotta.model.event.OrderOuterClass.Order order) {
 		
 		org.gmagnotta.model.Order modelOrder = new org.gmagnotta.model.Order();
 		
 		modelOrder.setId(order.getId());
 		modelOrder.setCreationDate(new Date(order.getCreationDate()));
 		modelOrder.setAmount(convertToModel(order.getAmount()));
-		modelOrder.setExternalOrderId(order.getExternalOrderId());
+		//modelOrder.setExternalOrderId(order.getExternalOrderId());
+		modelOrder.setUser(order.getUser());
 		
-		for (org.gmagnotta.model.event.Orderchangeevent.LineItem l : order.getLineItemsList()) {
+		for (org.gmagnotta.model.event.OrderOuterClass.LineItem l : order.getLineItemsList()) {
             
 			
 			org.gmagnotta.model.LineItem modelLineItem = convertToModel(l);
 			modelLineItem.setOrder(modelOrder);
+			modelLineItem.setOrderid(order.getId());
 			
 			modelOrder.addLineItem(modelLineItem);
 
@@ -64,7 +65,7 @@ public class Utils {
 		
 	}
 	
-	public static org.gmagnotta.model.LineItem convertToModel(org.gmagnotta.model.event.Orderchangeevent.LineItem lineItem) {
+	public static org.gmagnotta.model.LineItem convertToModel(org.gmagnotta.model.event.OrderOuterClass.LineItem lineItem) {
 		
 		org.gmagnotta.model.LineItem model = new org.gmagnotta.model.LineItem();
 		model.setId(lineItem.getId());
@@ -72,13 +73,13 @@ public class Utils {
 //    	model.setOrder(modelOrder);
 		model.setItem(convertToModel(lineItem.getItem()));
 		model.setQuantity(lineItem.getQuantity());
-		model.setOrderid(lineItem.getOrderid());
+		//model.setOrderid(lineItem.);
 		
 		return model;
     	
 	}
 	
-	public static org.gmagnotta.model.Item convertToModel(org.gmagnotta.model.event.Orderchangeevent.Item item) {
+	public static org.gmagnotta.model.Item convertToModel(org.gmagnotta.model.event.OrderOuterClass.Item item) {
 		
     	org.gmagnotta.model.Item modelItem = new org.gmagnotta.model.Item();
     	
@@ -90,10 +91,14 @@ public class Utils {
 		
 	}
 	
-	public static BigDecimal convertToModel(org.gmagnotta.model.event.Orderchangeevent.BigDecimal price) {
+	public static BigDecimal convertToModel(org.gmagnotta.model.event.OrderOuterClass.BigDecimal price) {
 		
-    	BigInteger bi = new BigInteger(price.getUnscaledValue().toByteArray());
-    	return (new BigDecimal(bi, price.getScale()));
+		java.math.MathContext mc = new java.math.MathContext(price.getPrecision());
+        
+		return new java.math.BigDecimal(
+                new java.math.BigInteger(price.getValue().toByteArray()),
+                price.getScale(),
+                mc);
     	
 	}
 

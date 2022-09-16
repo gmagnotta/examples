@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.descriptors.Type;
 
 
 @ProtoDoc("@Indexed")
@@ -31,12 +30,15 @@ public class Order implements Serializable {
     private String externalOrderId;
 
     private Set<LineItem> lineItems;
+
+    private String user;
     
     public Order() {
         this.lineItems = new HashSet<>();
     }
 
-    @ProtoDoc("@Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)")
+    //@ProtoDoc("@Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)")
+    @ProtoDoc("@Field(index=Index.YES, analyze = Analyze.NO, store = Store.YES)")
     @ProtoField(number =  1, required = true)
     public int getId() {
         return id;
@@ -94,6 +96,16 @@ public class Order implements Serializable {
 
 	public void setExternalOrderId(String externalOrderId) {
 		this.externalOrderId = externalOrderId;
+	}
+
+    @ProtoDoc("@Field(index=Index.YES, analyze = Analyze.NO, store = Store.YES)")
+    @ProtoField(number =  6, required = false)
+    public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
 	}
 
 	@Override
