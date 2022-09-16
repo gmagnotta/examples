@@ -1,5 +1,0 @@
-# camel-quarkus-datagrid-api
-
-Example Camel Quarkus application that:
-
-* offers REST apis to interact via messaging with quarkus-datagrid application
