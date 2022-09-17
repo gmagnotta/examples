@@ -11,11 +11,18 @@ BUILDER_IMAGE=""
 ASSEMBLE_USER="jboss"
 SCRIPTS_URL="/usr/local/s2i/"
 OUTPUT_IMAGE=""
-INCREMENTAL=true
+INCREMENTAL=false
 CONTEXT_DIR="."
 
+if [ -f ".s2i/localconfig" ]; then
+    . .s2i/localconfig
+else
+    echo "Not found .s2i/localconfig"
+    exit -1
+fi
+
 echo "Start"
-builder=$(buildah from $BUILDER_IMAGE)
+builder=$(buildah from --ulimit nofile=90000:90000 $BUILDER_IMAGE)
 
 buildah add --chown $ASSEMBLE_USER:0 $builder ./$CONTEXT_DIR /tmp/src
 
