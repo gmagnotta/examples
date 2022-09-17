@@ -38,28 +38,28 @@ public class OrderCreatedEventObserver {
 	RemoteCache<Integer, Integer> topItemsCache;
 
 	@Incoming("topitems")
-	@Acknowledgment(Acknowledgment.Strategy.PRE_PROCESSING)
+	@Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
 	public void onTopItems(ConsumerRecord<Integer, Integer> message) {
 
 		if (message.value() != null) {
 
 			LOGGER.info("Inserting item " + message.key());
-			topItemsCache.putAsync(message.key(), message.value());
+			topItemsCache.put(message.key(), message.value());
 
 		} else {
 			LOGGER.info("Removing item " + message.key());
-			topItemsCache.removeAsync(message.key());
+			topItemsCache.remove(message.key());
 
 		}
 	}
 
 	@Incoming("toporders")
-	@Acknowledgment(Acknowledgment.Strategy.PRE_PROCESSING)
+	@Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
 	public void onTopOrders(ConsumerRecord<Integer, BiggestOrders> message) {
 
 		// clear cache
 		LOGGER.info("Clearing toporders cache");
-		topOrderCache.clearAsync();
+		topOrderCache.clear();
 
 		BiggestOrders orders = message.value();
 
@@ -70,14 +70,14 @@ public class OrderCreatedEventObserver {
 			Order order = iterator.next();
 
 			LOGGER.info("Inserting top order " + order.getId());
-			topOrderCache.putAsync(order.getId(), fromProtoBuf(order.getAmount()).intValue());
+			topOrderCache.put(order.getId(), fromProtoBuf(order.getAmount()).intValue());
 
 		}
 
 	}
 
 	@Incoming("order-created")
-	@Acknowledgment(Acknowledgment.Strategy.PRE_PROCESSING)
+	@Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
 	public void onMessage(byte[] message) {
 
 		try {
@@ -93,7 +93,7 @@ public class OrderCreatedEventObserver {
 				org.gmagnotta.model.Order order = Utils.convertoToModel(protoOrder);
 
 				LOGGER.info("Inserting order id " + order.getId());
-				orderCache.putAsync(String.valueOf(order.getId()), order);
+				orderCache.put(String.valueOf(order.getId()), order);
 
 			}
 
