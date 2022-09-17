@@ -8,27 +8,22 @@
 	<xs:import schemaLocation="ordercommon.xsd"
 		namespace="http://gmagnotta.org/CommonTypes" />
 
-	<xs:complexType name="orderCommandRequest">
+	<xs:complexType name="createOrderRequest">
 		<xs:sequence>
 			<xs:element name="order" type="comm:order" minOccurs="0" />
-			<xs:element name="orderCommandEnum"
-				type="cmd:orderCommandRequestEnum" minOccurs="1" />
-			<xs:element name="parameter" type="xs:anyType"
-				minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:simpleType name="orderCommandRequestEnum">
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="ORDER_RECEIVED" />
-			<xs:enumeration value="GET_TOP_ORDERS" />
-			<xs:enumeration value="GET_TOP_ITEMS" />
-			<xs:enumeration value="RESET" />
-		</xs:restriction>
-	</xs:simpleType>
+	<xs:element name="createOrderRequest" type="cmd:createOrderRequest" />
 
-	<xs:element name="orderCommandRequest"
-		type="cmd:orderCommandRequest" />
+	<xs:complexType name="topOrdersRequest">
+		<xs:sequence></xs:sequence>
+	</xs:complexType>
+	<xs:element name="topOrdersRequest" type="cmd:topOrdersRequest" />
+
+	<xs:complexType name="topItemsRequest">
+		<xs:sequence></xs:sequence>
+	</xs:complexType>
+	<xs:element name="topItemsRequest" type="cmd:topItemsRequest" />
 
 </xs:schema>
-

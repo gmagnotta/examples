@@ -55,3 +55,8 @@ message BigInteger {
    optional bytes bytes = 1;
 }
 
+message BiggestOrders {
+
+   repeated Order orders = 1;
+
+}

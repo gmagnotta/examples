@@ -37,6 +37,10 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jaxb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
     </dependency>
     <dependency>
@@ -176,6 +180,7 @@
           <sources>
             <source>src/main/resources/ordercommandrequest.xsd</source>
             <source>src/main/resources/ordercommandresponse.xsd</source>
+            <source>src/main/resources/ordercommon.xsd</source>
           </sources>
         </configuration>
       </plugin>
