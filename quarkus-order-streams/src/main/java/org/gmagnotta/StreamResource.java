@@ -1,9 +1,11 @@
 package org.gmagnotta;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -18,12 +20,15 @@ import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
+import org.gmagnotta.jaxb.TopItemsResponse;
+import org.gmagnotta.jaxb.TopOrdersResponse;
+import org.gmagnotta.jaxb.TopValue;
 import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.event.OrderOuterClass.Order;
 import org.jboss.logging.Logger;
 
 @Path("/api")
-public class GreetingResource {
+public class StreamResource {
     @Inject
     KafkaStreams streams;
 
@@ -32,8 +37,8 @@ public class GreetingResource {
 
     @GET
     @Path("topItems")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getTopItems() {
+    @Produces(MediaType.APPLICATION_XML)
+    public TopItemsResponse getTopItems() {
 
         ReadOnlyKeyValueStore<Integer, Integer> keyValueStore =
              //streams.store("itemsQuantity", QueryableStoreTypes.keyValueStore());
@@ -42,6 +47,7 @@ public class GreetingResource {
         KeyValueIterator<Integer, Integer> all = keyValueStore.all();
 
         Map<Integer, Integer> values = new LinkedHashMap<>();
+        List<TopValue> result = new ArrayList<TopValue>();
 
         while (all.hasNext()) {
             KeyValue<Integer, Integer> element = all.next();
@@ -49,9 +55,16 @@ public class GreetingResource {
             Integer item = (Integer) element.key;
             Integer qty = (Integer) element.value;
 
-            values.put(item, Integer.valueOf(qty.intValue()));
+            //values.put(item, Integer.valueOf(qty.intValue()));
+
+            TopValue top = new TopValue();
+
+            top.setId(item.intValue());
+            top.setValue(qty.intValue());
+            result.add(top);
         }
         
+        /*
         StringBuffer stringBuffer = new StringBuffer();
 
         LinkedHashMap<Integer, Integer> sortedMap = new LinkedHashMap<>();
@@ -61,13 +74,23 @@ public class GreetingResource {
 
         all.close();
 
-        return stringBuffer.toString();
+        */
+
+        //return stringBuffer.toString();
+
+
+        TopItemsResponse response = new TopItemsResponse();
+
+        response.setStatus("KAFKA");
+        response.getTopvalue().addAll(result);
+
+        return response;
     }
 
     @GET
     @Path("topOrders")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getTopOrders() {
+    @Produces(MediaType.APPLICATION_XML)
+    public TopOrdersResponse getTopOrders() {
 
         ReadOnlyKeyValueStore<String, BiggestOrders> keyValueStore =
              //streams.store("orderStateStore", QueryableStoreTypes.keyValueStore());
@@ -78,14 +101,33 @@ public class GreetingResource {
         Iterator<Order> iterator = biggest.iterator();
 
         StringBuffer stringBuffer = new StringBuffer();
+        List<TopValue> result = new ArrayList<TopValue>();
 
         while (iterator.hasNext()) {
             Order order = iterator.next();
 
-            stringBuffer.append("Order: " + order.getId() + " amount: " + fromProtoBuf(order.getAmount()) + "\n");
+            Integer id = (Integer) order.getId();
+            BigDecimal qty = fromProtoBuf(order.getAmount());
+
+            //values.put(item, Integer.valueOf(qty.intValue()));
+
+            TopValue top = new TopValue();
+
+            top.setId(id.intValue());
+            top.setValue(qty.intValue());
+            result.add(top);
+
+            // stringBuffer.append("Order: " + order.getId() + " amount: " + fromProtoBuf(order.getAmount()) + "\n");
         }
 
-        return stringBuffer.toString();
+        TopOrdersResponse response = new TopOrdersResponse();
+
+        response.setStatus("KAFKA");
+        response.getTopvalue().addAll(result);
+
+        return response;
+
+        // return stringBuffer.toString();
 
     }
 

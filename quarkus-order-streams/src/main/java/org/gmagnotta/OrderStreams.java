@@ -1,5 +1,7 @@
 package org.gmagnotta;
 
+import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -23,6 +25,7 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
@@ -43,14 +46,14 @@ import io.quarkus.runtime.StartupEvent;
 public class OrderStreams {
 
     @ConfigProperty(name = "kafka.broker")
-	String kafkaBroker;
+    String kafkaBroker;
 
     @Inject
-	Logger logger;
+    Logger logger;
 
     @Produces
     KafkaStreams streams;
-    
+
     @PostConstruct
     void init() {
 
@@ -66,47 +69,54 @@ public class OrderStreams {
 
         // Source stream from OrderCreated topics
         KStream<String, Order> ordersStream = builder
-			.stream("outbox.event.OrderCreated", Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
-        
-        //ordersStream.print(Printed.<String,Order>toSysOut().withLabel("orders"));
-          
+                .stream("outbox.event.OrderCreated",
+                        Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
+
+        // ordersStream.print(Printed.<String,Order>toSysOut().withLabel("orders"));
+
         // Extract items and quantities from line_items
         KStream<Integer, Integer> itemsQtyStream = ordersStream.flatMap(
-            (key, value) ->  {
-                List<KeyValue<Integer, Integer>> result = new LinkedList<>();
+                (key, value) -> {
+                    List<KeyValue<Integer, Integer>> result = new LinkedList<>();
 
-                List<LineItem> items = value.getLineItemsList();
+                    List<LineItem> items = value.getLineItemsList();
 
-                for (LineItem l : items) {
-                    result.add(KeyValue.pair(l.getItem().getId(), l.getQuantity()));
-                }
+                    for (LineItem l : items) {
+                        result.add(KeyValue.pair(l.getItem().getId(), l.getQuantity()));
+                    }
 
-                return result;
-            }
-        );
+                    return result;
+                });
 
-        //itemsStream.print(Printed.<Integer,Integer>toSysOut().withLabel("items"));
-        
-        //itemsStream.to("items", Produced.with(Serdes.Integer(), Serdes.Integer()));
+        // itemsStream.print(Printed.<Integer,Integer>toSysOut().withLabel("items"));
+
+        // itemsStream.to("items", Produced.with(Serdes.Integer(), Serdes.Integer()));
 
         // Aggregated itemsQty by item key and sum all the items
         KTable<Integer, Integer> groupedTable = itemsQtyStream.groupByKey().aggregate(
-             () -> Integer.valueOf(0),
-             (key, value, aggValue) -> Integer.sum(aggValue, value),
-             Materialized.<Integer, Integer, KeyValueStore<Bytes, byte[]>>as("itemsQuantity")
-             .withKeySerde(Serdes.Integer())
-             .withValueSerde(Serdes.Integer())
-        );
+                () -> Integer.valueOf(0),
+                (key, value, aggValue) -> Integer.sum(aggValue, value),
+                Materialized.<Integer, Integer, KeyValueStore<Bytes, byte[]>>as("itemsQuantity")
+                        .withKeySerde(Serdes.Integer())
+                        .withValueSerde(Serdes.Integer()));
+
+        groupedTable.toStream().to("topItems", Produced.with(Serdes.Integer(), Serdes.Integer()));
 
         // Find biggest Orders
         String orderStateStoreName = "orderStateStore";
         KeyValueBytesStoreSupplier orderSupplier = Stores.persistentKeyValueStore(orderStateStoreName);
-        StoreBuilder<KeyValueStore<String, BiggestOrders>> storeBuilder = Stores.keyValueStoreBuilder(orderSupplier, Serdes.String(), QuarkusOrderStreamsSerdes.BiggestOrders(10));
-        
+        StoreBuilder<KeyValueStore<String, BiggestOrders>> storeBuilder = Stores.keyValueStoreBuilder(orderSupplier,
+                Serdes.String(), QuarkusOrderStreamsSerdes.BiggestOrders(10));
+
         builder.addStateStore(storeBuilder);
 
-        KStream<String, BiggestOrders> statefulBiggestOrder = ordersStream.transformValues(() -> new BiggestOrderTransformer(orderStateStoreName, 10), orderStateStoreName);
-        //statefulBiggestOrder.print(Printed.<String, BiggestOrders>toSysOut().withLabel("biggest"));
+        KStream<String, BiggestOrders> statefulBiggestOrder = ordersStream
+                .transformValues(() -> new BiggestOrderTransformer(orderStateStoreName, 10), orderStateStoreName);
+        // statefulBiggestOrder.print(Printed.<String,
+        // BiggestOrders>toSysOut().withLabel("biggest"));
+
+        statefulBiggestOrder.to("topOrders",
+                Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.BiggestOrders(10)));
 
         Topology topology = builder.build();
         logger.info("Topology is " + topology.describe());
@@ -117,17 +127,28 @@ public class OrderStreams {
 
     void onStart(@Observes StartupEvent ev) {
 
-		streams.start();
+        streams.start();
 
-		logger.info("Consumer started");
+        logger.info("Consumer started");
 
-	}
+    }
 
-	void onStop(@Observes ShutdownEvent ev) {
+    void onStop(@Observes ShutdownEvent ev) {
 
-		streams.close();
+        streams.close();
 
-		logger.info("Consumer stopped");
+        logger.info("Consumer stopped");
 
-	}
+    }
+
+    private static BigDecimal fromProtoBuf(org.gmagnotta.model.event.OrderOuterClass.BigDecimal proto) {
+
+        java.math.MathContext mc2 = new java.math.MathContext(proto.getPrecision());
+        java.math.BigDecimal value = new java.math.BigDecimal(
+                new java.math.BigInteger(proto.getValue().toByteArray()),
+                proto.getScale(),
+                mc2);
+
+        return value;
+    }
 }
