@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.infinispan.client.Remote;
 
-@Path("/orders")
+@Path("/api")
 public class OrderResource {
 
     @Inject
