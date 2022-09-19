@@ -98,7 +98,9 @@
                 <configuration>
                     <packageName>org.gmagnotta.jaxb</packageName>
                     <sources>
-                        <source>src/main/resources/aggregated.xsd</source>
+                        <source>src/main/resources/ordercommandrequest.xsd</source>
+                        <source>src/main/resources/ordercommandresponse.xsd</source>
+                        <source>src/main/resources/ordercommon.xsd</source>
                     </sources>
                 </configuration>
             </plugin>

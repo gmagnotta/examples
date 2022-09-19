@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.gmagnotta.jaxb.Aggregationtype;
+import org.gmagnotta.jaxb.TopItemsResponse;
 
 import javax.inject.Inject;
 
@@ -22,7 +22,7 @@ public class ItemsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        Aggregationtype res = servicesInterface.getTopItems();
+        TopItemsResponse res = servicesInterface.getTopItems();
 
         request.setAttribute("items", res);
 

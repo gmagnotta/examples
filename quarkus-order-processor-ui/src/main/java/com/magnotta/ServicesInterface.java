@@ -8,7 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.gmagnotta.jaxb.Aggregationtype;
+import org.gmagnotta.jaxb.TopItemsResponse;
+import org.gmagnotta.jaxb.TopOrdersResponse;
 
 @Path("/api")
 public interface ServicesInterface {
@@ -16,12 +17,12 @@ public interface ServicesInterface {
     @GET
     @Path("/topOrders")
     @Produces({ MediaType.APPLICATION_XML })
-    Aggregationtype getTopOrders();
+    TopOrdersResponse getTopOrders();
 
     @GET
     @Path("/topItems")
     @Produces({ MediaType.APPLICATION_XML })
-    Aggregationtype getTopItems();
+    TopItemsResponse getTopItems();
 
     @POST
     @Path("/reset")

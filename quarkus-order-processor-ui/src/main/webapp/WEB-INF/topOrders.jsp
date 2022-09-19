@@ -54,10 +54,10 @@
                                     </thead>
 
                                     <tbody>
-                                        <c:forEach items="${orders.aggregatedorder}" var="item">
+                                        <c:forEach items="${orders.topvalue}" var="item">
                                             <tr>
-                                                <td>${item.orderid}</td>
-                                                <td>${item.items}</td>
+                                                <td>${item.id}</td>
+                                                <td>${item.value}</td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>

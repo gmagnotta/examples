@@ -53,10 +53,10 @@
                             </thead>
 
                             <tbody>
-                                <c:forEach items="${items.aggregateditem}" var="item">
+                                <c:forEach items="${items.topvalue}" var="item">
                                     <tr>
-                                        <td>${item.item}</td>
-                                        <td>${item.quantity}</td>
+                                        <td>${item.id}</td>
+                                        <td>${item.value}</td>
                                     </tr>
                                 </c:forEach>
                             </tbody>
