@@ -92,7 +92,7 @@ public class OrderResource {
 
         TopItemsResponse response = new TopItemsResponse();
 
-        response.setStatus("DATAGRID");
+        response.setSource("DATAGRID");
         response.getTopvalue().addAll(result);
 
         return response;
@@ -123,7 +123,7 @@ public class OrderResource {
 
         TopOrdersResponse response = new TopOrdersResponse();
 
-        response.setStatus("DATAGRID");
+        response.setSource("DATAGRID");
         response.getTopvalue().addAll(result);
 
         return response;
