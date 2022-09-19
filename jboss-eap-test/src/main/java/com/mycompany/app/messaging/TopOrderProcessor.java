@@ -103,7 +103,7 @@ public class TopOrderProcessor implements MessageListener {
 				response.setSource("EAP");
 				response.getTopvalue().addAll(result);
 
-				StringWriter s = UmarshallUtils.marshall(new ObjectFactory().createTopOrders(response));
+				StringWriter s = UmarshallUtils.marshall(new ObjectFactory().createTopOrdersResponse(response));
 
 				TextMessage textResponse = context.createTextMessage(s.toString());
 				textResponse.setJMSCorrelationID(requestMessage.getJMSCorrelationID());

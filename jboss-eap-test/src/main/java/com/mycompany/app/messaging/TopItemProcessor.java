@@ -64,7 +64,7 @@ public class TopItemProcessor implements MessageListener {
 
 				// LOGGER.info("Received content " + requestMessage.getText());
 
-				org.gmagnotta.jaxb.TopItemsRequest getTopOrders = UmarshallUtils.unmarshall(org.gmagnotta.jaxb.TopItemsRequest.class,
+				org.gmagnotta.jaxb.TopItemsRequest getTopItems = UmarshallUtils.unmarshall(org.gmagnotta.jaxb.TopItemsRequest.class,
 						requestMessage.getText());
 
 				LOGGER.info("Received message id " + message.getJMSMessageID());

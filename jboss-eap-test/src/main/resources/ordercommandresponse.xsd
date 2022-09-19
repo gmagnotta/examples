@@ -16,7 +16,7 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:element name="topOrders" type="cmd:topOrdersResponse" />
+	<xs:element name="topOrdersResponse" type="cmd:topOrdersResponse" />
 
 	<xs:complexType name="topItemsResponse">
 		<xs:sequence>
