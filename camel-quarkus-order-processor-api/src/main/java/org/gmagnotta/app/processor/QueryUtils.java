@@ -1,18 +1,12 @@
 package org.gmagnotta.app.processor;
 
-import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.List;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
 
 import org.apache.camel.Exchange;
 import org.eclipse.microprofile.opentracing.Traced;
-import org.gmagnotta.jaxb.OrderCommandResponse;
 import org.gmagnotta.jaxb.TopItemsRequest;
 import org.gmagnotta.jaxb.TopOrdersRequest;
-import org.gmagnotta.jaxb.TopValue;
 import org.jboss.logging.Logger;
 
 
@@ -120,13 +114,13 @@ public class QueryUtils {
 
 	public void decodeReset(Exchange exchange) throws Exception {
     	
-        String responseContent = exchange.getIn().getBody(String.class);
+       /* String responseContent = exchange.getIn().getBody(String.class);
 
 		OrderCommandResponse responseMessage = Utils.unmarshall(OrderCommandResponse.class, responseContent);
         	
 		if (!"200".equalsIgnoreCase(responseMessage.getStatus())) {
 			throw new Exception("Error");
-		}
+		} */
 
 	}
 	
@@ -142,13 +136,13 @@ public class QueryUtils {
 
 	public void decodeRebuild(Exchange exchange) throws Exception {
     	
-        String responseContent = exchange.getIn().getBody(String.class);
+        /*String responseContent = exchange.getIn().getBody(String.class);
 
 		OrderCommandResponse responseMessage = Utils.unmarshall(OrderCommandResponse.class, responseContent);
         	
 		if (!"200".equalsIgnoreCase(responseMessage.getStatus())) {
 			throw new Exception("Error");
-		}
+		}*/
 
 	}
 	
