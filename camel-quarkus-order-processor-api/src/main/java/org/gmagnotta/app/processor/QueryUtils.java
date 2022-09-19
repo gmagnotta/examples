@@ -9,9 +9,6 @@ import javax.inject.Named;
 
 import org.apache.camel.Exchange;
 import org.eclipse.microprofile.opentracing.Traced;
-import org.gmagnotta.jaxb.Aggregateditemtype;
-import org.gmagnotta.jaxb.Aggregatedordertype;
-import org.gmagnotta.jaxb.Aggregationtype;
 import org.gmagnotta.jaxb.OrderCommandResponse;
 import org.gmagnotta.jaxb.TopItemsRequest;
 import org.gmagnotta.jaxb.TopOrdersRequest;
@@ -38,7 +35,7 @@ public class QueryUtils {
 
 	}
 
-	public void decodeGetTopOrders(Exchange exchange) throws Exception {
+	/*public void decodeGetTopOrders(Exchange exchange) throws Exception {
 
 		String responseContent = exchange.getIn().getBody(String.class);
         	
@@ -66,7 +63,7 @@ public class QueryUtils {
 		}
 		
 		exchange.getOut().setBody(aggregation);
-	}
+	}*/
 
 	
 	public void prepareGetTopItems(Exchange exchange) throws Exception {
@@ -78,7 +75,7 @@ public class QueryUtils {
 
 	}
 
-	public void decodeGetTopItems(Exchange exchange) throws Exception {
+	/*public void decodeGetTopItems(Exchange exchange) throws Exception {
     	
     	
         String responseContent = exchange.getIn().getBody(String.class);
@@ -109,7 +106,7 @@ public class QueryUtils {
 		
 		exchange.getOut().setBody(aggregation);
 		
-    }
+    }*/
 	
 	public void prepareReset(Exchange exchange) throws Exception {
 

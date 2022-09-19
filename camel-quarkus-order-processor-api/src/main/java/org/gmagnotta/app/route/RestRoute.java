@@ -6,7 +6,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
-import org.gmagnotta.jaxb.Aggregationtype;
+import org.gmagnotta.jaxb.TopItemsResponse;
+import org.gmagnotta.jaxb.TopOrdersResponse;
 import org.jboss.logging.Logger;
 
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -35,7 +36,7 @@ public class RestRoute extends RouteBuilder {
         .contextPath("/api");
    	
         rest("/topOrders")
-        .get().outType(Aggregationtype.class)
+        .get().outType(TopOrdersResponse.class)
         .route()
          .circuitBreaker()
           .to("bean://queryutils?method=prepareGetTopOrders")
@@ -50,7 +51,7 @@ public class RestRoute extends RouteBuilder {
         .endRest();
        
        rest("/topItems")
-        .get().outType(Aggregationtype.class)
+        .get().outType(TopItemsResponse.class)
         .route()
          .circuitBreaker()
           .to("bean://queryutils?method=prepareGetTopItems")
