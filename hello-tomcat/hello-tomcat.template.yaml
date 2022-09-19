@@ -1,0 +1,112 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: hello-tomcat
+message: This is an OpenShift template to deploy hello-tomcat.
+metadata:
+  name: hello-tomcat
+  annotations:
+    description: "hello-tomcat Template"
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: hello-tomcat
+  data:
+    backend-url: ${BACKEND_URL}
+    quarkus-log-level: 'INFO'
+    quarkus-log-file-path: '/tmp/quarkus.log'
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: hello-tomcat
+    labels:
+      app: hello-tomcat
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: hello-tomcat
+    template:
+      metadata:
+        labels:
+          app: hello-tomcat
+        annotations:
+          kubernetes.io/change-cause: ${CAUSE}
+          gitcommit: ${CAUSE}
+      spec:
+        containers:
+          - name: hello-tomcat
+            image: ${IMAGE}
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep -iq ''"status": "UP"'''
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+              - containerPort: 8778
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
+              limits:
+                cpu: "1000m"
+                memory: "512Mi"
+            imagePullPolicy: IfNotPresent
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 60
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: hello-tomcat
+    labels:
+      app: hello-tomcat
+  spec:
+    ports:
+      - name: 8080-tcp
+        protocol: TCP
+        port: 8080
+        targetPort: 8080
+      - name: 8778-tcp
+        protocol: TCP
+        port: 8778
+        targetPort: 8778
+    selector:
+      app: hello-tomcat
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: hello-tomcat
+    labels:
+      app: hello-tomcat
+  spec:
+    to:
+      kind: Service
+      name: hello-tomcat
+      weight: 100
+    port:
+      targetPort: 8080-tcp
+    wildcardPolicy: None
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
+- description: Description of this deployment
+  name: CAUSE
+  required: true
