@@ -34,7 +34,7 @@
                     <div class="page-content">
                         <div class="mdl-grid">
                             <!-- Your content goes here -->
-                            <div>This is the list of orders with most quantity ordered
+                            <div>This is the list of orders with most quantity ordered coming from ${orders.status}
                             </div>
 
                         </div>
