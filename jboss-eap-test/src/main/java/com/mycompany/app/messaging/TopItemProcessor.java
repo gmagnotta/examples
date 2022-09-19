@@ -28,6 +28,7 @@ import com.mycompany.app.messaging.utils.UmarshallUtils;
 import com.mycompany.app.service.ItemService;
 
 import org.gmagnotta.jaxb.ObjectFactory;
+import org.gmagnotta.jaxb.TopItemsResponse;
 
 @MessageDriven(name = "TopItemProcessor", activationConfig = {
 		@ActivationConfigProperty(propertyName = "destinationLookup", propertyValue = "java:global/remoteContext/getTopItemsCommand"),
@@ -90,12 +91,12 @@ public class TopItemProcessor implements MessageListener {
 
 				}
 
-				TopOrdersResponse response = new TopOrdersResponse();
+				TopItemsResponse response = new TopItemsResponse();
 
 				response.setSource("EAP");
 				response.getTopvalue().addAll(result);
 
-				StringWriter s = UmarshallUtils.marshall(new ObjectFactory().createTopOrders(response));
+				StringWriter s = UmarshallUtils.marshall(new ObjectFactory().createTopItemsResponse(response));
 
 				TextMessage textResponse = context.createTextMessage(s.toString());
 				textResponse.setJMSCorrelationID(requestMessage.getJMSCorrelationID());
