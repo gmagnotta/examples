@@ -33,7 +33,7 @@
                     <div class="page-content">
                         <div class="mdl-grid">
                             <!-- Your content goes here -->
-                            <div>This is the list of most requested items coming from coming from ${items.status}</div>
+                            <div>This is the list of most requested items coming from coming from ${items.source}</div>
 
                         </div>
                         <!-- Your content goes here -->
