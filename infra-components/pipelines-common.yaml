@@ -440,3 +440,27 @@ spec:
   workspaces:
     - description: The git repo will be cloned onto the volume backing this workspace
       name: output
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clean-pvs
+spec:
+  workspaces:
+    - name: artifacts
+    - name: varlibcontainers
+      mountPath: /var/lib/containers
+  steps:
+    - name: clean
+      image: registry.access.redhat.com/ubi8/buildah:8.5-14
+      script: |
+        #!/usr/bin/env bash
+        set -e
+
+        if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
+          echo "Deleting artifacts.tar"
+          rm -rf $(workspaces.artifacts.path)/artifacts.tar
+        fi
+
+        echo "Cleaning container image cache"
+        buildah rmi --all
