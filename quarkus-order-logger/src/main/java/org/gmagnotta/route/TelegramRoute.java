@@ -4,6 +4,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.kafka.KafkaComponent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -14,10 +16,13 @@ import org.gmagnotta.model.event.OrderOuterClass.Order;
 public class TelegramRoute extends RouteBuilder {
 
     @ConfigProperty(name = "telegram.token")
-	String telegramToken;
+    String telegramToken;
 
-	@ConfigProperty(name = "telegram.chatid")
-	String telegramChatId;
+    @ConfigProperty(name = "telegram.chatid")
+    String telegramChatId;
+
+    @ConfigProperty(name = "telegram.enabled")
+    boolean telegramEnabled;
 
     @ConfigProperty(name = "kafka.broker")
     String kafkaBroker;
@@ -39,14 +44,23 @@ public class TelegramRoute extends RouteBuilder {
         getContext().getTypeConverterRegistry().addTypeConverter(String.class, Order.class, new OrderStringConverter());
 
         from("kafka:outbox.event.OrderCreated")
-            .convertBodyTo(String.class)
-            .log("Message received from Kafka! ${body}")
-            .to("direct:telegram");
+                .convertBodyTo(String.class)
+                .log("Message received from Kafka! ${body}")
+                .choice()
+                    .when(new Predicate() {
+
+                        @Override
+                        public boolean matches(Exchange exchange) {
+                            return telegramEnabled;
+                        }
+
+                    }).to("direct:telegram");
 
         from("direct:telegram")
-         .log("${body}")
-		 .setHeader(org.apache.camel.component.telegram.TelegramConstants.TELEGRAM_CHAT_ID, constant(telegramChatId))
-		 .to("telegram:bots?authorizationToken=" + telegramToken);
+                .log("${body}")
+                .setHeader(org.apache.camel.component.telegram.TelegramConstants.TELEGRAM_CHAT_ID,
+                        constant(telegramChatId))
+                .to("telegram:bots?authorizationToken=" + telegramToken);
     }
-    
+
 }

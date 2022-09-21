@@ -58,6 +58,8 @@ spec:
                 secretKeyRef:
                   name: quarkus-order-logger
                   key: telegram-chatid
+            - name: TELEGRAM_ENABLED
+              value: 'false'
           ports:
             - containerPort: 8080
               protocol: TCP
