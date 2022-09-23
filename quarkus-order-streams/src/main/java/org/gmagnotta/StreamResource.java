@@ -24,7 +24,7 @@ import org.gmagnotta.jaxb.TopItemsResponse;
 import org.gmagnotta.jaxb.TopOrdersResponse;
 import org.gmagnotta.jaxb.TopValue;
 import org.gmagnotta.model.BiggestOrders;
-import org.gmagnotta.model.event.OrderOuterClass.Order;
+import org.gmagnotta.model.connect.Order;
 import org.jboss.logging.Logger;
 
 @Path("/api")
@@ -100,16 +100,13 @@ public class StreamResource {
 
         Iterator<Order> iterator = biggest.iterator();
 
-        StringBuffer stringBuffer = new StringBuffer();
         List<TopValue> result = new ArrayList<TopValue>();
 
         while (iterator.hasNext()) {
             Order order = iterator.next();
 
-            Integer id = (Integer) order.getId();
-            BigDecimal qty = fromProtoBuf(order.getAmount());
-
-            //values.put(item, Integer.valueOf(qty.intValue()));
+            Integer id = Integer.valueOf((int) order.getId());
+            BigDecimal qty = ProtoUtils.bigDecimalFromString(order.getAmount());
 
             TopValue top = new TopValue();
 
@@ -127,18 +124,6 @@ public class StreamResource {
 
         return response;
 
-        // return stringBuffer.toString();
-
     }
 
-    private static BigDecimal fromProtoBuf(org.gmagnotta.model.event.OrderOuterClass.BigDecimal proto) {
-
-        java.math.MathContext mc2 = new java.math.MathContext(proto.getPrecision());
-        java.math.BigDecimal value = new java.math.BigDecimal(
-                new java.math.BigInteger(proto.getValue().toByteArray()),
-                proto.getScale(),
-                mc2);
-
-        return value;
-    }
 }

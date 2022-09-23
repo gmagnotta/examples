@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.TreeSet;
 
 import org.gmagnotta.OrderComparator;
-import org.gmagnotta.model.event.OrderOuterClass.Order;
+import org.gmagnotta.model.connect.Order;
 
 /**
  * Class that acts as a priority queue but has a fixed size.

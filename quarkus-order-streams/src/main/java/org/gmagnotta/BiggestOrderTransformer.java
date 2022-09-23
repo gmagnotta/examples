@@ -6,7 +6,7 @@ import org.apache.kafka.streams.kstream.ValueTransformer;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.gmagnotta.model.BiggestOrders;
-import org.gmagnotta.model.event.OrderOuterClass.Order;
+import org.gmagnotta.model.connect.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

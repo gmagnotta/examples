@@ -55,8 +55,16 @@ message BigInteger {
    optional bytes bytes = 1;
 }
 
+message BiggestOrder {
+   
+   required int32 id = 1;
+   
+   required string amount = 2;
+   
+}
+
 message BiggestOrders {
 
-   repeated Order orders = 1;
+   repeated BiggestOrder orders = 1;
 
 }

@@ -219,23 +219,18 @@ public class OrderStreams {
         protoOrders.to("outbox.event.OrderCreated", Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
 
         
-          
-        // Extract items and quantities from line_items
-        KStream<Integer, Integer> itemsQtyStream = protoOrders.flatMap(
+        // Extract items id and quantities from line_items
+        lineItemsStream.flatMap(
             (key, value) -> {
                 List<KeyValue<Integer, Integer>> result = new LinkedList<>();
             
-                List<org.gmagnotta.model.event.OrderOuterClass.LineItem> items = value.getLineItemsList();
-            
-                for (org.gmagnotta.model.event.OrderOuterClass.LineItem l : items) {
-                    result.add(KeyValue.pair(l.getItem().getId(), l.getQuantity()));
-                }
+                result.add(KeyValue.pair((int) value.getItem(), (int) value.getQuantity()));
             
                 return result;
-            });
+        })
           
-        // Aggregate itemsQty by item key and sum all the items
-        itemsQtyStream.groupByKey(Grouped.with(Serdes.Integer(), Serdes.Integer())).aggregate(
+        // Aggregate elements by item id and sum all the quantities
+        .groupByKey(Grouped.with(Serdes.Integer(), Serdes.Integer())).aggregate(
             () -> Integer.valueOf(0),
             (key, value, aggValue) -> Integer.sum(aggValue, value),
             Materialized.<Integer, Integer, KeyValueStore<Bytes, byte[]>>as("itemsQuantity")
@@ -254,12 +249,12 @@ public class OrderStreams {
         builder.addStateStore(storeBuilder);
         
         // Keep biggest orders from the stream
-        protoOrders.transformValues(
+        ordersStream.transformValues(
             () -> new BiggestOrderTransformer(orderStateStoreName, 10),
             orderStateStoreName)
         
-        // write biggest order to "topOrders" topic
-        .to("topOrders", Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.BiggestOrders(10)));
+        // write biggest orders to "topOrders" topic
+        .to("topOrders", Produced.with(Serdes.Long(), QuarkusOrderStreamsSerdes.BiggestOrders(10)));
           
 
 
