@@ -1,0 +1,24 @@
+{
+    "name": "cdc",
+    "config": {
+      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+      "tasks.max": "1",
+      "database.hostname": "localhost",
+      "database.port": "5432",
+      "database.user": "user",
+      "database.password": "pass",
+      "database.dbname": "db",
+      "database.server.name": "dbserver1",
+      "schema.whitelist": "public",
+      "table.whitelist": "public.orders, public.line_items, public.items",
+      "tombstones.on.delete": "false",
+      "plugin.name": "pgoutput",
+      "transforms": "unwrap",
+      "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+      "transforms.unwrap.drop.tombstones": "false",
+      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false"
+    }
+  }
