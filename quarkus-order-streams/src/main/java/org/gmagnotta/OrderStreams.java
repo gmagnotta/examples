@@ -34,6 +34,7 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.StreamJoined;
 import org.apache.kafka.streams.kstream.ValueJoiner;
@@ -214,13 +215,15 @@ public class OrderStreams {
 
         });
 
+        protoOrders.print(Printed.<String,org.gmagnotta.model.event.OrderOuterClass.Order>toSysOut().withLabel("protoOrders"));
+        
         // we'll materialize the Stream to the topic "outbox.event.OrderCreated"
         // so other clients can fetch the Aggregate
         protoOrders.to("outbox.event.OrderCreated", Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
 
         
         // Extract items id and quantities from line_items
-        lineItemsStream.flatMap(
+        KStream<Integer, Integer> topItemsStream = lineItemsStream.flatMap(
             (key, value) -> {
                 List<KeyValue<Integer, Integer>> result = new LinkedList<>();
             
@@ -235,11 +238,14 @@ public class OrderStreams {
             (key, value, aggValue) -> Integer.sum(aggValue, value),
             Materialized.<Integer, Integer, KeyValueStore<Bytes, byte[]>>as("itemsQuantity")
                 .withKeySerde(Serdes.Integer())
-                .withValueSerde(Serdes.Integer()))
+                .withValueSerde(Serdes.Integer())).toStream();
         
-        // transform the aggregation to a Stream and write to "topItems" topic
-        .toStream().to("topItems", Produced.with(Serdes.Integer(), Serdes.Integer()));
+        topItemsStream.print(Printed.<Integer,Integer>toSysOut().withLabel("topItems"));
+
+        // write to "topItems" topic
+        topItemsStream.to("topItems", Produced.with(Serdes.Integer(), Serdes.Integer()));
         
+
         // Find biggest Orders
         String orderStateStoreName = "orderStateStore";
         KeyValueBytesStoreSupplier orderSupplier = Stores.persistentKeyValueStore(orderStateStoreName);
@@ -249,12 +255,15 @@ public class OrderStreams {
         builder.addStateStore(storeBuilder);
         
         // Keep biggest orders from the stream
-        ordersStream.transformValues(
+        KStream<Long, BiggestOrders> topOrdersStream = ordersStream.transformValues(
             () -> new BiggestOrderTransformer(orderStateStoreName, 10),
-            orderStateStoreName)
+            orderStateStoreName);
+        
+
+        topOrdersStream.print(Printed.<Long,BiggestOrders>toSysOut().withLabel("topOrders"));
         
         // write biggest orders to "topOrders" topic
-        .to("topOrders", Produced.with(Serdes.Long(), QuarkusOrderStreamsSerdes.BiggestOrders(10)));
+        topOrdersStream.to("topOrders", Produced.with(Serdes.Long(), QuarkusOrderStreamsSerdes.BiggestOrders(10)));
           
 
 
