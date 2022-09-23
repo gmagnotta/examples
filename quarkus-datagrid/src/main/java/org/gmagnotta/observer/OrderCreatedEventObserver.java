@@ -1,7 +1,7 @@
 package org.gmagnotta.observer;
 
-import java.math.BigDecimal;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -63,14 +63,14 @@ public class OrderCreatedEventObserver {
 
 		BiggestOrders orders = message.value();
 
-		Iterator<Order> iterator = orders.iterator();
+		Iterator<org.gmagnotta.model.Order> iterator = orders.iterator();
 
 		while (iterator.hasNext()) {
 
-			Order order = iterator.next();
+			org.gmagnotta.model.Order order = iterator.next();
 
 			LOGGER.info("Inserting top order " + order.getId());
-			topOrderCache.put(order.getId(), fromProtoBuf(order.getAmount()).intValue());
+			topOrderCache.put(order.getId(), order.getAmount().intValue());
 
 		}
 
@@ -103,17 +103,6 @@ public class OrderCreatedEventObserver {
 
 		}
 
-	}
-
-	private static BigDecimal fromProtoBuf(org.gmagnotta.model.event.OrderOuterClass.BigDecimal proto) {
-
-		java.math.MathContext mc2 = new java.math.MathContext(proto.getPrecision());
-		java.math.BigDecimal value = new java.math.BigDecimal(
-				new java.math.BigInteger(proto.getValue().toByteArray()),
-				proto.getScale(),
-				mc2);
-
-		return value;
 	}
 
 }
