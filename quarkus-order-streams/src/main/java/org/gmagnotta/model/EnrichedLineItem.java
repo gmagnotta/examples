@@ -22,7 +22,15 @@ public class EnrichedLineItem {
     }
 
     public String toString() {
-        return item.toString() + " " + lineItem.toString();
+        StringBuffer buffer = new StringBuffer();
+
+        if (item != null) {
+            buffer.append("item " + item.toString());
+        }
+        if (lineItem != null) {
+            buffer.append("lineItem " + lineItem.toString());
+        }
+        return buffer.toString();
     }
 
 }

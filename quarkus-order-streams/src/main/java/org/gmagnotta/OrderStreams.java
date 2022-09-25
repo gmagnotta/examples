@@ -24,12 +24,13 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.Topology.AutoOffsetReset;
 import org.apache.kafka.streams.kstream.Aggregator;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.Initializer;
 import org.apache.kafka.streams.kstream.JoinWindows;
-import org.apache.kafka.streams.kstream.Joined;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
@@ -77,91 +78,80 @@ public class OrderStreams {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "quarkus-order-streams");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBroker);
-        //props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
-        //props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
-
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         StreamsBuilder builder = new StreamsBuilder();
 
-        // Creates items KTable
-        KTable<Long, Item> itemsTable = builder
-                .stream("dbserver1.public.items",
-                        Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Item()))
-
-                // replace the original Key of debezium with the item id (Long)
-                // making easier the join with lineitem 
-                .selectKey(new KeyValueMapper<String, Item, Long>() {
-                    @Override
-                    public Long apply(String key, Item value) {
-                        return Long.valueOf(value.getId());
-                    }
-                }).toTable(Materialized.with(Serdes.Long(), QuarkusOrderStreamsSerdes.Item()));
+        // Creates a Global KTable containing all items
+        GlobalKTable<String, Item> itemsTable = builder.globalTable("dbserver1.public.items",
+             Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Item(), null, AutoOffsetReset.EARLIEST));
 
         // Creates line items Stream
         KStream<Long, LineItem> lineItemsStream = builder
                 .stream("dbserver1.public.line_items",
-                        Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.LineItem()))
+                        Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.LineItem(), null, AutoOffsetReset.EARLIEST))
 
-                // replace the original Key of debezium with the item id (Long)
-                // making easier the join with items
+                // replace the original Key created by debezium with the ord id (Long)
+                // making possible to join with orders
                 .selectKey(new KeyValueMapper<String, LineItem, Long>() {
                     @Override
                     public Long apply(String key, LineItem value) {
-                        return Long.valueOf(value.getItem());
+                        return value.getOrd();
                     }
                 });
 
+        // lineItemsStream.print(Printed.<Long, LineItem>toSysOut().withLabel("lineItemsStream"));
+
         // Join line items Stream with Items Table and produce an Enriched Line Item
         KStream<Long, EnrichedLineItem> enrichedLineItems = lineItemsStream.join(itemsTable,
+                new KeyValueMapper<Long,LineItem,String>() {
+
+                    @Override
+                    public String apply(Long key, LineItem value) {
+                        return "{\"id\":" + value.getItem() + "}";
+                    }
+                    
+                },
                 new ValueJoiner<org.gmagnotta.model.connect.LineItem, org.gmagnotta.model.connect.Item, EnrichedLineItem>() {
                     @Override
                     public EnrichedLineItem apply(org.gmagnotta.model.connect.LineItem leftValue,
                             org.gmagnotta.model.connect.Item rightValue) {
 
-                        EnrichedLineItem enrichedLineItem = new EnrichedLineItem();
+                        EnrichedLineItem enriched = new EnrichedLineItem();
 
-                        enrichedLineItem.setItem(rightValue);
-                        enrichedLineItem.setLineItem(leftValue);
+                        enriched.setItem(rightValue);
+                        enriched.setLineItem(leftValue);
 
-                        return enrichedLineItem;
+                        return enriched;
 
                     }
-                },
-                Joined.with(
-                        Serdes.Long(),
-                        QuarkusOrderStreamsSerdes.LineItem(),
-                        QuarkusOrderStreamsSerdes.Item()))
+                })
+                ;
 
-                // replace the Key of with the order id (Long)
-                // making easier the join with orders
-                .selectKey(new KeyValueMapper<Long, EnrichedLineItem, Long>() {
-                    @Override
-                    public Long apply(Long key, EnrichedLineItem value) {
-                        return value.getLineItem().getOrd();
-                    }
-                });
+        //enrichedLineItems.print(Printed.<Long, EnrichedLineItem>toSysOut().withLabel("enrichedLineItems"));
 
         // Build orders Stream
         KStream<Long, Order> ordersStream = builder
                 .stream("dbserver1.public.orders",
-                        Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Order()))
+                        Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Order(), null, AutoOffsetReset.EARLIEST))
 
-                // replace the original Key of debezium with the order id (Long)
-                // making easier the join with enriched line items
+                // replace the original Key created by debezium with the order id (Long)
+                // making possible to join with line items
                 .selectKey(new KeyValueMapper<String, Order, Long>() {
                     @Override
                     public Long apply(String key, Order value) {
-                        return Long.valueOf(value.getId());
+                        return value.getId();
                     }
                 });
 
-        // Join orders stream and enriched line items producing Enriched Orders
-        KTable<Long, OrderCollector> orderCollection = ordersStream.join(enrichedLineItems,
+        // ordersStream.print(Printed.<Long, Order>toSysOut().withLabel("ordersStream"));
+
+        // Join orders stream and line items to produce Enriched Orders
+        KStream<Long, EnrichedOrder> orderCollection = ordersStream.join(enrichedLineItems,
                 new ValueJoiner<Order, EnrichedLineItem, EnrichedOrder>() {
                     @Override
                     public EnrichedOrder apply(Order leftValue,
-                            EnrichedLineItem rightValue) {
+                    EnrichedLineItem rightValue) {
                         EnrichedOrder enrichedOrder = new EnrichedOrder();
 
                         enrichedOrder.setLineItem(rightValue);
@@ -173,28 +163,40 @@ public class OrderStreams {
                 JoinWindows.of(Duration.ofMinutes(5)),
                 StreamJoined.with(Serdes.Long(), QuarkusOrderStreamsSerdes.Order(), QuarkusOrderStreamsSerdes.EnrichedLineItem()))
 
-                // we will obtain a list of Enriched Ordes. We'll group similar
-                // elements by key
-                .groupByKey(Grouped.with(Serdes.Long(), QuarkusOrderStreamsSerdes.EnrichedOrder())).aggregate(
-                        new Initializer<OrderCollector>() {
-                            @Override
-                            public OrderCollector apply() {
-                                return new OrderCollector();
-                            }
-                        },
-                        // we will aggregate all the elements with the same key
-                        // producing an order collector element
-                        new Aggregator<Long, EnrichedOrder, OrderCollector>() {
-                            @Override
-                            public OrderCollector apply(Long aggKey, EnrichedOrder newValue, OrderCollector aggValue) {
-                                aggValue.addOrder(newValue);
-                                return aggValue;
-                            }
-                        }, Materialized.with(Serdes.Long(), QuarkusOrderStreamsSerdes.OrderCollector()));
+                // replace the Key with the order id (Long)
+                // making possible to group by key
+                .selectKey(new KeyValueMapper<Long, EnrichedOrder, Long>() {
+                    @Override
+                    public Long apply(Long key, EnrichedOrder value) {
+                        return value.getOrder().getId();
+                    }
+                });
 
-        // We will transform each order collector element in the final prococol
-        // buffer Order class
-        KStream<String, org.gmagnotta.model.event.OrderOuterClass.Order> protoOrders = orderCollection.mapValues(
+        // orderCollection.print(Printed.<Long, EnrichedOrder>toSysOut().withLabel("orderCollection"));
+
+        // we will obtain a list of Enriched Ordes. We'll group similar
+        // elements by key
+        KTable<Long, OrderCollector> grouped = orderCollection.groupByKey(Grouped.with(Serdes.Long(), QuarkusOrderStreamsSerdes.EnrichedOrder())).aggregate(
+                new Initializer<OrderCollector>() {
+                    @Override
+                    public OrderCollector apply() {
+                        return new OrderCollector();
+                    }
+                },
+                // aggregates all the elements with the same key
+                // producing an order collector aggregate element
+                new Aggregator<Long, EnrichedOrder, OrderCollector>() {
+                    @Override
+                    public OrderCollector apply(Long aggKey, EnrichedOrder newValue, OrderCollector aggValue) {
+                        aggValue.addOrder(newValue);
+                        return aggValue;
+                    }
+                }, Materialized.with(Serdes.Long(), QuarkusOrderStreamsSerdes.OrderCollector()));
+        
+        //grouped.toStream().print(Printed.<Long,OrderCollector>toSysOut().withLabel("grouped"));
+
+        // transforms each order collector element in the final encoded protobuf Order class
+        KStream<String, org.gmagnotta.model.event.OrderOuterClass.Order> protoOrders = grouped.mapValues(
                 new ValueMapper<OrderCollector, org.gmagnotta.model.event.OrderOuterClass.Order>() {
                     @Override
                     public org.gmagnotta.model.event.OrderOuterClass.Order apply(OrderCollector s) {
@@ -204,21 +206,22 @@ public class OrderStreams {
                     }
                 }, Materialized.with(Serdes.Long(), QuarkusOrderStreamsSerdes.Orders()))
 
-        // we'll transform the obtained KTable to a Stream replacing the Long key with the
-        // corresponding String as expeted by other clients
-        .toStream().selectKey(new KeyValueMapper<Long, org.gmagnotta.model.event.OrderOuterClass.Order, String>() {
+                // transform the obtained KTable to a Stream replacing the Long key with the
+                // a String as expeted by other microservices
+                .toStream().selectKey(new KeyValueMapper<Long, org.gmagnotta.model.event.OrderOuterClass.Order, String>() {
 
-            @Override
-            public String apply(Long key, org.gmagnotta.model.event.OrderOuterClass.Order value) {
-                return String.valueOf(value.getId());
-            }
+                    @Override
+                    public String apply(Long key, org.gmagnotta.model.event.OrderOuterClass.Order value) {
+                        return String.valueOf(value.getId());
+                    }
 
-        });
+                });
 
         protoOrders.print(Printed.<String,org.gmagnotta.model.event.OrderOuterClass.Order>toSysOut().withLabel("protoOrders"));
         
+        
         // we'll materialize the Stream to the topic "outbox.event.OrderCreated"
-        // so other clients can fetch the Aggregate
+        // so other clients can process the Aggregate
         protoOrders.to("outbox.event.OrderCreated", Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
 
         
@@ -227,10 +230,10 @@ public class OrderStreams {
             (key, value) -> {
                 List<KeyValue<Integer, Integer>> result = new LinkedList<>();
             
-                result.add(KeyValue.pair((int) value.getItem(), (int) value.getQuantity()));
+                result.add(KeyValue.pair((int) value.getId(), (int) value.getQuantity()));
             
                 return result;
-        })
+        }) 
           
         // Aggregate elements by item id and sum all the quantities
         .groupByKey(Grouped.with(Serdes.Integer(), Serdes.Integer())).aggregate(
@@ -245,7 +248,7 @@ public class OrderStreams {
         // write to "topItems" topic
         topItemsStream.to("topItems", Produced.with(Serdes.Integer(), Serdes.Integer()));
         
-
+        
         // Find biggest Orders
         String orderStateStoreName = "orderStateStore";
         KeyValueBytesStoreSupplier orderSupplier = Stores.persistentKeyValueStore(orderStateStoreName);
@@ -259,13 +262,11 @@ public class OrderStreams {
             () -> new BiggestOrderTransformer(orderStateStoreName, 10),
             orderStateStoreName);
         
-
         topOrdersStream.print(Printed.<Long,BiggestOrders>toSysOut().withLabel("topOrders"));
         
         // write biggest orders to "topOrders" topic
         topOrdersStream.to("topOrders", Produced.with(Serdes.Long(), QuarkusOrderStreamsSerdes.BiggestOrders(10)));
-          
-
+        
 
         Topology topology = builder.build();
         logger.info("Topology is " + topology.describe());
