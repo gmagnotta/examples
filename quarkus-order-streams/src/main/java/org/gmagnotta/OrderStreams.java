@@ -230,7 +230,7 @@ public class OrderStreams {
             (key, value) -> {
                 List<KeyValue<Integer, Integer>> result = new LinkedList<>();
             
-                result.add(KeyValue.pair((int) value.getId(), (int) value.getQuantity()));
+                result.add(KeyValue.pair((int) value.getItem(), (int) value.getQuantity()));
             
                 return result;
         }) 
