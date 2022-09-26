@@ -27,7 +27,17 @@ public class OrderComparator implements Comparator<Order> {
                 order2Amout.getScale(),
                 mc2);
 
-        return order2Value.compareTo(order1Value);
+        int retVal = order2Value.compareTo(order1Value);
+
+        if (retVal == 0) {
+
+            return Long.valueOf(order2.getCreation_date()).compareTo(Long.valueOf(order1.getCreation_date()));
+
+        } else {
+
+            return retVal;
+
+        }
     }
 
 }
