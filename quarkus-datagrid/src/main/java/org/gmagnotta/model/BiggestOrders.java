@@ -1,7 +1,8 @@
 package org.gmagnotta.model;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.TreeSet;
+import java.util.List;
 
 
 /**
@@ -11,33 +12,21 @@ import java.util.TreeSet;
  */
 public class BiggestOrders {
 
-    private TreeSet<Order> inner;
-    private int maxSize;
+    private List<Order> orders ;
 
 
-    public BiggestOrders(int maxSize) {
-        this.inner = new TreeSet<>(new OrderComparator());
-        this.maxSize = maxSize;
+    public BiggestOrders() {
+        this.orders = new ArrayList<Order>();
     }
 
 
     public BiggestOrders add(Order element) {
-        inner.add(element);
-        if (inner.size() > maxSize) {
-            inner.pollLast();
-        }
-        return this;
-    }
-
-    public BiggestOrders remove(Order element) {
-        if (inner.contains(element)) {
-            inner.remove(element);
-        }
+        orders.add(element);
         return this;
     }
 
     public Iterator<Order> iterator() {
-        return inner.iterator();
+        return orders.iterator();
     }
 
     @Override
@@ -45,7 +34,7 @@ public class BiggestOrders {
         StringBuffer stringBuffer = new StringBuffer();
         stringBuffer.append("BiggestOrders{");
 
-        Iterator<Order> iterator = inner.iterator();
+        Iterator<Order> iterator = orders.iterator();
         while (iterator.hasNext()) {
             Order o = iterator.next();
             stringBuffer.append(o.getId() + " ,");

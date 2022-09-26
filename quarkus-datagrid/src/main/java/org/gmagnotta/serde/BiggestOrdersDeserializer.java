@@ -12,20 +12,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 public class BiggestOrdersDeserializer implements Deserializer<BiggestOrders> {
 
-    private int maxSize;
-
-    public BiggestOrdersDeserializer() {
-        this(10);
-    }
-
-    public BiggestOrdersDeserializer(int maxSize) {
-        this.maxSize = maxSize;
-    }
-
     @Override
     public BiggestOrders deserialize(String topic, byte[] data) {
 
-        BiggestOrders orders = new BiggestOrders(maxSize);
+        BiggestOrders orders = new BiggestOrders();
         
         try {
             org.gmagnotta.model.event.OrderOuterClass.BiggestOrders biggest = org.gmagnotta.model.event.OrderOuterClass.BiggestOrders.parseFrom(data);

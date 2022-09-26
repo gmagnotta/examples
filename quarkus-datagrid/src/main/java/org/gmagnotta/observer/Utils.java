@@ -44,7 +44,7 @@ public class Utils {
 		org.gmagnotta.model.Order modelOrder = new org.gmagnotta.model.Order();
 		
 		modelOrder.setId(order.getId());
-		modelOrder.setCreationDate(new Date(order.getCreationDate()));
+		modelOrder.setCreationDate(order.getCreationDate());
 		modelOrder.setAmount(convertToModel(order.getAmount()));
 		//modelOrder.setExternalOrderId(order.getExternalOrderId());
 		modelOrder.setUser(order.getUser());

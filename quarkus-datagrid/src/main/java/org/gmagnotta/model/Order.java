@@ -3,7 +3,6 @@ package org.gmagnotta.model;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,9 +20,9 @@ public class Order implements Serializable {
 
     private int id;
 
-    private Date creationDate;
+    private long creationDate;
 
-    private Date orderWithdrawal;
+    private long orderWithdrawal;
 
     private BigDecimal amount;
     
@@ -50,19 +49,19 @@ public class Order implements Serializable {
 
     @ProtoDoc("@Field(index=Index.YES, analyze = Analyze.YES, store = Store.NO)")
     @ProtoField(number =  2, required = true)
-    public Date getCreationDate() {
+    public long getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(Date creationDate) {
+    public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
     }
 
-    public Date getOrderWithdrawal() {
+    public long getOrderWithdrawal() {
         return orderWithdrawal;
     }
 
-    public void setOrderWithdrawal(Date orderWithdrawal) {
+    public void setOrderWithdrawal(long orderWithdrawal) {
         this.orderWithdrawal = orderWithdrawal;
     }
 
