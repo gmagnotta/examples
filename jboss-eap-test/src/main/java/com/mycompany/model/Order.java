@@ -26,7 +26,7 @@ import javax.persistence.TemporalType;
 		@NamedQuery(name = "getAllOrders", query = "SELECT DISTINCT o FROM Order o INNER JOIN FETCH o.lineItems ORDER BY o.id ASC"),
 })
 @NamedNativeQueries({
-		@NamedNativeQuery(name = "getTopOrders", query = "select id, amount from orders order by amount desc")
+		@NamedNativeQuery(name = "getTopOrders", query = "select id, amount from orders order by amount desc, creation_date desc")
 })
 public class Order implements Serializable {
 
