@@ -8,21 +8,15 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.Topology.AutoOffsetReset;
 import org.apache.kafka.streams.kstream.Aggregator;
@@ -44,7 +38,6 @@ import org.apache.kafka.streams.state.KeyValueBytesStoreSupplier;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.EnrichedLineItem;
 import org.gmagnotta.model.connect.EnrichedOrder;
@@ -57,28 +50,14 @@ import org.jboss.logging.Logger;
 
 import com.google.protobuf.ByteString;
 
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
-
 @ApplicationScoped
 public class OrderStreams {
-
-    @ConfigProperty(name = "kafka.broker")
-    String kafkaBroker;
 
     @Inject
     Logger logger;
 
     @Produces
-    KafkaStreams streams;
-
-    @PostConstruct
-    void init() {
-
-        Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "quarkus-order-streams");
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBroker);
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    public Topology getTopology() {
 
         StreamsBuilder builder = new StreamsBuilder();
 
@@ -271,26 +250,8 @@ public class OrderStreams {
         Topology topology = builder.build();
         logger.info("Topology is " + topology.describe());
 
-        streams = new KafkaStreams(topology, props);
-
+        return topology;
     }
-
-    void onStart(@Observes StartupEvent ev) {
-
-        streams.start();
-
-        logger.info("Consumer started");
-
-    }
-
-    void onStop(@Observes ShutdownEvent ev) {
-
-        streams.close();
-
-        logger.info("Consumer stopped");
-
-    }
-
 
     private static BigDecimal bigDecimalFromString(String encodedString) {
 
