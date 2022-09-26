@@ -39,7 +39,7 @@ spec:
         - resources: {}
           name: quarkus-order-streams
           env:
-            - name: KAFKA_BROKER
+            - name: QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: quarkus-order-streams
