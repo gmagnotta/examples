@@ -10,16 +10,15 @@
 
 	<properties>
 		<compiler-plugin.version>3.8.1</compiler-plugin.version>
-		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<maven.compiler.release>11</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>com.redhat.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>2.2.5.Final-redhat-00007</quarkus.platform.version>
+		<quarkus.platform.version>2.7.6.Final-redhat-00006</quarkus.platform.version>
+		<skipITs>true</skipITs>
 		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
-
-	</properties>
+	  </properties>
 
 	<dependencyManagement>
 		<dependencies>
@@ -43,8 +42,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-arc</artifactId>
+		  </dependency>
+		<!-- <dependency>
+			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-artemis-jms</artifactId>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-log</artifactId>
@@ -83,10 +86,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
-			<artifactId>camel-quarkus-jta</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-activemq</artifactId>
 		</dependency>
 		<dependency>
@@ -108,10 +107,6 @@
             <artifactId>quarkus-junit5</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- <dependency>
-			<groupId>org.apache.camel.quarkus</groupId>
-			<artifactId>camel-quarkus-main</artifactId>
-		</dependency> -->
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
@@ -126,27 +121,27 @@
 	
 	<repositories>
 		<repository>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>redhat-ga-repository</id>
-			<url>https://maven.repository.redhat.com/ga/</url>
+		  <releases>
+			<enabled>true</enabled>
+		  </releases>
+		  <snapshots>
+			<enabled>false</enabled>
+		  </snapshots>
+		  <id>redhat</id>
+		  <url>https://maven.repository.redhat.com/ga</url>
 		</repository>
-	</repositories>
+	  </repositories>
 	<pluginRepositories>
 		<pluginRepository>
 			<releases>
-				<enabled>true</enabled>
+			  <enabled>true</enabled>
 			</releases>
 			<snapshots>
-				<enabled>false</enabled>
+			  <enabled>false</enabled>
 			</snapshots>
-			<id>redhat-ga-repository</id>
-			<url>https://maven.repository.redhat.com/ga/</url>
-		</pluginRepository>
+			<id>redhat</id>
+			<url>https://maven.repository.redhat.com/ga</url>
+		  </pluginRepository>
 	</pluginRepositories>
 	
     <build>
@@ -186,6 +181,25 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<executions>
+				  <execution>
+					<goals>
+					  <goal>integration-test</goal>
+					  <goal>verify</goal>
+					</goals>
+					<configuration>
+					  <systemPropertyVariables>
+						<native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+						<maven.home>${maven.home}</maven.home>
+					  </systemPropertyVariables>
+					</configuration>
+				  </execution>
+				</executions>
+			  </plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jaxb2-maven-plugin</artifactId>
                                 <version>2.5.0</version>
@@ -212,44 +226,17 @@
 	</build>
 	<profiles>
 		<profile>
-			<id>native</id>
-			<activation>
-				<property>
-					<name>native</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-failsafe-plugin</artifactId>
-						<version>${surefire-plugin.version}</version>
-						<executions>
-							<execution>
-								<goals>
-									<goal>integration-test</goal>
-									<goal>verify</goal>
-								</goals>
-								<configuration>
-									<systemPropertyVariables>
-										<native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
-										<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-										<maven.home>${maven.home}</maven.home>
-									</systemPropertyVariables>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-			<properties>
-				<quarkus.package.type>native</quarkus.package.type>
-			</properties>
+		  <id>native</id>
+		  <activation>
+			<property>
+			  <name>native</name>
+			</property>
+		  </activation>
+		  <properties>
+			<skipITs>false</skipITs>
+			<quarkus.package.type>native</quarkus.package.type>
+		  </properties>
 		</profile>
-	</profiles>
-
-
-
-
-	
+	  </profiles>
 
 </project>

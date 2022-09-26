@@ -1,11 +1,9 @@
 package org.gmagnotta.app.route;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import javax.enterprise.inject.Produces;
 
-import org.apache.activemq.ActiveMQXAConnectionFactory;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -14,9 +12,6 @@ import org.gmagnotta.app.converter.OrderTypeConverter;
 import org.gmagnotta.jaxb.Order;
 import org.gmagnotta.jaxb.Ordertype;
 import org.jboss.logging.Logger;
-import org.jboss.narayana.jta.jms.ConnectionFactoryProxy;
-import org.jboss.narayana.jta.jms.TransactionHelperImpl;
-import org.springframework.transaction.jta.JtaTransactionManager;
 
 @ApplicationScoped
 /**
@@ -31,30 +26,26 @@ public class XmlFileRoute extends RouteBuilder {
     
     @ConfigProperty(name = "quarkus.artemis.url")
     String brokerUrl;
+
+    @ConfigProperty(name = "quarkus.artemis.username")
+    String brokerUsername;
+
+    @ConfigProperty(name = "quarkus.artemis.password")
+    String brokerPassword;
     
     @ConfigProperty(name = "processingthreads")
     int processingThreads;
-    
-    @Inject
-    TransactionManager transactionManager;
-    
-    @Inject
-    UserTransaction userTransaction;
+
+    @Produces
+    ActiveMQConnectionFactory activeMQConectionFactory;
     
     @Override
     public void configure() throws Exception {
     	
-    	JtaTransactionManager jtaTransactionManager = new JtaTransactionManager(userTransaction, transactionManager);
-    	getContext().getRegistry().bind("jtaTransactionManager", jtaTransactionManager);
-
-    	// https://access.redhat.com/solutions/5482771
-    	// https://github.com/quarkusio/quarkus/issues/5762
-    	ActiveMQXAConnectionFactory activeMQConectionFactory = new ActiveMQXAConnectionFactory(brokerUrl);
+    	activeMQConectionFactory = new ActiveMQConnectionFactory(brokerUsername, brokerPassword, brokerUrl);
     	
     	ActiveMQComponent activeMq = new ActiveMQComponent();
-    	activeMq.setConnectionFactory(new ConnectionFactoryProxy(activeMQConectionFactory, new TransactionHelperImpl(transactionManager)));
-    	activeMq.setTransacted(true);
-    	activeMq.setTransactionManager(jtaTransactionManager);
+    	activeMq.setConnectionFactory(activeMQConectionFactory);
     	
     	getContext().addComponent("activemq", activeMq);
         
@@ -75,9 +66,7 @@ public class XmlFileRoute extends RouteBuilder {
           .convertBodyTo(Order.class)
           .to("bean://orderprocessor")
           .marshal(jaxbDataFormat)
-          .transacted()
-           .to("activemq:queue:createOrderCommand?jmsMessageType=Text")
-          .end()
+          .to("activemq:queue:createOrderCommand?jmsMessageType=Text")
          .log("done processing order ${headers.OrderEntity.id}");
         
     }
