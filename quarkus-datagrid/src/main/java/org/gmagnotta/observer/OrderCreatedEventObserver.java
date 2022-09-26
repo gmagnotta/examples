@@ -1,8 +1,5 @@
 package org.gmagnotta.observer;
 
-import java.util.Iterator;
-import java.util.List;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -10,7 +7,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.gmagnotta.model.BiggestOrders;
-import org.gmagnotta.model.event.OrderOuterClass.Order;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.jboss.logging.Logger;
@@ -31,7 +27,7 @@ public class OrderCreatedEventObserver {
 
 	@Inject
 	@Remote("toporders")
-	RemoteCache<Integer, Integer> topOrderCache;
+	RemoteCache<String, BiggestOrders> topOrderCache;
 
 	@Inject
 	@Remote("topitems")
@@ -57,22 +53,10 @@ public class OrderCreatedEventObserver {
 	@Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
 	public void onTopOrders(ConsumerRecord<Integer, BiggestOrders> message) {
 
-		// clear cache
-		LOGGER.info("Clearing toporders cache");
-		topOrderCache.clear();
+		BiggestOrders biggestOrders = message.value();
 
-		BiggestOrders orders = message.value();
-
-		Iterator<org.gmagnotta.model.Order> iterator = orders.iterator();
-
-		while (iterator.hasNext()) {
-
-			org.gmagnotta.model.Order order = iterator.next();
-
-			LOGGER.info("Inserting top order " + order.getId());
-			topOrderCache.put(order.getId(), order.getAmount().intValue());
-
-		}
+		LOGGER.info("Inserting top orders");
+		topOrderCache.put("TOP_ORDERS", biggestOrders);
 
 	}
 
@@ -88,7 +72,7 @@ public class OrderCreatedEventObserver {
 
 			} else {
 
-				Order protoOrder = Order.parseFrom(message);
+				org.gmagnotta.model.event.OrderOuterClass.Order protoOrder = org.gmagnotta.model.event.OrderOuterClass.Order.parseFrom(message);
 
 				org.gmagnotta.model.Order order = Utils.convertoToModel(protoOrder);
 

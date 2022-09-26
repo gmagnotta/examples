@@ -1,6 +1,7 @@
 package org.gmagnotta;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -13,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import org.gmagnotta.jaxb.TopItemsResponse;
 import org.gmagnotta.jaxb.TopOrdersResponse;
 import org.gmagnotta.jaxb.TopValue;
+import org.gmagnotta.model.BiggestOrders;
 import org.gmagnotta.model.Order;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
@@ -35,7 +37,7 @@ public class OrderResource {
 
     @Inject
     @Remote("toporders")
-    RemoteCache<Integer, Integer> topOrderCache;
+    RemoteCache<String, BiggestOrders> topOrderCache;
 
     @Inject
     @Remote("topitems")
@@ -103,21 +105,21 @@ public class OrderResource {
     @Produces(MediaType.APPLICATION_XML)
     public TopOrdersResponse getTopOrders() {
 
-        CloseableIteratorSet<Integer> keySet = topOrderCache.keySet();
-
-        CloseableIterator<Integer> iterator = keySet.iterator();
+        BiggestOrders topOrders = topOrderCache.get("TOP_ORDERS");
 
         List<TopValue> result = new ArrayList<TopValue>();
 
-        while (iterator.hasNext()) {
-            Integer key = iterator.next();
+        List<Order> orders = topOrders.getOrders();
 
-            Integer el = topOrderCache.get(key);
+        Iterator<Order> iterator = orders.iterator();
+
+        while (iterator.hasNext()) {
+            Order order = iterator.next();
 
             TopValue top = new TopValue();
 
-            top.setId(key.intValue());
-            top.setValue(el.intValue());
+            top.setId(order.getId());
+            top.setValue(order.getAmount().toBigInteger().intValue());
             result.add(top);
         }
 

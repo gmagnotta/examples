@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.infinispan.protostream.annotations.ProtoField;
+
 
 /**
  * Class that acts as a priority queue but has a fixed size.
@@ -13,20 +15,27 @@ import java.util.List;
 public class BiggestOrders {
 
     private List<Order> orders ;
-
-
+    
     public BiggestOrders() {
         this.orders = new ArrayList<Order>();
     }
-
 
     public BiggestOrders add(Order element) {
         orders.add(element);
         return this;
     }
-
+    
     public Iterator<Order> iterator() {
         return orders.iterator();
+    }
+    
+    @ProtoField(number =  1, required = false)
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 
     @Override
