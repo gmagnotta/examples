@@ -31,7 +31,11 @@ public class OrderComparator implements Comparator<Order> {
 
         if (retVal == 0) {
 
-            return Long.valueOf(order2.getCreation_date()).compareTo(Long.valueOf(order1.getCreation_date()));
+            Long order2Date = Long.valueOf(order2.getCreation_date() /1000);
+
+            Long order1Date = Long.valueOf(order1.getCreation_date() /1000);
+
+            return order1Date.compareTo(order2Date);
 
         } else {
 
