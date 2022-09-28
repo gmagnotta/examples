@@ -4,3 +4,12 @@ metadata:
   name: quarkus-order-streams
 data:
   kafka-broker: kafka:9092
+  security-protocol: 'SASL_SSL'
+  sasl-jaas-mechanism: 'PLAIN'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quarkus-order-streams
+data:
+  sasl-jaas-config: 'dGVzdA=='

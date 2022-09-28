@@ -39,6 +39,21 @@ spec:
         - resources: {}
           name: quarkus-order-streams
           env:
+            - name: QUARKUS_KAFKA_STREAMS_SECURITY_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-streams
+                  key: security-protocol
+            - name: QUARKUS_KAFKA_STREAMS_SASL_JAAS_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-streams
+                  key: sasl-jaas-config
+            - name: QUARKUS_KAFKA_STREAMS_SASL_MECHANISM
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-streams
+                  key: sasl-jaas-mechanism
             - name: QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
