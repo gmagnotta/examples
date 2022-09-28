@@ -16,15 +16,18 @@ objects:
     infinispan-uri: 'datagrid.project:11222'
     quarkus-log-level: 'INFO'
     quarkus-log-file-path: '/tmp/quarkus.log'
-    quarkus-artemis-url: 'tcp://amqbroker:61616'
-    kafka-bootstrap-servers: 'amqstreams:9092'
+    quarkus-artemis-url: 'amqbroker.project:61616'
+    kafka-bootstrap-servers: 'kafka.project:9092'
+    sasl-jaas-mechanism: 'PLAIN'
+    security-protocol: 'SASL_SSL'
 - apiVersion: v1
   kind: Secret
   metadata:
     name: quarkus-datagrid
   data:
     infinispan-username: YWRtaW4=
-    infinispan-password: YWRtaW4=
+    infinispan-password: cGFzc3dvcmQ=
+    sasl-jaas-config: YWRtaW4=
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -82,6 +85,21 @@ objects:
                   configMapKeyRef:
                     name: quarkus-datagrid
                     key: kafka-bootstrap-servers
+              - name: KAFKA_SECURITY_PROTOCOL
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-datagrid
+                    key: security-protocol
+              - name: KAFKA_SASL_JAAS_CONFIG
+                valueFrom:
+                  secretKeyRef:
+                    name: quarkus-datagrid
+                    key: sasl-jaas-config
+              - name: KAFKA_SASL_MECHANISM
+                valueFrom:
+                  configMapKeyRef:
+                    name: quarkus-datagrid
+                    key: sasl-jaas-mechanism
             ports:
               - containerPort: 8080
                 protocol: TCP
