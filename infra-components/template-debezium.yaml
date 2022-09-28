@@ -1,0 +1,149 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: debezium
+  application: ${APPLICATION_NAME}
+message: This is a template to provision debezium for Red Hat OpenShift Streams for Apache Kafka.
+metadata:
+  name: debezium
+  annotations:
+    description: "debezium template"
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${APPLICATION_NAME}
+  data:
+    group-id: '1'
+    bootstrap-servers: 'test:443'
+    security-protocol: 'SASL_SSL'
+    sasl-jaas-mechanism: 'PLAIN'
+    config-storage-topic: 'debezium_configs'
+    offset-storage-topic: 'debezium_offsets'
+    status-storage-topic: 'debezium_statuses'
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${APPLICATION_NAME}
+  data:
+    sasl-jaas-config: 'dGVzdA=='
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APPLICATION_NAME}
+    labels:
+      app: ${APPLICATION_NAME}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: ${APPLICATION_NAME}
+    template:
+      metadata:
+        labels:
+          app: ${APPLICATION_NAME}
+        annotations:
+          alpha.image.policy.openshift.io/resolve-names: '*'
+      spec:
+        containers:
+          - name: debezium
+            image: quay.io/debezium/connect:1.9
+            env:
+              - name: GROUP_ID
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: group-id
+              - name: BOOTSTRAP_SERVERS
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: bootstrap-servers
+              - name: CONNECT_SECURITY_PROTOCOL
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: security-protocol
+              - name: CONNECT_SASL_JAAS_CONFIG
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sasl-jaas-config
+              - name: CONNECT_SASL_MECHANISM
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sasl-jaas-mechanism
+              - name: CONFIG_STORAGE_TOPIC
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: config-storage-topic
+              - name: OFFSET_STORAGE_TOPIC
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: offset-storage-topic
+              - name: STATUS_STORAGE_TOPIC
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: status-storage-topic
+              - name: CONNECT_CONSUMER_SECURITY_PROTOCOL
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: security-protocol
+              - name: CONNECT_CONSUMER_SASL_JAAS_CONFIG
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sasl-jaas-config
+              - name: CONNECT_CONSUMER_SASL_MECHANISM
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sasl-jaas-mechanism
+              - name: CONNECT_PRODUCER_SECURITY_PROTOCOL
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: security-protocol
+              - name: CONNECT_PRODUCER_SASL_JAAS_CONFIG
+                valueFrom:
+                  secretKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sasl-jaas-config
+              - name: CONNECT_PRODUCER_SASL_MECHANISM
+                valueFrom:
+                  configMapKeyRef:
+                    name: ${APPLICATION_NAME}
+                    key: sasl-jaas-mechanism
+            ports:
+              - name: connect
+                containerPort: 8083
+                protocol: TCP
+            resources:
+              limits:
+                memory: ${MEMORY_LIMIT}
+            imagePullPolicy: IfNotPresent
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 60
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+    strategy:
+      type: Recreate
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+parameters:
+- displayName: Application Name
+  description: The name for the application.
+  name: APPLICATION_NAME
+  value: debezium
+  required: true
+- displayName: Container Memory Limit
+  description: Container memory limit.
+  name: MEMORY_LIMIT
+  value: 1Gi
+  required: false
