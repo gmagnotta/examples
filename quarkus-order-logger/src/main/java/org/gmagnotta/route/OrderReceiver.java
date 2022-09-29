@@ -1,5 +1,7 @@
 package org.gmagnotta.route;
 
+import javax.enterprise.context.ApplicationScoped;
+
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -10,6 +12,7 @@ import org.jboss.logging.Logger;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
+@ApplicationScoped
 public class OrderReceiver {
 
     private static final Logger LOGGER = Logger.getLogger(OrderReceiver.class);
