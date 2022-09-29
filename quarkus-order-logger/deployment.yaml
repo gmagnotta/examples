@@ -39,11 +39,6 @@ spec:
         - resources: {}
           name: quarkus-order-logger
           env:
-            - name: KAFKA_BROKER
-              valueFrom:
-                configMapKeyRef:
-                  name: quarkus-order-logger
-                  key: kafka-broker
             - name: QUARKUS_LOG_LEVEL
               value: INFO
             - name: QUARKUS_LOG_FILE_PATH
