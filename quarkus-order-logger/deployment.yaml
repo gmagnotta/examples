@@ -60,6 +60,26 @@ spec:
                   key: telegram-chatid
             - name: TELEGRAM_ENABLED
               value: 'false'
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-logger
+                  key: kafka-bootstrap-servers
+            - name: KAFKA_SECURITY_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-logger
+                  key: security-protocol
+            - name: KAFKA_SASL_JAAS_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-logger
+                  key: sasl-jaas-config
+            - name: KAFKA_SASL_MECHANISM
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-logger
+                  key: sasl-jaas-mechanism
           ports:
             - containerPort: 8080
               protocol: TCP

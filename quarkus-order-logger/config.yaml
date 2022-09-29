@@ -3,12 +3,15 @@ apiVersion: v1
 metadata:
   name: quarkus-order-logger
 data:
-  telegram-token: MTIzNDU2
-  telegram-chatid: MTIzNDU2
+  telegram-token: replaceme
+  telegram-chatid: replaceme
+  sasl-jaas-config: replaceme
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: quarkus-order-logger
 data:
-  kafka-broker: kafka:9092
+  kafka-broker: kafka.giuseppe-shared:9092
+  sasl-jaas-mechanism: PLAIN
+  security-protocol: SASL_SSL
