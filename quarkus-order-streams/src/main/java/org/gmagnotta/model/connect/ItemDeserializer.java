@@ -2,11 +2,12 @@ package org.gmagnotta.model.connect;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ItemDeserializer implements Deserializer<Item> {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Override
     public Item deserialize(String topic, byte[] data) {
@@ -21,7 +22,7 @@ public class ItemDeserializer implements Deserializer<Item> {
     }
 
     public static void main(String[] args) {
-        String s = "{\"id\":0,\"description\":\"Bacon King\",\"price\":\"ZA==\"}";
+        String s = "{\"id\":0,\"description\":\"Bacon King\",\"price\":\"ZA==\", \"__op\":\"r\"}";
 
         ItemDeserializer i = new ItemDeserializer();
 

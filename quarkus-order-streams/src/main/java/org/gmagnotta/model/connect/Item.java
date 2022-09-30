@@ -1,5 +1,7 @@
 package org.gmagnotta.model.connect;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Item {
 
     // {"id":0,"description":"Bacon King","price":"ZA=="}
@@ -7,6 +9,8 @@ public class Item {
     public long id;
     public String description;
     public String price;
+    @JsonProperty("__op")
+    public String op;
 
     public long getId() {
         return id;
@@ -32,7 +36,16 @@ public class Item {
         this.price = price;
     }
 
+    public String getOp() {
+        return op;
+    }
+
+    public void setOp(String op) {
+        this.op = op;
+    }
+
     public String toString() {
         return "Item: {id " + id + " description " + description + " price " + price + "}";
     }
+
 }

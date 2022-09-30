@@ -2,10 +2,11 @@ package org.gmagnotta.model.connect;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class OrderCollectorDeserializer implements Deserializer<OrderCollector> {
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Override
     public OrderCollector deserialize(String topic, byte[] data) {
