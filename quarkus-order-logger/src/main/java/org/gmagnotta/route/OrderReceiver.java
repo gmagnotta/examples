@@ -4,6 +4,8 @@ import javax.enterprise.context.ApplicationScoped;
 
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -46,7 +48,7 @@ public class OrderReceiver {
 
 	@Incoming("items")
 	@Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
-	public void onItemsChanged(Item item) throws InvalidProtocolBufferException {
+	public void onItemsChanged(ConsumerRecord<String, Item> item) throws InvalidProtocolBufferException {
 
 		if (item == null) {
 
@@ -54,11 +56,20 @@ public class OrderReceiver {
 
 		} else {
 
-			if ("u".equalsIgnoreCase(item.getOp())) {
+			Header header = item.headers().lastHeader("__op");
 
-				LOGGER.info("This item was updated: " + item.toString());
+			if (header != null) {
+
+				String operation = new String(header.value());
+
+				if ("u".equalsIgnoreCase(operation)) {
+
+					LOGGER.info("This item was updated: " + item.value().toString());
+
+				}
 
 			}
+
 
 		}
 
