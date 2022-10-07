@@ -1,0 +1,89 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: hello-tomcat-pipeline
+message: This is an OpenShift template to build hello-tomcat.
+metadata:
+  name: hello-tomcat-pipeline
+  annotations:
+    description: "hello-tomcat pipeline Template"
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: jws56-openjdk11-openshift-rhel8
+  spec:
+    lookupPolicy:
+      local: true
+    tags:
+    - annotations:
+        description: Red Hat JBoss WS 5.6 Image
+      from:
+        kind: DockerImage
+        name: registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8
+      name: latest
+      referencePolicy:
+        type: Local
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: hello-tomcat
+  spec:
+    lookupPolicy:
+      local: true
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    name: hello-tomcat
+    labels:
+      application: hello-tomcat
+  spec:
+    resources: {}
+    source:
+      type: Git
+      git:
+        ref: master
+        uri: 'https://github.com/gmagnotta/examples'
+      contextDir: hello-tomcat
+    strategy:
+      type: Source
+      sourceStrategy:
+        forcePull: true
+        incremental: true
+        from:
+          kind: ImageStreamTag
+          name: 'jws56-openjdk11-openshift-rhel8:latest'
+    postCommit: {}
+    runPolicy: Serial
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'hello-tomcat:latest'
+    triggers: []
+- apiVersion: tekton.dev/v1beta1
+  kind: Pipeline
+  metadata:
+    name: hello-tomcat
+  spec:
+    workspaces:
+      - name: template
+    tasks:
+      - name: build
+        taskRef:
+          name: s2i-startbuild-cli
+        params:
+          - name: BUILDCONFIG-NAME
+            value: "hello-tomcat"
+      - name: deploy
+        taskRef:
+          name: openshift-actions
+        runAfter:
+          - build
+        workspaces:
+          - name: source
+            workspace: template
+        params:
+          - name: SCRIPT
+            value: |
+              oc process -p IMAGE=$(tasks.build.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/hello-tomcat-template.yaml | oc apply -f -
+parameters:

@@ -8,14 +8,6 @@ metadata:
   annotations:
     description: "hello-tomcat Template"
 objects:
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: hello-tomcat
-  data:
-    backend-url: ${BACKEND_URL}
-    quarkus-log-level: 'INFO'
-    quarkus-log-file-path: '/tmp/quarkus.log'
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
