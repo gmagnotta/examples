@@ -1,6 +1,6 @@
-This project has goal to demonstrate how is possible to migrate a legacy monolith Java Enterprise application as a container running in OpenShift Container Platform by adopting DevOps practices and how to extend it by using the transaction outbox pattern.
+This project wants to demonstrate how it is possible to migrate a legacy monolith Java Enterprise application as a container running in OpenShift Container Platform by adopting DevOps practices.
 
-The application is a simple JakartaEE web store application.
+The application is a simple JavaEE web store application.
 
 It requires:
 - PostgreSQL database
@@ -28,9 +28,9 @@ Then modify the deploy.sh script in order to fill it with all the required value
 
 The script will generate the certificates needed for https and then will create a kubernetes Secret and a Configmap to store application data.
 
-You can import the OpenShift pipeline. Remember to update the configmap with the correct imagepath.
+You can import the OpenShift pipeline.
 
-Finally start the pipeline and enjoy the monolith built and started inside OpenShift
+Finally start the pipeline and enjoy the monolith built and started inside OpenShift.
 
 
 ----
@@ -43,14 +43,44 @@ oc secrets link pipeline quay --for=pull,mount
 oc secrets link default registry-redhat-io-sa-pull-secret
 oc secrets link pipeline registry-redhat-io-sa-pull-secret --for=pull,mount
 
-oc apply -f pipelines-common.yaml
+oc apply -f ../infra-components/pipelines-common.yaml
+
+oc create configmap template-jboss-eap-test --from-file=jboss-eap-test-template.yaml
+
+oc create configmap template-jboss-eap-test-migration --from-file=jboss-eap-test-migration.yaml
 
 oc apply -f jboss-eap-test-pipelines.yaml
 
-sh-4.4$ psql -U postgres
-postgres=# create database jboss;
-postgres=# create user jboss with encrypted password 'jboss';
-postgres=# grant all privileges on database jboss to jboss;
 
+CONTAINER="postgresql-578df4dfbb-5dwqp"
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "drop database jboss;"' && \
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "drop user jboss;"'
+
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "create database jboss;"' && \
+oc exec $CONTAINER -- /bin/bash -c "psql postgres -c \"create user jboss with encrypted password 'jboss';\"" && \
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "grant all privileges on database jboss to jboss;"' && \
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "ALTER user \"jboss\" REPLICATION;"' && \
+oc exec $CONTAINER -- /bin/bash -c 'psql jboss -c "CREATE PUBLICATION dbz_publication FOR ALL TABLES;"'
 
 ./deploy.sh
+
+----------
+Local Testing
+
+You can replicate the S2I build on your laptop. You need to provision the same infrastructure
+
+podman run --rm -d -e AMQ_USER="amq" -e AMQ_PASSWORD="amq" -e AMQ_ROLE="admin" -e AMQ_QUEUES="getTopItemsCommand,getTopOrdersCommand,createOrderCommand,invalidMessage" -p 8161:8161 -p 61616:61616 registry.redhat.io/amq7/amq-broker-rhel8:7.8
+
+
+podman volume create postgres
+podman run -d --name postgresql_database -e POSTGRESQL_USER=jboss -e POSTGRESQL_PASSWORD=jboss -e POSTGRESQL_DATABASE=jboss -p 5432:5432 -v postgres:/var/lib/pgsql/data rhel8/postgresql-10
+PODMAN="postgresql_database"
+#podman exec -ti $PODMAN /bin/bash -c 'psql postgres -c "create database jboss;"' && \
+#podman exec -ti $PODMAN /bin/bash -c "psql postgres -c \"create user jboss with encrypted password 'jboss';\"" && \
+#podman exec -ti $PODMAN /bin/bash -c 'psql postgres -c "grant all privileges on database jboss to jboss;"' && \
+podman exec -ti $PODMAN /bin/bash -c 'psql postgres -c "ALTER user \"jboss\" REPLICATION;"' && \
+podman exec -ti $PODMAN /bin/bash -c 'psql jboss -c "CREATE PUBLICATION dbz_publication FOR ALL TABLES;"' && \
+podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#wal_level \= replica/wal_level \= logical/g' /var/lib/pgsql/data/userdata/postgresql.conf" 
+podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#max_wal_senders \= 10/max_wal_senders \= 4/g' /var/lib/pgsql/data/userdata/postgresql.conf" 
+podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#smax_replication_slots \= 10/max_replication_slots \= 4/g' /var/lib/pgsql/data/userdata/postgresql.conf" 
+podman restart postgresql_database

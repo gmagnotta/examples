@@ -16,7 +16,7 @@ HOSTNAME_HTTPS="secure-jboss-eap-project.domain"
 OCP_POSTGRESQL_SERVICE_HOST="postgresql.project"
 OCP_POSTGRESQL_SERVICE_PORT="5432"
 AMQ_BROKER="amqbroker.project"
-MQ_QUEUES="orderCommand"
+MQ_QUEUES="getTopItemsCommand,getTopOrdersCommand,createOrderCommand,invalidMessage"
 
 # Add view role to serviceaccount
 oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
