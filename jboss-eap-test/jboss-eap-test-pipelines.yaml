@@ -30,15 +30,6 @@ metadata:
 spec:
   lookupPolicy:
     local: true
-  tags:
-  - annotations:
-      description: Flyway
-    from:
-      kind: DockerImage
-      name: quay.io/gmagnotta/flyway
-    name: latest
-    referencePolicy:
-      type: Local
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
@@ -79,6 +70,32 @@ spec:
     to:
       kind: ImageStreamTag
       name: 'jboss-eap-test:latest'
+  triggers: []
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: flyway
+  labels:
+    application: jboss-eap-test
+spec:
+  resources: {}
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: 'https://github.com/gmagnotta/examples'
+    contextDir: migratedb
+  strategy:
+    type: Docker
+    dockerStrategy:
+      forcePull: true
+  postCommit: {}
+  runPolicy: Serial
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'flyway:latest'
   triggers: []
 ---
 apiVersion: build.openshift.io/v1
@@ -137,9 +154,17 @@ spec:
       params:
         - name: BUILDCONFIG-NAME
           value: "jboss-eap-test"
+    - name: build-flyway
+      taskRef:
+        name: s2i-startbuild-cli
+      params:
+        - name: BUILDCONFIG-NAME
+          value: "flyway"
     - name: build-migrate
       taskRef:
         name: s2i-startbuild-cli
+      runAfter:
+        - build-flyway
       params:
         - name: BUILDCONFIG-NAME
           value: "jboss-eap-test-migrate"
