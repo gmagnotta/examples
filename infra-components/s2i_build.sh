@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
 # This script emulates an s2i build process performed exclusively with buildah.
-# Currently only builder images are supported.
 #
-# Version 0.0.4
+# Version 0.0.5
 #
 set -e
 
 BUILDER_IMAGE=""
+RUNTIME_IMAGE=""
+RUNTIME_ARTIFACT="/deployments/"
 ASSEMBLE_USER="jboss"
-SCRIPTS_URL="/usr/local/s2i/"
 OUTPUT_IMAGE=""
 INCREMENTAL=false
 CONTEXT_DIR="."
@@ -21,16 +21,19 @@ else
     exit -1
 fi
 
+SCRIPTS_URL=$(buildah inspect $BUILDER_IMAGE | jq '.Docker.config.Labels["io.openshift.s2i.scripts-url"]' | sed 's/image:\/\///g' | tr -d '"')
+DESTINATION_URL=$(buildah inspect $BUILDER_IMAGE | jq '.Docker.config.Labels["io.openshift.s2i.destination"]' | tr -d '"')
+
 echo "Start"
 builder=$(buildah from --ulimit nofile=90000:90000 $BUILDER_IMAGE)
 
-buildah add --chown $ASSEMBLE_USER:0 $builder ./$CONTEXT_DIR /tmp/src
+buildah add --chown $ASSEMBLE_USER:0 $builder ./$CONTEXT_DIR $DESTINATION_URL/src
 
 if [ "$INCREMENTAL" = "true" ]; then
 
     if [ -f "./artifacts.tar" ]; then
         echo "Restoring artifacts"
-        buildah add --chown $ASSEMBLE_USER:0 $builder ./artifacts.tar /tmp/artifacts
+        buildah add --chown $ASSEMBLE_USER:0 $builder ./artifacts.tar $DESTINATION_URL/artifacts
     fi
 
 fi
@@ -52,7 +55,7 @@ buildah config --cmd $SCRIPTS_URL/run $builder
 
 if [ -x "$CONTEXT_DIR/.s2i/bin/assemble" ]; then
     echo "Using assemble from .s2i"
-    eval buildah run $ENV $builder -- /tmp/src/.s2i/bin/assemble
+    eval buildah run $ENV $builder -- $DESTINATION_URL/src/.s2i/bin/assemble
 else
     echo "Using assemble from image"
     eval buildah run $ENV $builder -- $SCRIPTS_URL/assemble
@@ -69,6 +72,25 @@ if [ "$INCREMENTAL" = "true" ]; then
 
 fi
 
-buildah commit $builder $OUTPUT_IMAGE
+# RUNTIME IMAGE BUILD
+if [ ! -z "$RUNTIME_IMAGE" ]; then
+
+    echo "Creating Runtime Image"
+
+    runner=$(buildah from $RUNTIME_IMAGE)
+
+    buildah copy --chown $ASSEMBLE_USER:0 --from $builder $runner $RUNTIME_ARTIFACT $RUNTIME_ARTIFACT
+
+    buildah commit $runner $OUTPUT_IMAGE
+
+    buildah rm $runner
+
+else
+
+    echo "Not creating runtime image"
+
+    buildah commit $builder $OUTPUT_IMAGE
+
+fi
 
 buildah rm $builder
