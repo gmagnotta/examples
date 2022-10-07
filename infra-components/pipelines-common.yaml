@@ -464,3 +464,37 @@ spec:
 
         echo "Cleaning container image cache"
         buildah rmi --all
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: s2i-startbuild-cli
+spec:
+  params:
+    - name: IMAGE
+      default: registry.redhat.io/openshift4/ose-cli
+      type: string
+    - name: BUILDCONFIG-NAME
+      type: string
+  results:
+    - name: VALUE
+      description: the value read
+  steps:
+    - name: oc
+      image: $(params.IMAGE)
+      script: |
+        #!/usr/bin/env bash
+
+        set -e
+
+        oc start-build $(params.BUILDCONFIG-NAME) --wait --follow
+
+        #VALUE=$(oc get buildconfig $(params.BUILDCONFIG-NAME) -o jsonpath='{.status.imageChangeTriggers[0].lastTriggeredImageID}')
+
+        IMAGE=$(oc get buildconfig $(params.BUILDCONFIG-NAME) -o jsonpath='{.spec.output.to.name}' | cut -d ':' -f 1)
+
+        VALUE=$(oc get is $IMAGE -o jsonpath='{.status.tags[0].items[0].dockerImageReference}')
+
+        echo -n "$VALUE" > $(results.VALUE.path)
+
+        echo "Built image is $VALUE"
