@@ -1,0 +1,8 @@
+BUILDER_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8"
+RUNTIME_IMAGE=""
+ASSEMBLE_USER="jboss"
+SCRIPTS_URL="/usr/local/s2i/"
+OUTPUT_IMAGE="jboss-test"
+INCREMENTAL=true
+CONTEXT_DIR="."
+RUNTIME_ARTIFACT="/deployments/"
