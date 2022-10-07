@@ -1,8 +1,8 @@
-This is a collection of resources common to many projects.
+This is a collection of common resources to many projects.
 
-There are OpenShift image streams, templates and pipelines.
+There are OpenShift templates and pipeline tasks.
 
-Many applications are located in registry.redhat.io, so you need a valid secret in place. Please see https://access.redhat.com/RegistryAuthentication#registry-service-accounts-for-shared-environments-4
+Many referenced applications are located in registry.redhat.io, so you need a valid secret in place. Please see https://access.redhat.com/RegistryAuthentication#registry-service-accounts-for-shared-environments-4
 
 ----
 
@@ -20,9 +20,17 @@ oc process -p POSTGRESQL_DATABASE="c3Nv" -p POSTGRESQL_USER="c3Nv" -p POSTGRESQL
 
 Provision AMQ Broker
 
-oc process -p MQ_QUEUES="orderCommand" -p MQ_TOPICS="" -f template-amqbroker.yaml | oc apply -f -
+oc process -p MQ_QUEUES="" -p MQ_TOPICS="" -f template-amqbroker.yaml | oc apply -f -
 
 ----
+
+Create SSO DB Schema
+
+CONTAINER="postgresql-6fbdcc95-jsv5k"
+
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "create database sso;"' && \
+oc exec $CONTAINER -- /bin/bash -c "psql postgres -c \"create user sso with encrypted password 'sso';\"" && \
+oc exec $CONTAINER -- /bin/bash -c 'psql postgres -c "grant all privileges on database sso to sso;"'
 
 Provision Red Hat Single Sign-On
 
