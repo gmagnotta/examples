@@ -1,56 +1,3 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: jboss-eap-test-source-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: jboss-eap-test-artifacts-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 4Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: jboss-eap-test-varlibcontainers-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 4Gi
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: jboss-eap-test-pipelineconfig
-data:
-  dev-image-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test'
-  dev-image-migration-path: 'image-registry.openshift-image-registry.svc:5000/dev/jboss-eap-test-migration'
-  release-image-path: 'quay.io/gmagnotta/jboss-eap-test'
-  release-image-path-migration: 'quay.io/gmagnotta/jboss-eap-test-migration'
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: jboss-eap-test-s2ienvironment
-data:
-  environment: |
-    MAVEN_REPOS="nexus"
-    NEXUS_MAVEN_REPO_ID="nexus"
-    NEXUS_MAVEN_REPO_URL="http://nexus3:8081"
----
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
@@ -68,117 +15,134 @@ spec:
     referencePolicy:
       type: Local
 ---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: jboss-eap-test
+spec:
+  lookupPolicy:
+    local: true
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: flyway
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - annotations:
+      description: Flyway
+    from:
+      kind: DockerImage
+      name: quay.io/gmagnotta/flyway
+    name: latest
+    referencePolicy:
+      type: Local
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: jboss-eap-test-migration
+spec:
+  lookupPolicy:
+    local: true
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: jboss-eap-test
+  labels:
+    application: jboss-eap-test
+spec:
+  resources: {}
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: 'https://github.com/gmagnotta/examples'
+    contextDir: jboss-eap-test
+  strategy:
+    type: Source
+    sourceStrategy:
+      env:
+        - name: VARIABLE
+          value: 'value'
+      forcePull: true
+      incremental: true
+      from:
+        kind: ImageStreamTag
+        name: 'eap74-openjdk11-openshift-rhel8:latest'
+  postCommit: {}
+  runPolicy: Serial
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'jboss-eap-test:latest'
+  triggers: []
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: jboss-eap-test-migrate
+  labels:
+    application: jboss-eap-test-migrate
+spec:
+  resources: {}
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: 'https://github.com/gmagnotta/examples'
+    contextDir: jboss-eap-test/src/main/resources/db
+  strategy:
+    type: Source
+    sourceStrategy:
+      env:
+        - name: CONTEXT
+          value: 'jboss-eap-test/src/main/resources/db'
+      forcePull: true
+      incremental: false
+      from:
+        kind: ImageStreamTag
+        name: 'flyway:latest'
+  postCommit: {}
+  runPolicy: Serial
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'jboss-eap-test-migration:latest'
+  triggers: []
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: jboss-eap-test-pipelineconfig
+data:
+  release-image-path: 'quay.io/gmagnotta/jboss-eap-test'
+  release-image-path-migration: 'quay.io/gmagnotta/jboss-eap-test-migration'
+---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: jboss-eap-test-dev-pipeline
 spec:
-  params:
-    - name: repo-url
   workspaces:
-    - name: src
-    - name: artifacts
-    - name: varlibcontainers
-    - name: empty
-    - name: s2ienv
+    - name: template
+    - name: template-migrate
   tasks:
-    - name: fetch-repository
-      taskRef:
-        name: git-clone
-      workspaces:
-        - name: output
-          workspace: src
-      params:
-        - name: url
-          value: $(params.repo-url)
-        - name: deleteExisting
-          value: "true"
-    - name: get-dev-path
-      taskRef:
-        name: get-configmap-value
-      runAfter:
-        - fetch-repository
-      params:
-        - name: CONFIGMAP-NAME
-          value: "jboss-eap-test-pipelineconfig"
-        - name: CONFIGMAP-KEY
-          value: "dev-image-path"
-    - name: get-migration-path
-      taskRef:
-        name: get-configmap-value
-      runAfter:
-        - fetch-repository
-      params:
-        - name: CONFIGMAP-NAME
-          value: "jboss-eap-test-pipelineconfig"
-        - name: CONFIGMAP-KEY
-          value: "dev-image-migration-path"
     - name: build
       taskRef:
-        name: buildah-s2i
-      runAfter:
-        - get-dev-path
-      workspaces:
-        - name: source
-          workspace: src
-        - name: varlibcontainers
-          workspace: varlibcontainers
-        - name: artifacts
-          workspace: artifacts
-        - name: s2ienv
-          workspace: s2ienv
+        name: s2i-startbuild-cli
       params:
-        - name: S2I_IMAGE
-          value: "image-registry.openshift-image-registry.svc:5000/dev/eap74-openjdk11-openshift-rhel8"
-        - name: TLSVERIFY
-          value: "false"
-        - name: IMAGE
-          value: $(tasks.get-dev-path.results.VALUE)
-        - name: CONTEXT
+        - name: BUILDCONFIG-NAME
           value: "jboss-eap-test"
-        - name: INCREMENTAL
-          value: "true"
     - name: build-migrate
       taskRef:
-        name: buildah-s2i
-      runAfter:
-        - get-migration-path
-        - build
-      workspaces:
-        - name: source
-          workspace: src
-        - name: varlibcontainers
-          workspace: varlibcontainers
-        - name: artifacts
-          workspace: artifacts
-        - name: s2ienv
-          workspace: s2ienv
+        name: s2i-startbuild-cli
       params:
-        - name: S2I_IMAGE
-          value: "quay.io/gmagnotta/flyway"
-        - name: TLSVERIFY
-          value: "false"
-        - name: IMAGE
-          value: $(tasks.get-migration-path.results.VALUE)
-        - name: CONTEXT
-          value: "jboss-eap-test/src/main/resources/db"
-        - name: S2I_SCRIPTS_URL
-          value: "/flyway"
-    - name: deploy
-      taskRef:
-        name: openshift-actions
-      runAfter:
-        - build
-        - build-migrate
-      workspaces:
-        - name: source
-          workspace: src
-      params:
-        - name: CONTEXT
-          value: "jboss-eap-test"
-        - name: SCRIPT
-          value: |
-            oc process -p IMAGE=$(tasks.get-dev-path.results.VALUE)@$(tasks.build.results.IMAGE_DIGEST) -p MIGRATION_IMAGE=$(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST) -p CAUSE=$(tasks.fetch-repository.results.commit) -f jboss-eap-test-template.yaml | oc apply -f -
+        - name: BUILDCONFIG-NAME
+          value: "jboss-eap-test-migrate"
     - name: migrate
       taskRef:
         name: openshift-actions
@@ -187,13 +151,24 @@ spec:
         - build-migrate
       workspaces:
         - name: source
-          workspace: src
+          workspace: template-migrate
       params:
-        - name: CONTEXT
-          value: "jboss-eap-test"
         - name: SCRIPT
           value: |
-            oc process -p MIGRATION_IMAGE=$(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST) -f jboss-eap-test-migration.yaml | oc apply -f -
+            oc process -p MIGRATION_IMAGE=$(tasks.build-migrate.results.VALUE) -f $(workspaces.source.path)/jboss-eap-test-migration.yaml | oc apply -f -
+    - name: deploy
+      taskRef:
+        name: openshift-actions
+      runAfter:
+        - build
+        - build-migrate
+      workspaces:
+        - name: source
+          workspace: template
+      params:
+        - name: SCRIPT
+          value: |
+            oc process -p IMAGE=$(tasks.build.results.VALUE) -p MIGRATION_IMAGE=$(tasks.build-migrate.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/jboss-eap-test-template.yaml | oc apply -f -
     - name: update-built-image
       taskRef:
         name: set-configmap-value
@@ -206,7 +181,7 @@ spec:
         - name: CONFIGMAP-KEY
           value: "dev-latest-built-image"
         - name: VALUE
-          value: $(tasks.get-dev-path.results.VALUE)@$(tasks.build.results.IMAGE_DIGEST)
+          value: $(tasks.build.results.VALUE)
     - name: update-migrate-image
       taskRef:
         name: set-configmap-value
@@ -219,7 +194,7 @@ spec:
         - name: CONFIGMAP-KEY
           value: "dev-latest-migration-image"
         - name: VALUE
-          value: $(tasks.get-migration-path.results.VALUE)@$(tasks.build-migrate.results.IMAGE_DIGEST)
+          value: $(tasks.build-migrate.results.VALUE)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
