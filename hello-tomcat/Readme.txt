@@ -7,4 +7,4 @@ oc create configmap template --from-file=hello-tomcat-template.yaml
 
 oc apply -f ../infra-components/pipelines-common.yaml
 
-oc process -f hello-tomcat-pipeline.yaml | oc process -f -
+oc process -f hello-tomcat-pipeline.yaml | oc apply -f -
