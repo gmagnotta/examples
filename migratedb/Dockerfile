@@ -1,4 +1,4 @@
-# BUILD IMAGE
+# BUILDER IMAGE
 FROM registry.access.redhat.com/ubi8/ubi-minimal as build
 
 USER root
@@ -17,7 +17,7 @@ LABEL io.openshift.s2i.scripts-url="image:///flyway" \
 
 USER root
 
-COPY --chown=jboss:0 --from=build /tmp/flyway /flyway
+COPY --chown=185:0 --from=build /tmp/flyway /flyway
 
 ENV FLYWAY_EDITION="community"
 ENV FLYWAY_USER=""
@@ -27,13 +27,13 @@ ENV FLYWAY_PARAMS="-?"
 
 COPY ./s2i/ /flyway/
 
-RUN chown -R jboss:0 /flyway && \
+RUN chown -R 185:0 /flyway && \
     chmod 555 /flyway/flyway && \
     chmod 555 /flyway/run && \
     chmod 555 /flyway/assemble
 
 WORKDIR /flyway
 
-USER jboss
+USER 185
 
 ENTRYPOINT ["/flyway/run"]

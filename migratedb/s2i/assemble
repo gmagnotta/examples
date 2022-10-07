@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "---> Installing application source ..."
+echo "---> Copying SQL scripts ..."
 mv /tmp/src/* /flyway/sql/
 
-echo "purging"
+echo "Purging temporary files"
 rm -rf /tmp/src
