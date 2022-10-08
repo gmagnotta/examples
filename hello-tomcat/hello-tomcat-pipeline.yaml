@@ -31,10 +31,17 @@ objects:
   spec:
     lookupPolicy:
       local: true
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: hello-tomcat-artifact
+  spec:
+    lookupPolicy:
+      local: true
 - apiVersion: build.openshift.io/v1
   kind: BuildConfig
   metadata:
-    name: hello-tomcat
+    name: hello-tomcat-artifact
     labels:
       application: hello-tomcat
   spec:
@@ -58,6 +65,39 @@ objects:
     output:
       to:
         kind: ImageStreamTag
+        name: 'hello-tomcat-artifact:latest'
+    triggers: []
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    name: hello-tomcat
+    labels:
+      application: hello-tomcat
+  spec:
+    resources: {}
+    source:
+      type: Dockerfile
+      dockerfile: |-
+        FROM jws56-openjdk11-openshift-rhel8:latest
+        COPY /hello-tomcat.war /deployments/ROOT.war
+      images:
+      - from:
+          kind: ImageStreamTag
+          name: 'hello-tomcat-artifact:latest'
+        paths:
+        - sourcePath: '/deployments/hello-tomcat.war'
+          destinationDir: '.'
+    strategy:
+      type: Docker
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: 'jws56-openjdk11-openshift-rhel8:latest'
+    postCommit: {}
+    runPolicy: Serial
+    output:
+      to:
+        kind: ImageStreamTag
         name: 'hello-tomcat:latest'
     triggers: []
 - apiVersion: tekton.dev/v1beta1
@@ -73,17 +113,25 @@ objects:
           name: s2i-startbuild-cli
         params:
           - name: BUILDCONFIG-NAME
+            value: "hello-tomcat-artifact"
+      - name: build-runtime
+        taskRef:
+          name: s2i-startbuild-cli
+        runAfter:
+          - build
+        params:
+          - name: BUILDCONFIG-NAME
             value: "hello-tomcat"
       - name: deploy
         taskRef:
           name: openshift-actions
         runAfter:
-          - build
+          - build-runtime
         workspaces:
           - name: source
             workspace: template
         params:
           - name: SCRIPT
             value: |
-              oc process -p IMAGE=$(tasks.build.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/hello-tomcat-template.yaml | oc apply -f -
+              oc process -p IMAGE=$(tasks.build-runtime.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/hello-tomcat-template.yaml | oc apply -f -
 parameters:
