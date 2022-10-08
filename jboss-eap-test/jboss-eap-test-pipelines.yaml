@@ -18,7 +18,32 @@ spec:
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
+  name: eap74-openjdk11-runtime-openshift-rhel8
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - annotations:
+      description: Red Hat JBoss EAP 7 runtime Image
+    from:
+      kind: DockerImage
+      name: registry.redhat.io/jboss-eap-7/eap74-openjdk11-runtime-openshift-rhel8
+    name: latest
+    referencePolicy:
+      type: Local
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
   name: jboss-eap-test
+spec:
+  lookupPolicy:
+    local: true
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: jboss-eap-test-runtime
 spec:
   lookupPolicy:
     local: true
@@ -70,6 +95,44 @@ spec:
     to:
       kind: ImageStreamTag
       name: 'jboss-eap-test:latest'
+  triggers: []
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: jboss-eap-test-runtime
+  labels:
+    application: jboss-eap-test
+spec:
+  resources: {}
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM eap74-openjdk11-runtime-openshift-rhel8:latest
+      COPY /server $JBOSS_HOME
+      USER root
+      RUN chown -R jboss:root $JBOSS_HOME && chmod -R ug+rwX $JBOSS_HOME
+      USER jboss
+      CMD $JBOSS_HOME/bin/openshift-launch.sh
+    images:
+    - from:
+        kind: ImageStreamTag
+        name: 'jboss-eap-test:latest'
+      paths:
+      - sourcePath: '/s2i-output/server/'
+        destinationDir: '.'
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: 'eap74-openjdk11-runtime-openshift-rhel8:latest'
+  postCommit: {}
+  runPolicy: Serial
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'jboss-eap-test-runtime:latest'
   triggers: []
 ---
 apiVersion: build.openshift.io/v1
@@ -148,12 +211,20 @@ spec:
     - name: template
     - name: template-migrate
   tasks:
-    - name: build
+    - name: build-artifacts
       taskRef:
         name: s2i-startbuild-cli
       params:
         - name: BUILDCONFIG-NAME
           value: "jboss-eap-test"
+    - name: build-runtime
+      taskRef:
+        name: s2i-startbuild-cli
+      runAfter:
+        - build-artifacts
+      params:
+        - name: BUILDCONFIG-NAME
+          value: "jboss-eap-test-runtime"
     - name: build-flyway
       taskRef:
         name: s2i-startbuild-cli
@@ -172,7 +243,6 @@ spec:
       taskRef:
         name: openshift-actions
       runAfter:
-        - build
         - build-migrate
       workspaces:
         - name: source
@@ -185,33 +255,30 @@ spec:
       taskRef:
         name: openshift-actions
       runAfter:
-        - build
-        - build-migrate
+        - build-runtime
       workspaces:
         - name: source
           workspace: template
       params:
         - name: SCRIPT
           value: |
-            oc process -p IMAGE=$(tasks.build.results.VALUE) -p MIGRATION_IMAGE=$(tasks.build-migrate.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/jboss-eap-test-template.yaml | oc apply -f -
+            oc process -p IMAGE=$(tasks.build-runtime.results.VALUE) -p MIGRATION_IMAGE=$(tasks.build-migrate.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/jboss-eap-test-template.yaml | oc apply -f -
     - name: update-built-image
       taskRef:
         name: set-configmap-value
       runAfter:
         - deploy
-        - migrate
       params:
         - name: CONFIGMAP-NAME
           value: "jboss-eap-test-pipelineconfig"
         - name: CONFIGMAP-KEY
           value: "dev-latest-built-image"
         - name: VALUE
-          value: $(tasks.build.results.VALUE)
+          value: $(tasks.build-runtime.results.VALUE)
     - name: update-migrate-image
       taskRef:
         name: set-configmap-value
       runAfter:
-        - deploy
         - migrate
       params:
         - name: CONFIGMAP-NAME
