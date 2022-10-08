@@ -100,6 +100,12 @@ objects:
         kind: ImageStreamTag
         name: 'hello-tomcat:latest'
     triggers: []
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: hello-tomcat-pipelineconfig
+  data:
+    release-image-path: 'quay.io/gmagnotta/hello-tomcat'
 - apiVersion: tekton.dev/v1beta1
   kind: Pipeline
   metadata:
@@ -134,4 +140,59 @@ objects:
           - name: SCRIPT
             value: |
               oc process -p IMAGE=$(tasks.build-runtime.results.VALUE) -p CAUSE="deployment" -f $(workspaces.source.path)/hello-tomcat-template.yaml | oc apply -f -
+      - name: update-built-image
+        taskRef:
+          name: set-configmap-value
+        runAfter:
+          - deploy
+        params:
+          - name: CONFIGMAP-NAME
+            value: "hello-tomcat-pipelineconfig"
+          - name: CONFIGMAP-KEY
+            value: "dev-latest-built-image"
+          - name: VALUE
+            value: $(tasks.build-runtime.results.VALUE)
+- kind: RoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: 'system:image-puller'
+    namespace: hello-dev
+  subjects:
+    - kind: ServiceAccount
+      name: default
+      namespace: hello-test
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: 'system:image-puller'
+- apiVersion: tekton.dev/v1beta1
+  kind: Pipeline
+  metadata:
+    name: hello-tomcat-promote
+  spec:
+    params:
+      - name: dest-namespace
+    workspaces:
+      - name: template-deploy
+    tasks:
+      - name: get-image-built
+        taskRef:
+          name: get-configmap-value
+        params:
+          - name: CONFIGMAP-NAME
+            value: "hello-tomcat-pipelineconfig"
+          - name: CONFIGMAP-KEY
+            value: "dev-latest-built-image"
+      - name: deploy
+        taskRef:
+          name: openshift-actions
+        runAfter:
+          - get-image-built
+        workspaces:
+          - name: source
+            workspace: template-deploy
+        params:
+          - name: SCRIPT
+            value: |
+              oc process -p IMAGE=$(tasks.get-image-built.results.VALUE) -p CAUSE=$(tasks.get-image-built.results.VALUE) -f $(workspaces.source.path)/hello-tomcat-template.yaml | oc apply --namespace=$(params.dest-namespace) -f - 
 parameters:

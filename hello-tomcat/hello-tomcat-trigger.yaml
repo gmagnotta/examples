@@ -1,0 +1,79 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: event-binding
+spec:
+  params:
+    - name: git-repository-url
+      value: $(body.repository.url)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: push-trigger-template
+spec:
+  params:
+  - name: git-repository-url
+    description: The git repository url
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: hello-tomcat-
+    spec:
+      pipelineRef:
+        name: hello-tomcat
+      serviceAccountName: pipeline
+      workspaces:
+        - name: template
+          configmap:
+            name: deploy-template
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: listener
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: trigger
+      interceptors:
+        - ref:
+            name: "github"
+            kind: ClusterInterceptor
+            apiVersion: triggers.tekton.dev
+          params:
+          - name: "secretRef"
+            value:
+              secretName: git-secret
+              secretKey: secretToken
+          - name: "eventTypes"
+            value: ["push"]
+      bindings:
+        - ref: event-binding    
+      template:
+        ref: push-trigger-template
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: git-secret
+data:
+  secretToken: WnFaamFCQ1JzaDRSY3d3WUpBWDg1RkNBNytvRFdyRy8=
+type: Opaque
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: listener
+  name: el-listener
+spec:
+  port:
+    targetPort: http-listener
+  to:
+    kind: Service
+    name: el-listener
+    weight: 100
