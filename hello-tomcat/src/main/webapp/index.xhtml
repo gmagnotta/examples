@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en"
+    xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+<h:head>
+	<meta charset="UTF-8"/>
+	<title>Hello World!</title>
+</h:head>
+
+<h:body>
+	<h1>Hello world from web application!</h1>
+
+	<h:form prependId="false">
+		What's your name: <h:inputText value="#{user.name}" id="name" />
+		<h:commandButton value="Send">
+			<f:ajax execute="name" render="out"/>
+		</h:commandButton>
+
+		<h2><h:outputText id="out" value="#{user.greeting}" /></h2>
+	</h:form>
+</h:body>
+
+</html>
