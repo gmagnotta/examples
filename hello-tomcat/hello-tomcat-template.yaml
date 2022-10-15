@@ -115,7 +115,8 @@ objects:
             imagePullPolicy: IfNotPresent
             volumeMounts:
             - name: tomcat-users
-              mountPath: /opt/jws-5.6/tomcat/conf
+              mountPath: /opt/jws-5.6/tomcat/conf/tomcat-users.xml
+              subPath: tomcat-users.xml
         restartPolicy: Always
         terminationGracePeriodSeconds: 60
         dnsPolicy: ClusterFirst
