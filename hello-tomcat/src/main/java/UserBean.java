@@ -1,9 +1,12 @@
 import java.io.Serializable;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
 import javax.enterprise.context.SessionScoped;
+import javax.faces.context.FacesContext;
 import javax.inject.Named;
 
-@Named("user")
+@Named
 @SessionScoped
 public class UserBean implements Serializable {
     private String name;
@@ -24,7 +27,12 @@ public class UserBean implements Serializable {
         if (name.length() == 0) {
             return "";
         } else {
-            return "Hello, " + name + "!";
+            
+            ResourceBundle bundle = ResourceBundle.getBundle("messages", FacesContext.getCurrentInstance().getViewRoot().getLocale());
+            String greet = bundle.getString("greet");
+
+            return MessageFormat.format(greet, name);
+
         }
     }
 }
