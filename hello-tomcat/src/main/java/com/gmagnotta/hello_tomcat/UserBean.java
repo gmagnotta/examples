@@ -1,3 +1,5 @@
+package com.gmagnotta.hello_tomcat;
+
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
