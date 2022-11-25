@@ -249,7 +249,7 @@ objects:
             image: ${IMAGE}
             env:
               - name: DNS_MEMBERSHIP_SERVICE_NAME
-                value: "hello-tomcat"
+                value: "hello-tomcat-ping"
             readinessProbe:
               exec:
                 command:
@@ -262,6 +262,8 @@ objects:
               - containerPort: 8778
                 protocol: TCP
               - containerPort: 8888
+                protocol: TCP
+              - containerPort: 4000
                 protocol: TCP
             resources:
               requests:
@@ -309,9 +311,6 @@ objects:
     name: hello-tomcat
     labels:
       app: hello-tomcat
-    annotations:
-      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-      description: "The service for tomcat cluster membership."
   spec:
     ports:
       - name: 8080-tcp
@@ -322,14 +321,33 @@ objects:
         protocol: TCP
         port: 8778
         targetPort: 8778
-      - name: 8888-tcp
-        protocol: TCP
-        port: 8888
-        targetPort: 8888
     selector:
       app: hello-tomcat
     type: ClusterIP
     sessionAffinity: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: hello-tomcat-ping
+    labels:
+      app: hello-tomcat
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+      description: "The service for tomcat cluster membership."
+  spec:
+    publishNotReadyAddresses: true
+    clusterIP: None
+    ports:
+      - name: 8888-tcp
+        protocol: TCP
+        port: 8888
+        targetPort: 8888
+      - name: 4000-tcp
+        protocol: TCP
+        port: 4000
+        targetPort: 4000
+    selector:
+      app: hello-tomcat
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
