@@ -26,15 +26,23 @@ public class UserBean implements Serializable {
     }
 
     public String getGreeting() {
+        
+        String tempUser;
         if (name.length() == 0) {
-            return "";
-        } else {
-            
-            ResourceBundle bundle = ResourceBundle.getBundle("messages", FacesContext.getCurrentInstance().getViewRoot().getLocale());
-            String greet = bundle.getString("greet");
 
-            return MessageFormat.format(greet, name);
+            ResourceBundle bundle = ResourceBundle.getBundle("messages", FacesContext.getCurrentInstance().getViewRoot().getLocale());
+            tempUser = bundle.getString("user");
+
+        } else {
+
+            tempUser = name;
 
         }
+            
+        ResourceBundle bundle = ResourceBundle.getBundle("messages", FacesContext.getCurrentInstance().getViewRoot().getLocale());
+        String greet = bundle.getString("greet");
+
+        return MessageFormat.format(greet, tempUser);
+
     }
 }

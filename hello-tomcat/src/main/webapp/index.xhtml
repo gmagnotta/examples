@@ -14,7 +14,7 @@
 
 	<h:form prependId="false">
 		#{messages.insert_name} <h:inputText value="#{userBean.name}" id="name" required="true" />
-		<h:commandButton value="#{messages.send}" />
+		<h:commandButton value="#{messages.send}" action="index?faces-redirect=true" />
 
 	</h:form>
 	
