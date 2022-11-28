@@ -250,6 +250,14 @@ objects:
             env:
               - name: DNS_MEMBERSHIP_SERVICE_NAME
                 value: "hello-tomcat-ping"
+              - name: ENDPOINT
+                value: "test"
+              - name: ACCESSKEY
+                value: "test"
+              - name: SECRETKEY
+                value: "test"
+              - name: BUCKET
+                value: "test"
             readinessProbe:
               exec:
                 command:

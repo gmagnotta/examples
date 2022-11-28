@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://xmlns.jcp.org/jsf/passthrough"
-	xmlns:jsf="http://xmlns.jcp.org/jsf">
+	xmlns:jsf="http://xmlns.jcp.org/jsf" xmlns:ui="http://java.sun.com/jsf/facelets">
 
 <h:head>
 	<meta charset="UTF-8" />
@@ -9,9 +9,18 @@
 </h:head>
 
 <h:body>
-	<h1>Upload a file</h1>
+	<h1>Files in the configured S3 bucket</h1>
 
-	<h:form enctype="multipart/form-data" >
+	<ul>
+		<ui:repeat value="#{s3Bean.results}" var="item">
+			<li>#{item.get().objectName()} #{item.get().size()}</li>
+		</ui:repeat>
+	</ul>
+
+
+	<h1>Upload a file in the S3 bucket</h1>
+
+	<h:form enctype="multipart/form-data">
 		<h:inputFile value="#{uploadFileBean.uploadedFile}" />
 		<h:commandButton value="Upload File" action="#{uploadFileBean.action}" />
 	</h:form>
