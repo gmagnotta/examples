@@ -225,6 +225,15 @@ objects:
   kind: ConfigMap
   metadata:
     name: hello-tomcat
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: hello-tomcat
+  data:
+    s3-endpoint: dGVzdA==
+    s3-accesskey: dGVzdA==
+    s3-secretkey: dGVzdA==
+    s3-bucket: dGVzdA==
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -251,13 +260,25 @@ objects:
               - name: DNS_MEMBERSHIP_SERVICE_NAME
                 value: "hello-tomcat-ping"
               - name: ENDPOINT
-                value: "test"
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-endpoint
               - name: ACCESSKEY
-                value: "test"
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-accesskey
               - name: SECRETKEY
-                value: "test"
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-secretkey
               - name: BUCKET
-                value: "test"
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-bucket
             readinessProbe:
               exec:
                 command:

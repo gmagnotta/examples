@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
+import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -45,5 +46,16 @@ public class S3Util {
     public Iterable<Result<Item>> listBucket(String bucket) {
         return minioClient.listObjects(
                 ListObjectsArgs.builder().bucket(bucket).build());
+    }
+
+    public InputStream getFile(String bucket, String fileName) throws InvalidKeyException, ErrorResponseException,
+            InsufficientDataException, InternalException, InvalidResponseException, NoSuchAlgorithmException,
+            ServerException, XmlParserException, IllegalArgumentException, IOException {
+
+        return minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(fileName)
+                        .build());
     }
 }

@@ -13,7 +13,7 @@
 
 	<ul>
 		<ui:repeat value="#{s3Bean.results}" var="item">
-			<li>#{item.get().objectName()} #{item.get().size()}</li>
+			<li><a href="/secured/download?filename=#{item.get().objectName()}">#{item.get().objectName()} #{item.get().size()}</a></li>
 		</ui:repeat>
 	</ul>
 
