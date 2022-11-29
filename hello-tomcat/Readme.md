@@ -12,6 +12,8 @@ oc new-project hello-dev
 
 oc create configmap deploy-template --from-file=hello-tomcat-template.yaml
 
+oc process -f hello-tomcat-template-configs.yaml | oc apply -f -
+
 oc apply -f ../infra-components/pipelines-common.yaml
 
 oc process -f hello-tomcat-pipeline.yaml | oc apply -f -
