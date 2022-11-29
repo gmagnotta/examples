@@ -13,11 +13,18 @@
 <h:body>
 	<h1>Files in the configured S3 bucket</h1>
 
-	<ul>
-		<ui:repeat value="#{s3Bean.results}" var="item">
-			<li><a href="/secured/download.xhtml?filename=#{item.get().objectName()}">#{item.get().objectName()} #{item.get().size()}</a></li>
-		</ui:repeat>
-	</ul>
+	<h:panelGroup rendered="#{!s3Bean.results.iterator().hasNext()}">
+		<h2>S3 bucket is empty!</h2>
+	</h:panelGroup>
+
+	<h:panelGroup rendered="#{s3Bean.results.iterator().hasNext()}">
+		<ul>
+			<ui:repeat value="#{s3Bean.results}" var="item">
+				<li><a href="/secured/download.xhtml?filename=#{item.get().objectName()}">#{item.get().objectName()}
+						#{item.get().size()}</a></li>
+			</ui:repeat>
+		</ul>
+	</h:panelGroup>
 
 
 	<h1>Upload a file in the S3 bucket</h1>
