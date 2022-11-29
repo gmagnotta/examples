@@ -1,6 +1,5 @@
 package com.gmagnotta.hello_tomcat;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,7 +25,7 @@ public class UploadFileBean implements Serializable {
         this.uploadedFile = uploadedFile;
     }
 
-    public String action() throws IOException {
+    public String action() throws Exception {
 
         String fileName = uploadedFile.getSubmittedFileName();
 
@@ -54,9 +53,11 @@ public class UploadFileBean implements Serializable {
 
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Error uploading file", ex);
+
+            throw ex;
         }
 
-        return "fileUpload";
+        return "s3explorer?faces-redirect=true";
     }
 
 }
