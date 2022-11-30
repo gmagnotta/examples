@@ -17,7 +17,7 @@ import io.minio.messages.Item;
 
 @Named
 @RequestScoped
-public class S3Bean implements Serializable {
+public class S3Bean {
 
     private Logger LOGGER = Logger.getLogger(UploadFileBean.class.getName());
 

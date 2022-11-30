@@ -1,15 +1,14 @@
 package com.gmagnotta.hello_tomcat;
 
-import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.enterprise.context.SessionScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Named;
 
 @Named
-@SessionScoped
-public class BusyLoadBean implements Serializable {
+@RequestScoped
+public class BusyLoadBean {
 
     public void startBusyLoad() {
 

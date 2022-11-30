@@ -1,17 +1,16 @@
 package com.gmagnotta.hello_tomcat;
 
-import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.faces.view.ViewScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Named;
 import javax.servlet.http.Part;
 
 
 @Named
-@ViewScoped
-public class UploadFileBean implements Serializable {
+@RequestScoped
+public class UploadFileBean {
 
     private Logger LOGGER = Logger.getLogger(UploadFileBean.class.getName());
     
