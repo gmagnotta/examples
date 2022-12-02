@@ -14,6 +14,7 @@ import org.apache.cxf.transport.http.HTTPConduit;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.gmagnotta.hello_tomcat.service.BrokerService;
+import com.gmagnotta.hello_tomcat.service.FileLabellerService;
 
 public class ContextListenerImpl implements ServletContextListener {
     
@@ -28,7 +29,7 @@ public class ContextListenerImpl implements ServletContextListener {
     }
 
     @Produces
-    private BrokerService produce() {
+    private BrokerService produceBrokerService() {
         // https://www.jesperdj.com/2018/09/30/jaxb-on-java-9-10-11-and-beyond/
         // https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception
         // https://wiki.eclipse.org/EclipseLink/Examples/MOXy
@@ -39,6 +40,28 @@ public class ContextListenerImpl implements ServletContextListener {
         providers.add(new JacksonJaxbJsonProvider());
         
         BrokerService proxy = JAXRSClientFactory.create(path, BrokerService.class, providers);
+
+        ClientConfiguration config = WebClient.getConfig(proxy);
+
+        HTTPConduit conduit = (HTTPConduit) config.getConduit();
+        conduit.getClient().setConnectionTimeout(1000 * 30);
+        conduit.getClient().setReceiveTimeout(1000 * 30);
+
+        return proxy;
+    }
+
+    @Produces
+    private FileLabellerService produceFileLabellerService() {
+        // https://www.jesperdj.com/2018/09/30/jaxb-on-java-9-10-11-and-beyond/
+        // https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception
+        // https://wiki.eclipse.org/EclipseLink/Examples/MOXy
+
+        final String path = System.getenv("BACKEND_URL");
+
+        List<Object> providers = new ArrayList<>();
+        providers.add(new JacksonJaxbJsonProvider());
+        
+        FileLabellerService proxy = JAXRSClientFactory.create(path, FileLabellerService.class, providers);
 
         ClientConfiguration config = WebClient.getConfig(proxy);
 
