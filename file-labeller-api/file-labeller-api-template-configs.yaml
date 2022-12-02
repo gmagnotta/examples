@@ -1,0 +1,19 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: file-labeller-api
+message: This is an OpenShift template to deploy configurations for file-labeller-api.
+metadata:
+  name: file-labeller-api
+  annotations:
+    description: "file-labeller-api config Template"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: file-labeller-api
+  data:
+    quarkus_datasource_username: dGVzdA==
+    quarkus_datasource_password: dGVzdA==
+    quarkus_datasource_jdbc_url: dGVzdA==
+parameters:

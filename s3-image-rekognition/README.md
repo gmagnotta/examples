@@ -18,3 +18,5 @@ curl -v http://localhost:8080 \
   -H "Ce-Type: com.gmagnotta.events/s3upload" \
   -H "Ce-Source: image-uploader" \
   -d '{"bucket":"mybucket","objectKey":"Image.jpg"}'
+
+kn trigger create s3-image-rekognition-serverless --filter type=com.gmagnotta.events/s3upload --sink s3-image-rekognition-serverless

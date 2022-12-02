@@ -1,0 +1,19 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: s3-image-rekognition
+message: This is an OpenShift template to deploy configurations for s3-image-rekognition.
+metadata:
+  name: s3-image-rekognition
+  annotations:
+    description: "s3-image-rekognition config Template"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: s3-image-rekognition
+  data:
+    aws_access_key_id: dGVzdA==
+    aws_secret_access_key: dGVzdA==
+    aws_region: dGVzdA==
+parameters:

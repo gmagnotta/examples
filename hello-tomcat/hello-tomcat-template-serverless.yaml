@@ -19,7 +19,7 @@ objects:
           app: hello-tomcat-serverless
         annotations:
           autoscaling.knative.dev/min-scale: "1"
-          autoscaling.knative.dev/target: "1"
+          autoscaling.knative.dev/target: "10"
       spec:
         containerConcurrency: 0
         containers:
@@ -48,6 +48,10 @@ objects:
                   secretKeyRef:
                     name: hello-tomcat
                     key: s3-bucket
+              - name: BACKEND_URL
+                value: ${BACKEND}
+              - name: BROKER_URL
+                value: ${BROKER}
             readinessProbe:
               exec:
                 command:
@@ -109,4 +113,10 @@ objects:
 parameters:
 - description: Container image to use
   name: IMAGE
+  required: true
+- description: Url of the backend
+  name: BACKEND
+  required: true
+- description: Url of the broker
+  name: BROKER
   required: true
