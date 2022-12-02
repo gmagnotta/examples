@@ -1,6 +1,0 @@
-BUILDER_IMAGE="registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8"
-OUTPUT_IMAGE="hello-tomcat"
-INCREMENTAL=true
-RUNTIME_IMAGE=$BUILDER_IMAGE
-RUNTIME_ARTIFACT="/deployments/hello-tomcat.war"
-RUNTIME_DEST_ARTIFACT="/deployments/ROOT.war"

@@ -4,8 +4,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.Part;
+
+import org.apache.cxf.jaxrs.client.WebClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gmagnotta.hello_tomcat.model.S3UploadedObject;
+import com.gmagnotta.hello_tomcat.service.BrokerService;
 
 
 @Named
@@ -15,6 +22,9 @@ public class UploadFileBean {
     private Logger LOGGER = Logger.getLogger(UploadFileBean.class.getName());
     
     private Part uploadedFile;
+
+    @Inject
+    private BrokerService brokerService;
 
     public Part getUploadedFile() {
         return uploadedFile;
@@ -50,7 +60,24 @@ public class UploadFileBean {
 
             LOGGER.info("File written to S3");
 
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            S3UploadedObject s3UploadedObject = new S3UploadedObject();
+            s3UploadedObject.bucket = bucket;
+            s3UploadedObject.objectKey = fileName;
+
+            // Send
+            LOGGER.info("Sending CloudEvent " + objectMapper.writeValueAsString(s3UploadedObject));
+
+            WebClient.client(brokerService).header("ce-id", "dummy");
+            WebClient.client(brokerService).header("ce-source", "image-uploader");
+            WebClient.client(brokerService).header("ce-specversion", "1.0");
+            WebClient.client(brokerService).header("ce-type", "com.gmagnotta.events/s3upload");
+
+            brokerService.send(s3UploadedObject);
+
         } catch (Exception ex) {
+
             LOGGER.log(Level.SEVERE, "Error uploading file", ex);
 
             throw ex;
