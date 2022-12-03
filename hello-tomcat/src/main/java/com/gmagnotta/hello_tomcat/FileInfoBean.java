@@ -7,6 +7,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.NotFoundException;
 
 import com.gmagnotta.hello_tomcat.model.LabelledFile;
 import com.gmagnotta.hello_tomcat.service.FileLabellerService;
@@ -29,7 +30,11 @@ public class FileInfoBean {
         String fileName = (String) requestParams.get("filename");
         LOGGER.info("Requested filename " + fileName);
 
-        return fileLabellerService.getFileByName(fileName);
+        try {
+            return fileLabellerService.getFileByName(fileName);
+        } catch (NotFoundException ex) {
+            return null;
+        }
 
     }
 

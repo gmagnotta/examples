@@ -9,12 +9,19 @@
 </h:head>
 
 <h:body>
-	<h1>labels:</h1>
-	<ul>
-		<ui:repeat value="#{fileInfoBean.labelledFile.labels}" var="item">
-			<li>#{item}</li>
-		</ui:repeat>
-	</ul>
+	<h1>File labels:</h1>
+
+	<h:panelGroup rendered="#{fileInfoBean.labelledFile == null}">
+		<h2>Labels not yet generated. Please try again later</h2>
+	</h:panelGroup>
+
+	<h:panelGroup rendered="#{fileInfoBean.labelledFile != null}">
+		<ul>
+			<ui:repeat value="#{fileInfoBean.labelledFile.labels}" var="item">
+				<li>#{item}</li>
+			</ui:repeat>
+		</ul>
+	</h:panelGroup>
 
 </h:body>
 
