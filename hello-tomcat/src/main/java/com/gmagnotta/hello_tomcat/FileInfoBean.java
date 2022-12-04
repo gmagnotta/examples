@@ -18,24 +18,28 @@ public class FileInfoBean {
 
     private Logger LOGGER = Logger.getLogger(FileInfoBean.class.getName());
 
+    private LabelledFile labelledFile;
+
     @Inject
     private FileLabellerService fileLabellerService;
 
     public LabelledFile getLabelledFile() {
+        return labelledFile;
+    }
 
+    public void loadFileLabes() {
         FacesContext context = FacesContext.getCurrentInstance();
 
         Map<String, String> requestParams = context.getExternalContext().getRequestParameterMap();
 
         String fileName = (String) requestParams.get("filename");
-        LOGGER.info("Requested filename " + fileName);
+        LOGGER.info("Requesting " + fileName);
 
         try {
-            return fileLabellerService.getFileByName(fileName);
+            labelledFile = fileLabellerService.getFileByName(fileName);
         } catch (NotFoundException ex) {
-            return null;
+            labelledFile = null;
         }
-
     }
 
 }

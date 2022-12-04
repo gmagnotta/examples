@@ -8,6 +8,8 @@
 	<title>Secured resource!</title>
 </h:head>
 
+<f:event type="preRenderView" listener="#{fileInfoBean.loadFileLabes}" />
+
 <h:body>
 	<h1>File labels:</h1>
 
