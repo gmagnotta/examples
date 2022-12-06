@@ -12,6 +12,8 @@ objects:
   kind: Service
   metadata:
     name: s3-image-rekognition-serverless
+    labels:
+      networking.knative.dev/visibility: cluster-local
   spec:
     template:
       metadata:

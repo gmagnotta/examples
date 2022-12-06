@@ -1,5 +1,6 @@
 package com.gmagnotta.hello_tomcat;
 
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +70,7 @@ public class UploadFileBean {
             // Send
             LOGGER.info("Sending CloudEvent " + objectMapper.writeValueAsString(s3UploadedObject));
 
-            WebClient.client(brokerService).header("ce-id", "dummy");
+            WebClient.client(brokerService).header("ce-id", UUID.randomUUID().toString());
             WebClient.client(brokerService).header("ce-source", "image-uploader");
             WebClient.client(brokerService).header("ce-specversion", "1.0");
             WebClient.client(brokerService).header("ce-type", "com.gmagnotta.events/s3upload");
