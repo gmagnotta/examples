@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
@@ -200,7 +201,7 @@ public class CloudEventResource {
 
             // Build cloud Event
             CloudEvent event = CloudEventBuilder.v1()
-                    .withId("dummy")
+                    .withId(UUID.randomUUID().toString())
                     .withType("com.gmagnotta.events/filelabel")
                     .withSource(URI.create("http://cloud-event-labeller"))
                     .withData("application/json", mapper.writeValueAsBytes(labelledFile))
