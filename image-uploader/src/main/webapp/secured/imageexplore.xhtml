@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:jsf="http://xmlns.jcp.org/jsf" xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+	<meta charset="UTF-8" />
+	<title>Image explorer</title>
+</h:head>
+
+<f:event type="preRenderView" listener="#{s3Bean.reloadFileList}" />
+
+<h:body>
+
+	<h:panelGroup rendered="#{!s3Bean.results.iterator().hasNext()}">
+		<h2>S3 bucket is empty!</h2>
+	</h:panelGroup>
+
+	<h:panelGroup rendered="#{s3Bean.results.iterator().hasNext()}">
+		<h1>Images in the S3 bucket</h1>
+
+		<h:dataTable value="#{s3Bean.results}" var="item" style="border:1px solid #000000;">
+
+			<h:column>
+				<f:facet name="header">Image name</f:facet>
+				<a href="/secured/download.xhtml?filename=#{item.get().objectName()}">#{item.get().objectName()}</a>
+			</h:column>
+
+			<h:column>
+				<f:facet name="header">Tags</f:facet>
+				<a href="/secured/fileInfo.xhtml?filename=#{item.get().objectName()}">Show tags</a>
+			</h:column>
+
+		</h:dataTable>
+
+	</h:panelGroup>
+
+
+</h:body>
+
+</html>

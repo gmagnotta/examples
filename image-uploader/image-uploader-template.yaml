@@ -1,0 +1,179 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: image-uploader
+message: This is an OpenShift template to deploy image-uploader.
+metadata:
+  name: image-uploader
+  annotations:
+    description: "image-uploader Template"
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: image-uploader
+    labels:
+      app: image-uploader
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: image-uploader
+    template:
+      metadata:
+        labels:
+          app: image-uploader
+      spec:
+        containers:
+          - name: image-uploader
+            image: ${IMAGE}
+            env:
+              - name: DNS_MEMBERSHIP_SERVICE_NAME
+                value: "image-uploader-ping"
+              - name: ENDPOINT
+                valueFrom:
+                  secretKeyRef:
+                    name: image-uploader
+                    key: s3-endpoint
+              - name: ACCESSKEY
+                valueFrom:
+                  secretKeyRef:
+                    name: image-uploader
+                    key: s3-accesskey
+              - name: SECRETKEY
+                valueFrom:
+                  secretKeyRef:
+                    name: image-uploader
+                    key: s3-secretkey
+              - name: BUCKET
+                valueFrom:
+                  secretKeyRef:
+                    name: image-uploader
+                    key: s3-bucket
+              - name: BACKEND_URL
+                valueFrom:
+                  configMapKeyRef:
+                    name: image-uploader
+                    key: backend-url
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - 'curl --noproxy ''*'' -is ''http://localhost:8080/'' | head -1 | grep -iq ''HTTP/1.1 200'''
+            livenessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep -iq ''"status": "UP"'''
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+              - containerPort: 8778
+                protocol: TCP
+              - containerPort: 8888
+                protocol: TCP
+              - containerPort: 4000
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "128Mi"
+              limits:
+                cpu: "1000m"
+                memory: "512Mi"
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+            - name: tomcat-users
+              mountPath: /opt/jws-5.6/tomcat/conf/tomcat-users.xml
+              subPath: tomcat-users.xml
+            - name: server
+              mountPath: /opt/jws-5.6/tomcat/conf/server.xml
+              subPath: server.xml
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 60
+        dnsPolicy: ClusterFirst
+        securityContext: {}
+        schedulerName: default-scheduler
+        volumes:
+          - name: tomcat-users
+            configMap:
+              name: image-uploader
+              items:
+              - key: tomcat-users.xml
+                path: tomcat-users.xml
+          - name: server
+            configMap:
+              name: image-uploader
+              items:
+              - key: server.xml
+                path: server.xml
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 25%
+        maxSurge: 25%
+    revisionHistoryLimit: 10
+    progressDeadlineSeconds: 600
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: image-uploader
+    labels:
+      app: image-uploader
+  spec:
+    ports:
+      - name: 8080-tcp
+        protocol: TCP
+        port: 8080
+        targetPort: 8080
+      - name: 8778-tcp
+        protocol: TCP
+        port: 8778
+        targetPort: 8778
+    selector:
+      app: image-uploader
+    type: ClusterIP
+    sessionAffinity: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: image-uploader-ping
+    labels:
+      app: image-uploader
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+      description: "The service for tomcat cluster membership."
+  spec:
+    publishNotReadyAddresses: false
+    clusterIP: None
+    ports:
+      - name: 8888-tcp
+        protocol: TCP
+        port: 8888
+        targetPort: 8888
+      - name: 4000-tcp
+        protocol: TCP
+        port: 4000
+        targetPort: 4000
+    selector:
+      app: image-uploader
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: image-uploader
+    labels:
+      app: image-uploader
+  spec:
+    to:
+      kind: Service
+      name: image-uploader
+      weight: 100
+    port:
+      targetPort: 8080-tcp
+    wildcardPolicy: None
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
