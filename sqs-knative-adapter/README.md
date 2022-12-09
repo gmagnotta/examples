@@ -14,3 +14,7 @@ The application expects the following ENVIRONMENT VARIABLES:
 * AWS_ACCESS_KEY_ID the access key id that the applicaiton will use to authenticate against AWS SQS
 * AWS_SECRET_ACCESS_KEY the access key that the applicaiton will use to authenticate against AWS SQS
 * SQS_QUEUE the queue or arn that the application will use to fetch messages from AWS SQS
+
+## How to test
+
+while true ; do  echo -e "HTTP/1.1 200 OK\n\n" | nc -l -p 8082  ; done

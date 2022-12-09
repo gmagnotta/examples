@@ -34,19 +34,14 @@ objects:
                   secretKeyRef:
                     name: sqs-knative-adapter
                     key: sqs_queue
-            readinessProbe:
-              httpGet:
-                path: /q/health/ready
-                port: 0
-            livenessProbe:
-              httpGet:
-                path: /q/health/live
-                port: 0
+            ports:
+              - containerPort: 8080
+                protocol: TCP
     sink:
       ref:
-        apiVersion: serving.knative.dev/v1
-        kind: Service
-        name: broker
+        apiVersion: eventing.knative.dev/v1
+        kind: Broker
+        name: default
 parameters:
 - description: Container image to use
   name: IMAGE
