@@ -1,0 +1,19 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: sqs-knative-adapter
+message: This is an OpenShift template to deploy configurations for sqs-knative-adapter.
+metadata:
+  name: sqs-knative-adapter
+  annotations:
+    description: "sqs-knative-adapter config Template"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: sqs-knative-adapter
+  data:
+    aws_access_key_id: dGVzdA==
+    aws_secret_access_key: dGVzdA==
+    sqs_queue: dGVzdA==
+parameters:

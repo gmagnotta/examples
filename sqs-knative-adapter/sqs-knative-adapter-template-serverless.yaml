@@ -1,0 +1,53 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: sqs-knative-adapter-containersource
+message: This is an OpenShift template to deploy sqs-knative-adapter as a containersource.
+metadata:
+  name: sqs-knative-adapter-containersource
+  annotations:
+    description: "sqs-knative-adapter Template"
+objects:
+- apiVersion: sources.knative.dev/v1
+  kind: ContainerSource
+  metadata:
+    name: sqs-knative-adapter
+  spec:
+    template:
+      spec:
+        containers:
+          - name: sqs-knative-adapter
+            image: ${IMAGE}
+            env:
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: sqs-knative-adapter
+                    key: aws_access_key_id
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: sqs-knative-adapter
+                    key: aws_secret_access_key
+              - name: SQS_QUEUE
+                valueFrom:
+                  secretKeyRef:
+                    name: sqs-knative-adapter
+                    key: sqs_queue
+            readinessProbe:
+              httpGet:
+                path: /q/health/ready
+                port: 0
+            livenessProbe:
+              httpGet:
+                path: /q/health/live
+                port: 0
+    sink:
+      ref:
+        apiVersion: serving.knative.dev/v1
+        kind: Service
+        name: broker
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
