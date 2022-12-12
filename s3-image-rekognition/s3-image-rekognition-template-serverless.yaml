@@ -49,11 +49,9 @@ objects:
             readinessProbe:
               httpGet:
                 path: /q/health/ready
-                port: 0
             livenessProbe:
               httpGet:
                 path: /q/health/live
-                port: 0
             ports:
               - containerPort: 8080
                 protocol: TCP

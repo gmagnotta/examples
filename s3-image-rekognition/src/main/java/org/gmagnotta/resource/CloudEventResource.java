@@ -73,6 +73,7 @@ public class CloudEventResource {
         try {
 
             if ("label".equalsIgnoreCase(detectMode)) {
+                
                 AWSRekognitionService.analyzeImageLabelsFromS3Bucket(model.Records[0].s3.bucket.name, model.Records[0].s3.object.key);
 
             } else if ("text".equalsIgnoreCase(detectMode)) {
