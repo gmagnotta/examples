@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gmagnotta.model.S3EventNotification;
 import org.gmagnotta.service.AWSRekognitionService;
 import org.jboss.logging.Logger;
@@ -37,6 +38,9 @@ public class CloudEventResource {
 
     @Inject
     AWSRekognitionService AWSRekognitionService;
+
+    @ConfigProperty(name = "detect_mode")
+    String detectMode;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -68,7 +72,18 @@ public class CloudEventResource {
 
         try {
 
-            AWSRekognitionService.analyzeImageLabelsFromS3Bucket(model.Records[0].s3.bucket.name, model.Records[0].s3.object.key);
+            if ("label".equalsIgnoreCase(detectMode)) {
+                AWSRekognitionService.analyzeImageLabelsFromS3Bucket(model.Records[0].s3.bucket.name, model.Records[0].s3.object.key);
+
+            } else if ("text".equalsIgnoreCase(detectMode)) {
+
+                AWSRekognitionService.analyzeImageTextFromS3Bucket(model.Records[0].s3.bucket.name, model.Records[0].s3.object.key);
+
+            } else {
+
+                throw new Exception("Unknown detect mode " + detectMode);
+
+            }
 
         } catch (Exception e) {
 

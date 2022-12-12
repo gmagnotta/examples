@@ -43,8 +43,9 @@ public class AWSRekognitionService {
 
     @Inject
     ObjectMapper mapper;
-    
-    // see https://docs.aws.amazon.com/rekognition/latest/dg/labels-detect-labels-image.html
+
+    // see
+    // https://docs.aws.amazon.com/rekognition/latest/dg/labels-detect-labels-image.html
     public void analyzeImageLabelsFromS3Bucket(String bucket, String objectKey) throws Exception {
 
         List<String> fileLabels = new ArrayList<>();
@@ -81,30 +82,30 @@ public class AWSRekognitionService {
                     fileLabels.add(label.getName());
 
                     /*
-                    * List<Instance> instances = label.getInstances();
-                    * System.out.println("Instances of " + label.getName());
-                    * if (instances.isEmpty()) {
-                    * System.out.println("  " + "None");
-                    * } else {
-                    * for (Instance instance : instances) {
-                    * System.out.println("  Confidence: " + instance.getConfidence().toString());
-                    * System.out.println("  Bounding box: " +
-                    * instance.getBoundingBox().toString());
-                    * }
-                    * }
-                    * System.out.println("Parent labels for " + label.getName() + ":");
-                    * List<Parent> parents = label.getParents();
-                    * if (parents.isEmpty()) {
-                    * System.out.println("  None");
-                    * } else {
-                    * for (Parent parent : parents) {
-                    * System.out.println("  " + parent.getName());
-                    * }
-                    * }
-                    */
+                     * List<Instance> instances = label.getInstances();
+                     * System.out.println("Instances of " + label.getName());
+                     * if (instances.isEmpty()) {
+                     * System.out.println("  " + "None");
+                     * } else {
+                     * for (Instance instance : instances) {
+                     * System.out.println("  Confidence: " + instance.getConfidence().toString());
+                     * System.out.println("  Bounding box: " +
+                     * instance.getBoundingBox().toString());
+                     * }
+                     * }
+                     * System.out.println("Parent labels for " + label.getName() + ":");
+                     * List<Parent> parents = label.getParents();
+                     * if (parents.isEmpty()) {
+                     * System.out.println("  None");
+                     * } else {
+                     * for (Parent parent : parents) {
+                     * System.out.println("  " + parent.getName());
+                     * }
+                     * }
+                     */
 
                 }
-                
+
             }
 
             LabelledFile labelledFile = new LabelledFile();
@@ -133,65 +134,61 @@ public class AWSRekognitionService {
 
     }
 
-    public List<String> analyzeImageTextFromS3Bucket(String bucket, String objectKey) throws Exception {
+    public void analyzeImageTextFromS3Bucket(String bucket, String objectKey) throws Exception {
+
+        List<String> fileText = new ArrayList<>();
 
         try {
 
-            List<String> fileText = new ArrayList<>();
+            // Dummy mode?
+            if (dummyMode) {
 
-            // credentials and region are read from environment variable
-            // see EnvironmentVariableCredentialsProvider and
-            AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder
-                    .standard()
-                    //.withCredentials(credentialsProvider) // set to null to use DefaultAWSCredentialsProviderChain
-                    // and start using environment variables
-                    //.withCredentials(new EnvironmentVariableCredentialsProvider())
-                    //.withRegion(awsRegion) read from env variables
-                    .build();
+                fileText.add("dummy text");
 
-            DetectTextRequest request = new DetectTextRequest()
-                    .withImage(new Image()
-                            .withS3Object(new S3Object().withName(objectKey).withBucket(bucket)));
+            } else {
 
-            DetectTextResult result = rekognitionClient.detectText(request);
-            List<TextDetection> textDetections = result.getTextDetections();
+                // credentials and region are read from environment variable
+                // see EnvironmentVariableCredentialsProvider and
+                AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder
+                        .standard()
+                        .build();
 
-            logger.info("Detected texts for " + objectKey);
-            for (TextDetection text : textDetections) {
-                logger.info("Text: " + text.getDetectedText());
-                logger.info("Confidence: " + text.getConfidence().toString());
+                DetectTextRequest request = new DetectTextRequest()
+                        .withImage(new Image()
+                                .withS3Object(new S3Object().withName(objectKey).withBucket(bucket)));
 
-                if (text.getParentId() == null) {
-                    // add only element with parent id with null (a complete line)
-                    fileText.add(text.getDetectedText());
+                DetectTextResult result = rekognitionClient.detectText(request);
+                List<TextDetection> textDetections = result.getTextDetections();
+
+                logger.info("Detected texts for " + objectKey);
+                for (TextDetection text : textDetections) {
+                    logger.info("Text: " + text.getDetectedText());
+                    logger.info("Confidence: " + text.getConfidence().toString());
+
+                    if (text.getParentId() == null) {
+                        // add only element with parent id with null (a complete line)
+                        fileText.add(text.getDetectedText());
+                    }
+
                 }
-
-                /*
-                 * List<Instance> instances = label.getInstances();
-                 * System.out.println("Instances of " + label.getName());
-                 * if (instances.isEmpty()) {
-                 * System.out.println("  " + "None");
-                 * } else {
-                 * for (Instance instance : instances) {
-                 * System.out.println("  Confidence: " + instance.getConfidence().toString());
-                 * System.out.println("  Bounding box: " +
-                 * instance.getBoundingBox().toString());
-                 * }
-                 * }
-                 * System.out.println("Parent labels for " + label.getName() + ":");
-                 * List<Parent> parents = label.getParents();
-                 * if (parents.isEmpty()) {
-                 * System.out.println("  None");
-                 * } else {
-                 * for (Parent parent : parents) {
-                 * System.out.println("  " + parent.getName());
-                 * }
-                 * }
-                 */
 
             }
 
-            return fileText;
+            LabelledFile labelledFile = new LabelledFile();
+            labelledFile.name = objectKey;
+            labelledFile.labels = fileText;
+
+            // Build cloud Event
+            CloudEvent event = CloudEventBuilder.v1()
+                    .withId(UUID.randomUUID().toString())
+                    .withType("com.gmagnotta.events/filelabel")
+                    .withSource(URI.create("http://cloud-event-labeller"))
+                    .withData("application/json", mapper.writeValueAsBytes(labelledFile))
+                    .build();
+
+            // Send
+            logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
+            brokerService.send(event);
 
         } catch (AmazonRekognitionException e) {
 

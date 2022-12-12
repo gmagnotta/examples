@@ -62,9 +62,16 @@ public class CloudEventResource {
 
         }
 
-        org.gmagnotta.persistence.LabelledFile file = new org.gmagnotta.persistence.LabelledFile();
-        file.setName(model.name);
-        file.setLabels(model.labels);
+
+        org.gmagnotta.persistence.LabelledFile file = org.gmagnotta.persistence.LabelledFile.findByName(model.name);
+
+        if (file == null) {
+            file = new org.gmagnotta.persistence.LabelledFile();
+            file.setName(model.name);
+            file.setLabels(model.labels);
+        } else {
+            file.appendLabels(model.labels);
+        }
         
         file.persistAndFlush();
 

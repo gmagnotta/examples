@@ -27,6 +27,8 @@ objects:
             env:
               - name: DUMMY_MODE
                 value: 'true'
+              - name: DETECT_MODE
+                value: 'label'
               - name: AWS_ACCESS_KEY_ID
                 valueFrom:
                   secretKeyRef:

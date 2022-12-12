@@ -31,6 +31,10 @@ public class LabelledFile extends PanacheEntity {
         this.labels = labels;
     }
 
+    public void appendLabels(List<String> labels) {
+        this.labels.addAll(labels);
+    }
+
     public static LabelledFile findByName(String name) {
         if (name == null)
             return null;
