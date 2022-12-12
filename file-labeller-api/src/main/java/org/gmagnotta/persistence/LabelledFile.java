@@ -4,12 +4,15 @@ import java.util.List;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.LockModeType;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 @Entity
-public class LabelledFile extends PanacheEntity {
+public class LabelledFile extends PanacheEntityBase {
 
+    @Id
     String name;
 
     @ElementCollection
@@ -35,11 +38,8 @@ public class LabelledFile extends PanacheEntity {
         this.labels.addAll(labels);
     }
 
-    public static LabelledFile findByName(String name) {
-        if (name == null)
-            return null;
-
-        return find("name", name).firstResult();
+    public static LabelledFile findByIdForUpdate(String name) {
+        return LabelledFile.findById(name, LockModeType.PESSIMISTIC_WRITE);
     }
 
 }

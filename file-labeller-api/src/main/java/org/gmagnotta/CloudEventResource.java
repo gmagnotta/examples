@@ -63,7 +63,7 @@ public class CloudEventResource {
         }
 
 
-        org.gmagnotta.persistence.LabelledFile file = org.gmagnotta.persistence.LabelledFile.findByName(model.name);
+        org.gmagnotta.persistence.LabelledFile file = org.gmagnotta.persistence.LabelledFile.findByIdForUpdate(model.name);
 
         if (file == null) {
             file = new org.gmagnotta.persistence.LabelledFile();

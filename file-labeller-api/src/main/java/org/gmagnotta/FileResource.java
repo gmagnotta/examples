@@ -25,7 +25,7 @@ public class FileResource {
 
         logger.info("Searching " + name);
 
-        org.gmagnotta.persistence.LabelledFile file = org.gmagnotta.persistence.LabelledFile.findByName(name);
+        org.gmagnotta.persistence.LabelledFile file = org.gmagnotta.persistence.LabelledFile.findById(name);
 
         if (file == null) {
             throw new NotFoundException("Unknown file: " + name);

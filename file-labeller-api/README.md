@@ -29,18 +29,17 @@ curl -X GET http://localhost:8080/file/file.jpg
 
 CREATE TABLE labelledfile
 (
-  id bigint NOT NULL,
-  name character varying(255),
-  CONSTRAINT labelledfile_pkey PRIMARY KEY (id)
+  name character varying(255) NOT NULL,
+  CONSTRAINT labelledfile_pkey PRIMARY KEY (name)
 )
 ;
 
 CREATE TABLE labelledfile_labels
 (
-  labelledfile_id bigint NOT NULL,
+  labelledfile_name character varying(255) NOT NULL,
   labels character varying(255),
-  CONSTRAINT fkbmjeq1m4g42trg25l8l88t5kf FOREIGN KEY (labelledfile_id)
-      REFERENCES public.labelledfile (id) MATCH SIMPLE
+  CONSTRAINT fkbmjeq1m4g42trg25l8l88t5kf FOREIGN KEY (labelledfile_name)
+      REFERENCES public.labelledfile (name) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
