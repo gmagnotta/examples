@@ -20,3 +20,5 @@ curl -v http://localhost:8080 \
   -d '{"bucket":"mybucket","objectKey":"Image.jpg"}'
 
 kn trigger create s3-image-rekognition-serverless --filter type=com.gmagnotta.events/s3upload --sink s3-image-rekognition-serverless
+
+kn trigger create s3-image-rekognition-serverless-text --filter type=com.gmagnotta.events/s3upload --sink s3-image-rekognition-serverless-text
