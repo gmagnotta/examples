@@ -1,6 +1,7 @@
 package org.gmagnotta.service;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -30,6 +31,19 @@ public class AWSRekognitionServiceTest {
     AWSRekognitionService awsService;
 
     @Test
+    public void analyzeImageLabelsFromS3BucketTestNull() throws Exception {
+
+        Mockito.when(brokerService.send(any())).thenReturn(Response.accepted().build());
+        try {
+            awsService.analyzeImageLabelsFromS3Bucket(null, null);
+            Assertions.fail("Expected exception");
+        } catch (Exception ex) {
+            Assertions.assertTrue(true);
+        }
+        
+    }
+
+    @Test
     public void analyzeImageLabelsFromS3BucketTest() throws Exception {
 
         Mockito.when(brokerService.send(any())).thenReturn(Response.accepted().build());
@@ -46,6 +60,42 @@ public class AWSRekognitionServiceTest {
         Mockito.when(brokerService.send(any())).thenReturn(Response.serverError().build());
         try {
             awsService.analyzeImageLabelsFromS3Bucket("test", "test");
+            fail("Expected exception");
+        } catch (Exception ex) {
+            assertTrue(true);
+        }
+    }
+
+    @Test
+    public void analyzeImageTextFromS3BucketTestNull() throws Exception {
+
+        Mockito.when(brokerService.send(any())).thenReturn(Response.accepted().build());
+        try {
+            awsService.analyzeImageTextFromS3Bucket(null, null);
+            Assertions.fail("Expected exception");
+        } catch (Exception ex) {
+            Assertions.assertTrue(true);
+        }
+        
+    }
+
+    @Test
+    public void analyzeImageTextFromS3BucketTest() throws Exception {
+
+        Mockito.when(brokerService.send(any())).thenReturn(Response.accepted().build());
+        ArgumentCaptor<CloudEvent> argument = ArgumentCaptor.forClass(CloudEvent.class);
+        awsService.analyzeImageTextFromS3Bucket("test", "test");
+        verify(brokerService).send(argument.capture());
+        
+        assertArrayEquals("{\"name\":\"test\",\"labels\":[\"dummy text\"]}".getBytes(), argument.getValue().getData().toBytes());
+    }
+
+    @Test
+    public void analyzeImageTextFromS3BucketTestWithError() throws Exception {
+
+        Mockito.when(brokerService.send(any())).thenReturn(Response.serverError().build());
+        try {
+            awsService.analyzeImageTextFromS3Bucket("test", "test");
             fail("Expected exception");
         } catch (Exception ex) {
             assertTrue(true);

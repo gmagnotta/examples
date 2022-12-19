@@ -49,6 +49,10 @@ public class AWSRekognitionService {
     // https://docs.aws.amazon.com/rekognition/latest/dg/labels-detect-labels-image.html
     public void analyzeImageLabelsFromS3Bucket(String bucket, String objectKey) throws Exception {
 
+        if (bucket == null || bucket.length() == 0 || objectKey == null || objectKey.length() == 0) {
+            throw new Exception("Invalid parameters");
+        }
+
         List<String> fileLabels = new ArrayList<>();
 
         try {
@@ -144,6 +148,10 @@ public class AWSRekognitionService {
 
     public void analyzeImageTextFromS3Bucket(String bucket, String objectKey) throws Exception {
 
+        if (bucket == null || bucket.length() == 0 || objectKey == null || objectKey.length() == 0) {
+            throw new Exception("Invalid parameters");
+        }
+
         List<String> fileText = new ArrayList<>();
 
         try {
@@ -196,7 +204,14 @@ public class AWSRekognitionService {
 
             // Send
             logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
-            brokerService.send(event);
+            Response response = brokerService.send(event);
+            
+            if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                
+                logger.error("Received status " + response.getStatus());
+
+                throw new Exception("Received status " + response.getStatus());
+            }
 
         } catch (AmazonRekognitionException e) {
 
