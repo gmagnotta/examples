@@ -1,7 +1,6 @@
 package org.gmagnotta.service;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
 import javax.inject.Inject;
-import javax.validation.constraints.AssertTrue;
 import javax.ws.rs.core.Response;
 
 
