@@ -113,27 +113,35 @@ public class AWSRekognitionService {
 
             }
 
-            LabelledFile labelledFile = new LabelledFile();
-            labelledFile.name = objectKey;
-            labelledFile.labels = fileLabels;
+            if (fileLabels.size() > 0) {
 
-            // Build cloud Event
-            CloudEvent event = CloudEventBuilder.v1()
-                    .withId(UUID.randomUUID().toString())
-                    .withType("com.gmagnotta.events/filelabel")
-                    .withSource(URI.create("http://cloud-event-labeller"))
-                    .withData("application/json", mapper.writeValueAsBytes(labelledFile))
-                    .build();
+                LabelledFile labelledFile = new LabelledFile();
+                labelledFile.name = objectKey;
+                labelledFile.labels = fileLabels;
 
-            // Send
-            logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
-            Response response = brokerService.send(event);
-            
-            if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                // Build cloud Event
+                CloudEvent event = CloudEventBuilder.v1()
+                        .withId(UUID.randomUUID().toString())
+                        .withType("com.gmagnotta.events/filelabel")
+                        .withSource(URI.create("http://cloud-event-labeller"))
+                        .withData("application/json", mapper.writeValueAsBytes(labelledFile))
+                        .build();
+
+                // Send
+                logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
+                Response response = brokerService.send(event);
                 
-                logger.error("Received status " + response.getStatus());
+                if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                    
+                    logger.error("Received status " + response.getStatus());
 
-                throw new Exception("Received status " + response.getStatus());
+                    throw new Exception("Received status " + response.getStatus());
+                }
+
+            } else {
+
+                logger.info("No labels detected!");
+                
             }
 
         } catch (AmazonRekognitionException e) {
@@ -190,27 +198,34 @@ public class AWSRekognitionService {
 
             }
 
-            LabelledFile labelledFile = new LabelledFile();
-            labelledFile.name = objectKey;
-            labelledFile.labels = fileText;
+            // Send text only if there are elements
+            if (fileText.size() > 0) {
 
-            // Build cloud Event
-            CloudEvent event = CloudEventBuilder.v1()
-                    .withId(UUID.randomUUID().toString())
-                    .withType("com.gmagnotta.events/filelabel")
-                    .withSource(URI.create("http://cloud-event-labeller"))
-                    .withData("application/json", mapper.writeValueAsBytes(labelledFile))
-                    .build();
+                LabelledFile labelledFile = new LabelledFile();
+                labelledFile.name = objectKey;
+                labelledFile.labels = fileText;
 
-            // Send
-            logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
-            Response response = brokerService.send(event);
-            
-            if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                // Build cloud Event
+                CloudEvent event = CloudEventBuilder.v1()
+                        .withId(UUID.randomUUID().toString())
+                        .withType("com.gmagnotta.events/filelabel")
+                        .withSource(URI.create("http://cloud-event-labeller"))
+                        .withData("application/json", mapper.writeValueAsBytes(labelledFile))
+                        .build();
+
+                // Send
+                logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
+                Response response = brokerService.send(event);
                 
-                logger.error("Received status " + response.getStatus());
+                if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                    
+                    logger.error("Received status " + response.getStatus());
 
-                throw new Exception("Received status " + response.getStatus());
+                    throw new Exception("Received status " + response.getStatus());
+                }
+
+            } else {
+                logger.info("No text detected!");
             }
 
         } catch (AmazonRekognitionException e) {
