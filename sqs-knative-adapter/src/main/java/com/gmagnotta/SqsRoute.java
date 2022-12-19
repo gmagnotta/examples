@@ -1,4 +1,4 @@
-package org.gmagnotta;
+package com.gmagnotta;
 
 import java.util.UUID;
 
