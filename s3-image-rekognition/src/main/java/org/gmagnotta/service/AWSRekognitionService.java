@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -122,7 +123,14 @@ public class AWSRekognitionService {
 
             // Send
             logger.info("Sending CloudEvent " + mapper.writeValueAsString(labelledFile));
-            brokerService.send(event);
+            Response response = brokerService.send(event);
+            
+            if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                
+                logger.error("Received status " + response.getStatus());
+
+                throw new Exception("Received status " + response.getStatus());
+            }
 
         } catch (AmazonRekognitionException e) {
 
