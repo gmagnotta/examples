@@ -13,6 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.gmagnotta.model.LabelledFile;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +54,12 @@ public class CloudEventResource {
 
             model = mapper.readValue(data.toBytes(), org.gmagnotta.model.LabelledFile.class);
             logger.info("Received " + type + "; " + source + "; " + model.name + "; " + model.labels);
+
+            Set<ConstraintViolation<LabelledFile>> modelViolations = validator.validate(model);
+
+            if (!modelViolations.isEmpty()) {
+                throw new Exception("Invalid parameters");
+            }
 
         } catch (Exception e) {
 
