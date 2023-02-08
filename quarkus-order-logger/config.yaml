@@ -3,9 +3,9 @@ apiVersion: v1
 metadata:
   name: quarkus-order-logger
 data:
-  telegram-token: replaceme
-  telegram-chatid: replaceme
-  sasl-jaas-config: replaceme
+  telegram-token: cmVwbGFjZW1l
+  telegram-chatid: cmVwbGFjZW1l
+  sasl-jaas-config: cmVwbGFjZW1l
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -15,3 +15,4 @@ data:
   kafka-bootstrap-servers: kafka.giuseppe-shared:9092
   sasl-jaas-mechanism: PLAIN
   security-protocol: SASL_SSL
+  telegram-enabled: 'false'

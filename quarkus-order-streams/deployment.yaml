@@ -38,6 +38,14 @@ spec:
       containers:
         - resources: {}
           name: quarkus-order-streams
+          securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
           env:
             - name: QUARKUS_KAFKA_STREAMS_SECURITY_PROTOCOL
               valueFrom:

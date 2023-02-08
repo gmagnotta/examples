@@ -47,6 +47,14 @@ objects:
       spec:
         containers:
           - name: debezium
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
             image: quay.io/debezium/connect:1.9
             env:
               - name: GROUP_ID

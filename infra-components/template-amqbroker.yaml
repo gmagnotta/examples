@@ -78,7 +78,15 @@ objects:
             persistentVolumeClaim:
               claimName: ${APPLICATION_NAME}-amq-claim
         containers:
-          - name: sso
+          - name: amq
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
             image: amq-broker-rhel8:latest
             env:
               - name: AMQ_USER

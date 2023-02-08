@@ -75,6 +75,14 @@ objects:
               claimName: ${APPLICATION_NAME}-pvc
         containers:
           - name: postgresql
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
             image: postgresql-10:10-el8
             ports:
               - containerPort: 5432
@@ -113,7 +121,7 @@ objects:
             readinessProbe:
               timeoutSeconds: 10
               initialDelaySeconds: 90
-              'successThreshold:': 1
+              successThreshold: 1
               failureThreshold: 3
               exec:
                 command:
@@ -124,7 +132,7 @@ objects:
             livenessProbe:
               timeoutSeconds: 10
               initialDelaySeconds: 90
-              'successThreshold:': 1
+              successThreshold: 1
               failureThreshold: 3
               tcpSocket:
                 port: 5432

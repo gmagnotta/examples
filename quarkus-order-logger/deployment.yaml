@@ -38,6 +38,14 @@ spec:
       containers:
         - resources: {}
           name: quarkus-order-logger
+          securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
           env:
             - name: QUARKUS_LOG_LEVEL
               value: INFO
@@ -54,7 +62,10 @@ spec:
                   name: quarkus-order-logger
                   key: telegram-chatid
             - name: TELEGRAM_ENABLED
-              value: 'false'
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-logger
+                  key: telegram-enabled
             - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
