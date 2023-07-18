@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hello-tomcat
+    template: hello-tomcat
+  name: hello-tomcat
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: hello-tomcat
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        gitcommit: first deploy
+        kubernetes.io/change-cause: first deploy
+      labels:
+        app: hello-tomcat
+    spec:
+      containers:
+      - env:
+        - name: DNS_MEMBERSHIP_SERVICE_NAME
+          value: hello-tomcat-ping
+        - name: ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: s3-endpoint
+              name: hello-tomcat
+        - name: ACCESSKEY
+          valueFrom:
+            secretKeyRef:
+              key: s3-accesskey
+              name: hello-tomcat
+        - name: SECRETKEY
+          valueFrom:
+            secretKeyRef:
+              key: s3-secretkey
+              name: hello-tomcat
+        - name: BUCKET
+          valueFrom:
+            secretKeyRef:
+              key: s3-bucket
+              name: hello-tomcat
+        image: quay.io/gmagnotta/hello-tomcat@sha256:74dcfb48ba6457b075f4253013e28dd3136bd28f6538473a7c2db808ede5daf2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep
+              -iq ''"status": "UP"'''
+        name: hello-tomcat
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8778
+          protocol: TCP
+        - containerPort: 8888
+          protocol: TCP
+        - containerPort: 4000
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - curl --noproxy '*' -is 'http://localhost:8080/' | head -1 | grep -iq
+              'HTTP/1.1 200'
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /opt/jws-5.6/tomcat/conf/tomcat-users.xml
+          name: tomcat-users
+          subPath: tomcat-users.xml
+        - mountPath: /opt/jws-5.6/tomcat/conf/server.xml
+          name: server
+          subPath: server.xml
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - configMap:
+          items:
+          - key: tomcat-users.xml
+            path: tomcat-users.xml
+          name: hello-tomcat
+        name: tomcat-users
+      - configMap:
+          items:
+          - key: server.xml
+            path: server.xml
+          name: hello-tomcat
+        name: server
