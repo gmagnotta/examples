@@ -31,7 +31,7 @@ spec:
       - env:
         - name: DNS_MEMBERSHIP_SERVICE_NAME
           value: hello-tomcat-ping
-        image: quay.io/gmagnotta/hello-tomcat@sha256:74dcfb48ba6457b075f4253013e28dd3136bd28f6538473a7c2db808ede5daf2
+        image: hello-tomcat:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
