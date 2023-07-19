@@ -121,17 +121,17 @@ spec:
   workspaces:
     - name: source
   tasks:
-    - name: build
+    - name: build-artifacts
       taskRef:
         name: s2i-startbuild-cli
       params:
         - name: BUILDCONFIG-NAME
           value: "hello-tomcat-artifact"
-    - name: build-runtime
+    - name: build-runtime-image
       taskRef:
         name: s2i-startbuild-cli
       runAfter:
-        - build
+        - build-artifacts
       params:
         - name: BUILDCONFIG-NAME
           value: "hello-tomcat"
@@ -140,7 +140,7 @@ spec:
         name: git-clone
         kind: ClusterTask
       runAfter:
-        - build-runtime
+        - build-runtime-image
       workspaces:
         - name: output
           workspace: source
@@ -171,7 +171,7 @@ spec:
             - ../../base
             images:
             - name: hello-tomcat
-              newName: $(tasks.build-runtime.results.VALUE)
+              newName: $(tasks.build-runtime-image.results.VALUE)
             EOF
 
             oc apply -k .
@@ -180,10 +180,10 @@ spec:
         name: openshift-client
         kind: ClusterTask
       runAfter:
-        - deploy
+        - build-runtime-image
       params:
         - name: SCRIPT
           value: |
             set -eu -o pipefail
 
-            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-image":"$(tasks.build-runtime.results.VALUE)"}}'
+            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-image":"$(tasks.build-runtime-image.results.VALUE)"}}'
