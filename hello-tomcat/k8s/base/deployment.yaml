@@ -4,6 +4,8 @@ metadata:
   labels:
     app: hello-tomcat
     template: hello-tomcat
+    app.kubernetes.io/name: hello-tomcat
+    app.kubernetes.io/part-of: hello-tomcat
   name: hello-tomcat
 spec:
   progressDeadlineSeconds: 600

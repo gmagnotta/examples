@@ -1,0 +1,179 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: jws56-openjdk11-openshift-rhel8
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - annotations:
+      description: Red Hat JBoss WS 5.6 Image
+    from:
+      kind: DockerImage
+      name: registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8
+    name: latest
+    referencePolicy:
+      type: Local
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: hello-tomcat
+spec:
+  lookupPolicy:
+    local: true
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: hello-tomcat-artifact
+spec:
+  lookupPolicy:
+    local: true
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: hello-tomcat-artifact
+  labels:
+    application: hello-tomcat
+spec:
+  resources: {}
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: 'https://github.com/gmagnotta/examples'
+    contextDir: hello-tomcat
+  strategy:
+    type: Source
+    sourceStrategy:
+      forcePull: true
+      incremental: true
+      from:
+        kind: ImageStreamTag
+        name: 'jws56-openjdk11-openshift-rhel8:latest'
+  postCommit: {}
+  runPolicy: Serial
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'hello-tomcat-artifact:latest'
+  triggers: []
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: hello-tomcat
+  labels:
+    application: hello-tomcat
+spec:
+  resources: {}
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM jws56-openjdk11-openshift-rhel8:latest
+      COPY /hello-tomcat.war /deployments/ROOT.war
+    images:
+    - from:
+        kind: ImageStreamTag
+        name: 'hello-tomcat-artifact:latest'
+      paths:
+      - sourcePath: '/deployments/hello-tomcat.war'
+        destinationDir: '.'
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: 'jws56-openjdk11-openshift-rhel8:latest'
+  postCommit: {}
+  runPolicy: Serial
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'hello-tomcat:latest'
+  triggers: []
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: hello-tomcat-pipelineconfig
+data:
+  release-image-path: 'quay.io/gmagnotta/hello-tomcat'
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: source-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: hello-tomcat
+spec:
+  workspaces:
+    - name: source
+  tasks:
+    - name: build
+      taskRef:
+        name: s2i-startbuild-cli
+      params:
+        - name: BUILDCONFIG-NAME
+          value: "hello-tomcat-artifact"
+    - name: build-runtime
+      taskRef:
+        name: s2i-startbuild-cli
+      runAfter:
+        - build
+      params:
+        - name: BUILDCONFIG-NAME
+          value: "hello-tomcat"
+    - name: fetch-source
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      runAfter:
+        - build-runtime
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: "https://github.com/gmagnotta/examples"
+        - name: deleteExisting
+          value: "true"
+    - name: deploy
+      taskRef:
+        name: openshift-client
+        kind: ClusterTask
+      runAfter:
+        - fetch-source
+      workspaces:
+        - name: manifest-dir
+          workspace: source
+      params:
+        - name: SCRIPT
+          value: |
+            ls -lh
+            find .
+            oc kustomize edit set image quay.io/gmagnotta/hello-tomcat=$(tasks.build-runtime.results.VALUE) hello-tomcat/k8s/overlay/dev
+            oc apply -k hello-tomcat/k8s/overlay/dev
+    - name: update-built-image
+      taskRef:
+        name: openshift-client
+        kind: ClusterTask
+      runAfter:
+        - deploy
+      params:
+        - name: SCRIPT
+          value: |
+            set -eu -o pipefail
+
+            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-image":"$(tasks.build-runtime.results.VALUE)"}}'
