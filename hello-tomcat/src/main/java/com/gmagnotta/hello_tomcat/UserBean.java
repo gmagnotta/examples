@@ -81,15 +81,17 @@ public class UserBean implements Serializable {
 
         request.logout();
 
-        //FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
+        // FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
 
-        //FacesContext.getCurrentInstance().getExternalContext().responseSendError(401, "You are logged out.");
+        // FacesContext.getCurrentInstance().getExternalContext().responseSendError(401,
+        // "You are logged out.");
 
         FacesContext.getCurrentInstance().getExternalContext().setResponseStatus(401);
-        FacesContext.getCurrentInstance().getExternalContext().getResponseOutputWriter().write("<html><head><meta http-equiv='refresh' content='0;/index.xhtml'></head></html>");
-        
+        FacesContext.getCurrentInstance().getExternalContext().getResponseOutputWriter()
+                .write("<html><head><meta http-equiv='refresh' content='0;/index.xhtml'></head></html>");
+
         FacesContext.getCurrentInstance().responseComplete();
-        //return "/index.xhtml?faces-redirect=true";
+        // return "/index.xhtml?faces-redirect=true";
     }
 
 }
