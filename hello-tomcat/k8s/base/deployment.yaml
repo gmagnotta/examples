@@ -31,7 +31,7 @@ spec:
       - env:
         - name: DNS_MEMBERSHIP_SERVICE_NAME
           value: hello-tomcat-ping
-        image: hello-tomcat:latest
+        image: hello-tomcat
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:

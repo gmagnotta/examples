@@ -161,10 +161,20 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            ls -lh
-            find .
-            oc kustomize edit set image quay.io/gmagnotta/hello-tomcat=$(tasks.build-runtime.results.VALUE) hello-tomcat/k8s/overlay/dev
-            oc apply -k hello-tomcat/k8s/overlay/dev
+            cd hello-tomcat/k8s/overlay/dev
+
+            cat <<EOF > kustomization.yaml
+            apiVersion: kustomize.config.k8s.io/v1beta1
+            kind: Kustomization
+
+            resources:
+            - ../../base
+            images:
+            - name: hello-tomcat
+              newName: $(tasks.build-runtime.results.VALUE)
+            EOF
+
+            oc apply -k .
     - name: update-built-image
       taskRef:
         name: openshift-client
