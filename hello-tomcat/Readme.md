@@ -1,27 +1,19 @@
-# Example project to show how to build and deploy a simple java web application with OpenShift Container Platform
+# Example project to show how to build and deploy a simple java web application with OpenShift Container Platform, via OpenShift Pipelines
 
 ---
 How to use:
 
 ```
-oc new-project hello-test
-
-oc apply -f hello-tomcat-edit-from-hello.yaml
-
 oc new-project hello-dev
-
-oc create configmap deploy-template --from-file=hello-tomcat-template.yaml
-
-oc process -f hello-tomcat-template-configs.yaml | oc apply -f -
 
 oc apply -f ../infra-components/pipelines-common.yaml
 
-oc process -f hello-tomcat-pipeline.yaml | oc apply -f -
+oc apply -f k8s/pipelines/hello-tomcat-pipeline.yaml
 ```
 
 You can also create a github webhook
 ```
-oc apply -f hello-tomcat-trigger.yaml
+oc apply -f k8s/pipelines/hello-tomcat-trigger.yaml
 
 ```
 
