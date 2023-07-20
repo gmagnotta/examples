@@ -7,7 +7,9 @@ public class ContextListenerImpl implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-
+        while (true) {
+            ;
+        }
     }
 
     @Override
