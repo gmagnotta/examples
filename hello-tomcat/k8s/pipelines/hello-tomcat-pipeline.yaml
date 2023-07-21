@@ -38,7 +38,13 @@ metadata:
   labels:
     application: hello-tomcat
 spec:
-  resources: {}
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 4Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
   source:
     type: Git
     git:
@@ -53,6 +59,11 @@ spec:
       from:
         kind: ImageStreamTag
         name: 'jws56-openjdk11-openshift-rhel8:latest'
+      env:
+        - name: MAVEN_ARGS_APPEND
+          value: ''
+        - name: MAVEN_S2I_GOALS
+          value: 'clean package'
   postCommit: {}
   runPolicy: Serial
   output:
@@ -121,26 +132,10 @@ spec:
   workspaces:
     - name: source
   tasks:
-    - name: build-artifacts
-      taskRef:
-        name: s2i-startbuild-cli
-      params:
-        - name: BUILDCONFIG-NAME
-          value: "hello-tomcat-artifact"
-    - name: build-runtime-image
-      taskRef:
-        name: s2i-startbuild-cli
-      runAfter:
-        - build-artifacts
-      params:
-        - name: BUILDCONFIG-NAME
-          value: "hello-tomcat"
     - name: fetch-source
       taskRef:
         name: git-clone
         kind: ClusterTask
-      runAfter:
-        - build-runtime-image
       workspaces:
         - name: output
           workspace: source
@@ -149,12 +144,28 @@ spec:
           value: "https://github.com/gmagnotta/examples"
         - name: deleteExisting
           value: "true"
+    - name: compile-artifacts
+      taskRef:
+        name: s2i-startbuild-cli
+      runAfter:
+        - fetch-source
+      params:
+        - name: BUILDCONFIG-NAME
+          value: "hello-tomcat-artifact"
+    - name: build-runtime-image
+      taskRef:
+        name: s2i-startbuild-cli
+      runAfter:
+        - compile-artifacts
+      params:
+        - name: BUILDCONFIG-NAME
+          value: "hello-tomcat"
     - name: deploy
       taskRef:
         name: openshift-client
         kind: ClusterTask
       runAfter:
-        - fetch-source
+        - build-runtime-image
       workspaces:
         - name: manifest-dir
           workspace: source
@@ -187,3 +198,81 @@ spec:
             set -eu -o pipefail
 
             oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-image":"$(tasks.build-runtime-image.results.VALUE)"}}'
+    - name: update-built-digest
+      taskRef:
+        name: openshift-client
+        kind: ClusterTask
+      runAfter:
+        - build-runtime-image
+      params:
+        - name: SCRIPT
+          value: |
+            set -eu -o pipefail
+
+            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-digest":"$(tasks.build-runtime-image.results.DIGEST)"}}'
+    - name: sign-image
+      taskRef:
+        name: cosign
+      runAfter:
+        - update-built-image
+      params:
+        - name: IMAGETOSIGN
+          value: $(tasks.build-runtime-image.results.VALUE)
+        - name: COSIGNKEY
+          value: "k8s://giuseppe-magnotta-dev/signing-secrets"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: hello-tomcat-publish
+spec:
+  params:
+    - name: image-tag
+  workspaces:
+    - name: empty
+  tasks:
+    - name: get-image-built
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "hello-tomcat-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "dev-latest-built-image"
+    - name: getpushpath
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "hello-tomcat-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "release-image-path"
+    - name: copy
+      taskRef:
+        name: skopeo-copy
+        kind: ClusterTask
+      runAfter:
+        - getpushpath
+        - get-image-built
+      workspaces:
+        - name: images-url
+          workspace: empty
+      params:
+        - name: srcImageURL
+          value: "docker://$(tasks.get-image-built.results.VALUE)"
+        - name: destImageURL
+          value: "docker://$(tasks.getpushpath.results.VALUE):$(params.image-tag)"
+        - name: srcTLSverify
+          value: "false"
+        - name: destTLSverify
+          value: "false"
+    - name: sign-image
+      taskRef:
+        name: cosign
+      runAfter:
+        - copy
+      params:
+        - name: IMAGETOSIGN
+          value: $(tasks.getpushpath.results.VALUE):$(params.image-tag)
+        - name: COSIGNKEY
+          value: "k8s://giuseppe-magnotta-dev/signing-secrets"
