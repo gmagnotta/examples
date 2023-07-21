@@ -65,7 +65,7 @@ spec:
           value: $(params.IMAGE)
       script: |
         #!/usr/bin/env bash
-        set -e
+        set -eu -o pipefail
 
         echo "Start"
         builder=$(buildah from --tls-verify=$(params.TLSVERIFY) $BUILDER_IMAGE)
@@ -237,6 +237,8 @@ spec:
       image: $(params.IMAGE)
       script: |
         #!/usr/bin/env bash
+        set -eu -o pipefail
+
         VALUE=$(oc get configmap $(params.CONFIGMAP-NAME) -o jsonpath='{.data.$(params.CONFIGMAP-KEY)}')
 
         echo -n "$VALUE" > $(results.VALUE.path)
@@ -263,6 +265,8 @@ spec:
       image: $(params.IMAGE)
       script: |
         #!/usr/bin/env bash
+        set -eu -o pipefail
+
         oc patch configmap/$(params.CONFIGMAP-NAME) --type merge -p '{"data":{"$(params.CONFIGMAP-KEY)":"$(params.VALUE)"}}'
 ---
 apiVersion: tekton.dev/v1beta1
@@ -291,6 +295,7 @@ spec:
       workingDir: $(workspaces.source.path)/$(params.CONTEXT)
       script: |
         #!/usr/bin/env bash
+        set -eu -o pipefail
 
         $(params.SCRIPT)
 ---
@@ -455,7 +460,7 @@ spec:
       image: registry.access.redhat.com/ubi8/buildah:8.5-14
       script: |
         #!/usr/bin/env bash
-        set -e
+        set -eu -o pipefail
 
         if [ -f "$(workspaces.artifacts.path)/artifacts.tar" ]; then
           echo "Deleting artifacts.tar"
@@ -472,21 +477,32 @@ metadata:
 spec:
   params:
     - name: IMAGE
-      default: registry.redhat.io/openshift4/ose-cli
+      default: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
       type: string
     - name: BUILDCONFIG-NAME
       type: string
   results:
     - name: VALUE
       description: the value read
+    - name: URL
+      description: the image url
+    - name: DIGEST
+      description: the image digest
   steps:
     - name: oc
       image: $(params.IMAGE)
+      env:
+        - name: HOME
+          value: /tekton/home
       script: |
         #!/usr/bin/env bash
 
-        set -e
+        [[ "$(workspaces.manifest-dir.bound)" == "true" ]] && cd $(workspaces.manifest-dir.path)
 
+        [[ "$(workspaces.kubeconfig-dir.bound)" == "true" ]] && [[ -f $(workspaces.kubeconfig-dir.path)/kubeconfig ]] && export KUBECONFIG=$(workspaces.kubeconfig-dir.path)/kubeconfig
+
+        set -eu -o pipefail
+        
         oc start-build $(params.BUILDCONFIG-NAME) --wait --follow
 
         #VALUE=$(oc get buildconfig $(params.BUILDCONFIG-NAME) -o jsonpath='{.status.imageChangeTriggers[0].lastTriggeredImageID}')
@@ -498,3 +514,97 @@ spec:
         echo -n "$VALUE" > $(results.VALUE.path)
 
         echo "Built image is $VALUE"
+
+        URL=$(echo $VALUE | cut -d '@' -f 1)
+
+        echo -n "$URL" > $(results.URL.path)
+
+        echo "URL is $URL"
+
+        DIGEST=$(echo $VALUE | cut -d '@' -f 2 | cut -d ':' -f 2)
+
+        echo -n "$DIGEST" > $(results.DIGEST.path)
+
+        echo "Digest is $DIGEST"
+  workspaces:
+    - name: manifest-dir
+      optional: true
+    - name: kubeconfig-dir
+      optional: true
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: scan-code
+spec:
+  params:
+    - default: 'docker.io/sonarsource/sonar-scanner-cli:latest'
+      name: scanImage
+      type: string
+    - default: 'https://sonarqube-sonarqube.apps.cluster-tpn6s.sandbox2653.opentlc.com/'
+      name: sonarqubeHostUrl
+      type: string
+    - default: object-detection-rest
+      name: sonarqubeProjectKey
+      type: string
+    - default: object-detection-rest-sonarqube-secret
+      name: sonarqubeProjectSecret
+      type: string
+    - default: object-detection-rest-sonarqube-secret
+      name: sonarqubeProjectSecretKey
+      type: string
+    - default: 'true'
+      name: verbose
+      type: string
+    - default: './'
+      name: path
+      type: string
+  steps:
+    - env:
+        - name: SONAR_TOKEN_WEB_UI
+          valueFrom:
+            secretKeyRef:
+              key: $(params.sonarqubeProjectSecretKey)
+              name: $(params.sonarqubeProjectSecret)
+      image: $(params.scanImage)
+      name: scan-code
+      resources: {}
+      script: >
+        set -x
+
+        echo $(ls -a)
+
+        sonar-scanner -X -Dsonar.projectKey=$(params.sonarqubeProjectKey)
+        -Dsonar.sources=$(params.path) -Dsonar.host.url=$(params.sonarqubeHostUrl)
+        -Dsonar.login=$SONAR_TOKEN_WEB_UI
+      workingDir: /workspace/repository
+  workspaces:
+    - name: repository
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cosign
+spec:
+  params:
+    - default: 'gcr.io/projectsigstore/cosign'
+      name: IMAGE
+      type: string
+    - default: 'empty'
+      name: IMAGETOSIGN
+      type: string
+    - default: 'cosign-key'
+      name: COSIGNKEY
+      type: string
+  steps:
+    - image: $(params.IMAGE)
+      name: sign-container
+      resources: {}
+      args:
+        - sign
+        - --key
+        - $(params.COSIGNKEY)
+        - $(params.IMAGETOSIGN)
+        - -y
+        - --upload=true
+      workingDir: /workspace/repository
