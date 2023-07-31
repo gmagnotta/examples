@@ -1,3 +1,17 @@
+#
+# Example tekton chains pipeline
+#
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-pipelines-operator
+  namespace: openshift-operators
+spec:
+  channel:  latest
+  name: openshift-pipelines-operator-rh
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
@@ -125,6 +139,58 @@ spec:
       storage: 1Gi
 ---
 apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: s2i-startbuild-cli
+spec:
+  params:
+    - name: IMAGE
+      default: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      type: string
+    - name: BUILDCONFIG-NAME
+      type: string
+  results:
+    - name: IMAGE_URL
+      description: the image url
+    - name: IMAGE_DIGEST
+      description: the image digest
+    - name: SIMPLE_DIGEST
+      description: the image sha without prefix
+  steps:
+    - name: oc
+      image: $(params.IMAGE)
+      env:
+        - name: HOME
+          value: /tekton/home
+      script: |
+        #!/usr/bin/env bash
+
+        [[ "$(workspaces.manifest-dir.bound)" == "true" ]] && cd $(workspaces.manifest-dir.path)
+
+        [[ "$(workspaces.kubeconfig-dir.bound)" == "true" ]] && [[ -f $(workspaces.kubeconfig-dir.path)/kubeconfig ]] && export KUBECONFIG=$(workspaces.kubeconfig-dir.path)/kubeconfig
+
+        set -eu -o pipefail
+
+        oc start-build $(params.BUILDCONFIG-NAME) --wait --follow
+
+        #VALUE=$(oc get buildconfig $(params.BUILDCONFIG-NAME) -o jsonpath='{.status.imageChangeTriggers[0].lastTriggeredImageID}')
+
+        IMAGE=$(oc get buildconfig $(params.BUILDCONFIG-NAME) -o jsonpath='{.spec.output.to.name}' | cut -d ':' -f 1)
+
+        IMAGE_URL=$(oc get is $IMAGE -o jsonpath='{.status.tags[0].items[0].dockerImageReference}')
+
+        echo -n "$(echo $IMAGE_URL | cut -d '@' -f 1)" > $(results.IMAGE_URL.path)
+
+        echo -n "$(echo $IMAGE_URL | cut -d '@' -f 2)" > $(results.IMAGE_DIGEST.path)
+
+        echo -n "$(echo $IMAGE_URL | cut -d '@' -f 2 | cut -d ':' -f 2)" > $(results.SIMPLE_DIGEST.path)
+  workspaces:
+    - name: manifest-dir
+      optional: true
+    - name: kubeconfig-dir
+      optional: true
+---
+apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: hello-tomcat
@@ -182,7 +248,7 @@ spec:
             - ../../base
             images:
             - name: hello-tomcat
-              newName: $(tasks.build-runtime-image.results.VALUE)
+              newName: $(tasks.build-runtime-image.results.IMAGE_URL)@$(tasks.build-runtime-image.results.IMAGE_DIGEST)
             EOF
 
             oc apply -k .
@@ -197,29 +263,40 @@ spec:
           value: |
             set -eu -o pipefail
 
-            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-image":"$(tasks.build-runtime-image.results.VALUE)"}}'
-    - name: update-built-digest
-      taskRef:
-        name: openshift-client
-        kind: ClusterTask
-      runAfter:
-        - build-runtime-image
-      params:
-        - name: SCRIPT
-          value: |
-            set -eu -o pipefail
+            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-image":"$(tasks.build-runtime-image.results.IMAGE_URL)"}}'
 
-            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-digest":"$(tasks.build-runtime-image.results.DIGEST)"}}'
-    - name: sign-image
-      taskRef:
-        name: cosign
-      runAfter:
-        - update-built-image
-      params:
-        - name: IMAGETOSIGN
-          value: $(tasks.build-runtime-image.results.VALUE)
-        - name: COSIGNKEY
-          value: "k8s://giuseppe-magnotta-dev/signing-secrets"
+            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-digest":"$(tasks.build-runtime-image.results.IMAGE_DIGEST)"}}'
+
+            oc patch configmap/hello-tomcat-pipelineconfig --type merge -p '{"data":{"dev-latest-built-simpledigest":"$(tasks.build-runtime-image.results.SIMPLE_DIGEST)"}}'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-configmap-value
+spec:
+  params:
+    - name: IMAGE
+      default: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      type: string
+    - name: CONFIGMAP-NAME
+      type: string
+    - name: CONFIGMAP-KEY
+      type: string
+  results:
+    - name: VALUE
+      description: the value read
+  steps:
+    - name: oc
+      image: $(params.IMAGE)
+      script: |
+        #!/usr/bin/env bash
+        set -eu -o pipefail
+
+        VALUE=$(oc get configmap $(params.CONFIGMAP-NAME) -o jsonpath='{.data.$(params.CONFIGMAP-KEY)}')
+
+        echo -n "$VALUE" > $(results.VALUE.path)
+
+        echo "Read value is $VALUE"
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -247,32 +324,72 @@ spec:
           value: "hello-tomcat-pipelineconfig"
         - name: CONFIGMAP-KEY
           value: "release-image-path"
-    - name: copy
+    - name: get-image-digest
+      taskRef:
+        name: get-configmap-value
+      params:
+        - name: CONFIGMAP-NAME
+          value: "hello-tomcat-pipelineconfig"
+        - name: CONFIGMAP-KEY
+          value: "dev-latest-built-simpledigest"
+    - name: copy-image
       taskRef:
         name: skopeo-copy
         kind: ClusterTask
       runAfter:
         - getpushpath
         - get-image-built
+        - get-image-digest
       workspaces:
         - name: images-url
           workspace: empty
       params:
         - name: srcImageURL
-          value: "docker://$(tasks.get-image-built.results.VALUE)"
+          value: "docker://$(tasks.get-image-built.results.VALUE)@sha256:$(tasks.get-image-digest.results.VALUE)"
         - name: destImageURL
           value: "docker://$(tasks.getpushpath.results.VALUE):$(params.image-tag)"
         - name: srcTLSverify
           value: "false"
         - name: destTLSverify
           value: "false"
-    - name: sign-image
+    - name: copy-image-att
       taskRef:
-        name: cosign
+        name: skopeo-copy
+        kind: ClusterTask
       runAfter:
-        - copy
+        - getpushpath
+        - get-image-built
+        - get-image-digest
+      workspaces:
+        - name: images-url
+          workspace: empty
       params:
-        - name: IMAGETOSIGN
-          value: $(tasks.getpushpath.results.VALUE):$(params.image-tag)
-        - name: COSIGNKEY
-          value: "k8s://giuseppe-magnotta-dev/signing-secrets"
+        - name: srcImageURL
+          value: "docker://$(tasks.get-image-built.results.VALUE):sha256-$(tasks.get-image-digest.results.VALUE).att"
+        - name: destImageURL
+          value: "docker://$(tasks.getpushpath.results.VALUE):sha256-$(tasks.get-image-digest.results.VALUE).att"
+        - name: srcTLSverify
+          value: "false"
+        - name: destTLSverify
+          value: "false"
+    - name: copy-image-sig
+      taskRef:
+        name: skopeo-copy
+        kind: ClusterTask
+      runAfter:
+        - getpushpath
+        - get-image-built
+        - get-image-digest
+      workspaces:
+        - name: images-url
+          workspace: empty
+      params:
+        - name: srcImageURL
+          value: "docker://$(tasks.get-image-built.results.VALUE):sha256-$(tasks.get-image-digest.results.VALUE).sig"
+        - name: destImageURL
+          value: "docker://$(tasks.getpushpath.results.VALUE):sha256-$(tasks.get-image-digest.results.VALUE).sig"
+        - name: srcTLSverify
+          value: "false"
+        - name: destTLSverify
+          value: "false"
+
