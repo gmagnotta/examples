@@ -1,6 +1,29 @@
 #
 # Example tekton chains pipeline
 #
+# How to use:
+#
+#  1 - Provision an OCP cluster
+#  2 - Create a dev namespace
+#  3 - Apply this namespace inside the dev namespace. It will also install openshift pipelines
+#  4 - Generate cosign secrets as described in [1]: `cosign generate-key-pair k8s://openshift-pipelines/signing-secrets`
+#  5 - Configure Tekton Chains
+#      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"transparency.enabled": "true"}}'`
+#      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"artifacts.taskrun.storage": "oci"}}'`
+#      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"artifacts.pipeline.storage": "oci"}}'`
+#  6 - Restart the controller tekton-chains-controller in openshift-pipelines namespace
+#  7 - Extract public key used by cosign to sign `oc get secret signing-secrets -n openshift-pipelines  -o yaml`
+#  8 - Create quay secret
+#  9 - Link secret to pipeline account `oc secrets link pipeline quay --for=pull,mount`
+# 10 - Launch the hello-tomcat pipeline and enjoy the attestation and signature inside OCP internal registry
+# 11 - Start hello-tomcat-publish pipeline to export the image, attestation and signature to a remote registry
+# 12 - Verify the signature and attestation:
+#      `cosign verify --key cosign.pub $REGISTRY/hello-tomcat:<tag>`
+#      `cosign verify-attestation --key cosign.pub --type slsaprovenance $REGISTRY/hello-tomcat:<tag>`
+# 13 - Verify provenance on the public rekor service with the sha256 of the image: https://search.sigstore.dev/
+#
+# [1] - https://docs.openshift.com/container-platform/4.13/cicd/pipelines/using-tekton-chains-for-openshift-pipelines-supply-chain-security.html#signing-secrets-in-tekton-chains_using-tekton-chains-for-openshift-pipelines-supply-chain-security
+#
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
