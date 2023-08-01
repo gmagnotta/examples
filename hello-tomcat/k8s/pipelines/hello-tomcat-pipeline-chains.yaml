@@ -83,11 +83,7 @@ spec:
       cpu: 500m
       memory: 512Mi
   source:
-    type: Git
-    git:
-      ref: master
-      uri: 'https://github.com/gmagnotta/examples'
-    contextDir: hello-tomcat
+    type: Binary
   strategy:
     type: Source
     sourceStrategy:
@@ -172,6 +168,9 @@ spec:
       type: string
     - name: BUILDCONFIG-NAME
       type: string
+    - name: OC_PARAMS
+      default: ''
+      type: string
   results:
     - name: IMAGE_URL
       description: the image url
@@ -194,7 +193,15 @@ spec:
 
         set -eu -o pipefail
 
-        oc start-build $(params.BUILDCONFIG-NAME) --wait --follow
+        if [ "$(params.OC_PARAMS)" != "" ] ; then
+
+          oc start-build $(params.BUILDCONFIG-NAME) --wait --follow $(params.OC_PARAMS)
+        
+        else
+
+          oc start-build $(params.BUILDCONFIG-NAME) --wait --follow
+
+        fi
 
         #VALUE=$(oc get buildconfig $(params.BUILDCONFIG-NAME) -o jsonpath='{.status.imageChangeTriggers[0].lastTriggeredImageID}')
 
@@ -238,9 +245,14 @@ spec:
         name: s2i-startbuild-cli
       runAfter:
         - fetch-source
+      workspaces:
+        - name: manifest-dir
+          workspace: source
       params:
         - name: BUILDCONFIG-NAME
           value: "hello-tomcat-artifact"
+        - name: OC_PARAMS
+          value: "--from-dir=hello-tomcat"
     - name: build-runtime-image
       taskRef:
         name: s2i-startbuild-cli
