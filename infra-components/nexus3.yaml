@@ -1,6 +1,8 @@
 #
 # Example Nexus3 oss deployment
 #
+# https://help.sonatype.com/repomanager3/planning-your-implementation/quick-start-guide---proxying-maven-and-npm
+# https://help.sonatype.com/repomanager3/nexus-repository-administration/formats/maven-repositories
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
