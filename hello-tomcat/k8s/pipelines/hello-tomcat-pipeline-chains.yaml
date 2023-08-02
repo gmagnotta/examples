@@ -92,11 +92,19 @@ spec:
       from:
         kind: ImageStreamTag
         name: 'jws56-openjdk11-openshift-rhel8:latest'
-      env:
-        - name: MAVEN_ARGS_APPEND
-          value: ''
-        - name: MAVEN_S2I_GOALS
-          value: 'clean package'
+#      env:
+#        - name: MAVEN_S2I_GOALS
+#          value: 'clean package sonar:sonar'
+#        - name: MAVEN_ARGS_APPEND
+#          value: ''
+#        - name: MAVEN_MIRRORS
+#          value: 'dev'
+#        - name: DEV_MAVEN_MIRROR_ID
+#          value: 'nexus'
+#        - name: DEV_MAVEN_MIRROR_URL
+#          value: 'http://nexus3:8081/repository/maven-group/'
+#        - name: DEV_MAVEN_MIRROR_OF
+#          value: '\*'
   postCommit: {}
   runPolicy: Serial
   output:
