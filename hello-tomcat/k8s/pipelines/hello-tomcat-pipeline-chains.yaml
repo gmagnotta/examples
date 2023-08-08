@@ -4,17 +4,31 @@
 # How to use:
 #
 #  1 - Provision an OCP cluster
-#  2 - Create a dev namespace
-#  3 - Apply this namespace inside the dev namespace. It will also install openshift pipelines
-#  4 - Generate cosign secrets as described in [1]: `cosign generate-key-pair k8s://openshift-pipelines/signing-secrets`
-#  5 - Configure Tekton Chains
+#  2 - Install openshift pipelines with
+#
+#apiVersion: operators.coreos.com/v1alpha1
+#kind: Subscription
+#metadata:
+#  name: openshift-pipelines-operator
+#  namespace: openshift-operators
+#spec:
+#  channel:  latest
+#  name: openshift-pipelines-operator-rh
+#  source: redhat-operators
+#  sourceNamespace: openshift-marketplace
+#
+#  3 - Generate cosign secrets as described in [1]: `cosign generate-key-pair k8s://openshift-pipelines/signing-secrets`
+#  4 - Configure Tekton Chains
 #      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"transparency.enabled": "true"}}'`
 #      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"artifacts.taskrun.storage": "oci"}}'`
 #      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"artifacts.pipeline.storage": "oci"}}'`
-#  6 - Restart the controller tekton-chains-controller in openshift-pipelines namespace
-#  7 - Extract public key used by cosign to sign `oc get secret signing-secrets -n openshift-pipelines  -o yaml`
+#  5 - Restart the controller tekton-chains-controller in openshift-pipelines namespace
+#      `oc get pod -n openshift-pipelines`
+#      `oc delete pod tekton-chains-controller-xxxxx -n openshift-pipelines`
+#  6 - Extract public key used by cosign to sign `oc get secret signing-secrets -n openshift-pipelines  -o yaml`
+#  7 - Import this yaml to create needed resources
 #  8 - Create quay secret
-#  9 - Link secret to pipeline account `oc secrets link pipeline quay --for=pull,mount`
+#  9 - Link secret to pipeline account `oc secrets link pipeline quay --for=pull,mount` in hello-tomcat namespace
 # 10 - Launch the hello-tomcat pipeline and enjoy the attestation and signature inside OCP internal registry
 # 11 - Start hello-tomcat-publish pipeline to export the image, attestation and signature to a remote registry
 # 12 - Verify the signature and attestation:
@@ -22,23 +36,28 @@
 #      `cosign verify-attestation --key cosign.pub --type slsaprovenance $REGISTRY/hello-tomcat:<tag>`
 # 13 - Verify provenance on the public rekor service with the sha256 of the image: https://search.sigstore.dev/
 #
+# To manually download images from OpenShift internal registry to local computer
+#     `skopeo copy --preserve-digests docker://default-route-openshift-image-registry.apps.rosa-jfmqf.dykj.p1.openshiftapps.com/hello-tomcat/hello-tomcat:latest oci-archive:/tmp/hello-tomcat`
+#     `skopeo copy --preserve-digests docker://default-route-openshift-image-registry.apps.rosa-jfmqf.dykj.p1.openshiftapps.com/hello-tomcat/hello-tomcat:sha256-0b8edae0f3ce9d0d60c012a84981ba0b6c885f05fd1eb138b31658ce96207fc0.sig oci-archive:/tmp/hello-tomcat.sig`
+#     `skopeo copy --preserve-digests docker://default-route-openshift-image-registry.apps.rosa-jfmqf.dykj.p1.openshiftapps.com/hello-tomcat/hello-tomcat:sha256-0b8edae0f3ce9d0d60c012a84981ba0b6c885f05fd1eb138b31658ce96207fc0.att oci-archive:/tmp/hello-tomcat.att`
+#
+# To upload images from local computer to remote registry
+#     `skopeo copy --preserve-digests oci-archive:/tmp/hello-tomcat docker://quay.io/gmagnotta/hello-tomcat:stable`
+#     `skopeo copy --preserve-digests oci-archive:/tmp/hello-tomcat.sig docker://quay.io/gmagnotta/hello-tomcat:sha256-0b8edae0f3ce9d0d60c012a84981ba0b6c885f05fd1eb138b31658ce96207fc0.sig`
+#     `skopeo copy --preserve-digests oci-archive:/tmp/hello-tomcat.att docker://quay.io/gmagnotta/hello-tomcat:sha256-0b8edae0f3ce9d0d60c012a84981ba0b6c885f05fd1eb138b31658ce96207fc0.att`
+#
 # [1] - https://docs.openshift.com/container-platform/4.13/cicd/pipelines/using-tekton-chains-for-openshift-pipelines-supply-chain-security.html#signing-secrets-in-tekton-chains_using-tekton-chains-for-openshift-pipelines-supply-chain-security
 #
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
+apiVersion: v1
+kind: Namespace
 metadata:
-  name: openshift-pipelines-operator
-  namespace: openshift-operators
-spec:
-  channel:  latest
-  name: openshift-pipelines-operator-rh
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
+  name: hello-tomcat
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   name: jws56-openjdk11-openshift-rhel8
+  namespace: hello-tomcat
 spec:
   lookupPolicy:
     local: true
@@ -56,6 +75,7 @@ apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   name: hello-tomcat
+  namespace: hello-tomcat
 spec:
   lookupPolicy:
     local: true
@@ -64,6 +84,7 @@ apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   name: hello-tomcat-artifact
+  namespace: hello-tomcat
 spec:
   lookupPolicy:
     local: true
@@ -72,6 +93,7 @@ apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
   name: hello-tomcat-artifact
+  namespace: hello-tomcat
   labels:
     application: hello-tomcat
 spec:
@@ -117,6 +139,7 @@ apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
   name: hello-tomcat
+  namespace: hello-tomcat
   labels:
     application: hello-tomcat
 spec:
@@ -151,6 +174,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: hello-tomcat-pipelineconfig
+  namespace: hello-tomcat
 data:
   release-image-path: 'quay.io/gmagnotta/hello-tomcat'
 ---
@@ -158,6 +182,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: source-pvc
+  namespace: hello-tomcat
 spec:
   accessModes:
     - ReadWriteOnce
@@ -169,6 +194,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: s2i-startbuild-cli
+  namespace: hello-tomcat
 spec:
   params:
     - name: IMAGE
@@ -229,9 +255,36 @@ spec:
       optional: true
 ---
 apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: vulnerability-scan
+  namespace: hello-tomcat
+spec:
+  params:
+    - name: IMAGE
+      default: quay.io/gmagnotta/trivy-with-dbs@sha256:b6348c48e607588d266d6d9a63dea1ab675387bbef40fe538ce5c27d6ccf4e4e
+      type: string
+    - name: IMAGETOSCAN
+      default: ''
+      type: string
+  steps:
+    - name: scan
+      image: $(params.IMAGE)
+      args: ["--cache-dir", "/cache/trivy", "image", "--skip-db-update", "--skip-java-db-update", "--offline-scan", "--exit-code", "1", "$(params.IMAGETOSCAN)"]
+      env:
+        - name: HOME
+          value: /tekton/home
+  workspaces:
+    - name: manifest-dir
+      optional: true
+    - name: kubeconfig-dir
+      optional: true
+---
+apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: hello-tomcat
+  namespace: hello-tomcat
 spec:
   workspaces:
     - name: source
@@ -269,12 +322,20 @@ spec:
       params:
         - name: BUILDCONFIG-NAME
           value: "hello-tomcat"
+    - name: vuln-scan
+      taskRef:
+        name: vulnerability-scan
+      runAfter:
+        - build-runtime-image
+      params:
+        - name: IMAGETOSCAN
+          value: "$(tasks.build-runtime-image.results.IMAGE_URL)"
     - name: deploy
       taskRef:
         name: openshift-client
         kind: ClusterTask
       runAfter:
-        - build-runtime-image
+        - vuln-scan
       workspaces:
         - name: manifest-dir
           workspace: source
@@ -300,7 +361,7 @@ spec:
         name: openshift-client
         kind: ClusterTask
       runAfter:
-        - build-runtime-image
+        - vuln-scan
       params:
         - name: SCRIPT
           value: |
@@ -316,6 +377,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: get-configmap-value
+  namespace: hello-tomcat
 spec:
   params:
     - name: IMAGE
@@ -345,6 +407,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: hello-tomcat-publish
+  namespace: hello-tomcat
 spec:
   params:
     - name: image-tag
