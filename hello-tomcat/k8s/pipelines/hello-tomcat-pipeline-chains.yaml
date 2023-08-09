@@ -267,10 +267,13 @@ spec:
     - name: IMAGETOSCAN
       default: ''
       type: string
+    - name: SEVERITIES
+      default: 'CRITICAL'
+      type: string
   steps:
     - name: scan
       image: $(params.IMAGE)
-      args: ["--cache-dir", "/cache/trivy", "image", "--skip-db-update", "--skip-java-db-update", "--offline-scan", "--exit-code", "1", "$(params.IMAGETOSCAN)"]
+      args: ["--cache-dir", "/cache/trivy", "image", "--skip-db-update", "--skip-java-db-update", "--offline-scan", "--exit-code", "1", "--severity", "$(params.SEVERITIES)", "$(params.IMAGETOSCAN)"]
       env:
         - name: HOME
           value: /tekton/home
