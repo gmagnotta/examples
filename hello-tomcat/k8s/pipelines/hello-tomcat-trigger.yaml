@@ -6,6 +6,7 @@ spec:
   params:
     - name: git-repository-url
       value: $(body.repository.url)
+# use $(body.repository.clone_url) for gitea see https://docs.gitea.com/usage/webhooks#event-information
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
