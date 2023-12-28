@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+/usr/local/s2i/assemble
+
+echo "Moving /deployments/hello-tomcat.war to /deployments/ROOT.war"
+mv /deployments/hello-tomcat.war /deployments/ROOT.war
+

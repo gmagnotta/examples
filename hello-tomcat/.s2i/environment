@@ -1,0 +1,5 @@
+#MAVEN_MIRRORS=dev
+#DEV_MAVEN_MIRROR_ID=nexus
+#DEV_MAVEN_MIRROR_URL=http://nexus3-giuseppe-magnotta-dev.apps.sandbox-m3.1530.p1.openshiftapps.com/repository/maven-group/
+#DEV_MAVEN_MIRROR_URL=http://192.168.237.55:8081/repository/maven-central/
+#DEV_MAVEN_MIRROR_OF=\*
