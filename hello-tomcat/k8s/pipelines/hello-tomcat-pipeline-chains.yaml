@@ -23,12 +23,12 @@
 #      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"artifacts.taskrun.storage": "oci"}}'`
 #      `oc patch configmap chains-config -n openshift-pipelines -p='{"data":{"artifacts.pipeline.storage": "oci"}}'`
 #  5 - Restart the controller tekton-chains-controller in openshift-pipelines namespace
-#      `oc get pod -n openshift-pipelines`
+#      `oc get pod -n openshift-pipelines -o name | grep -i tekton-chains-controller`
 #      `oc delete pod tekton-chains-controller-xxxxx -n openshift-pipelines`
 #  6 - Extract public key used by cosign to sign `oc get secret signing-secrets -n openshift-pipelines  -o yaml`
 #  7 - Import this yaml to create needed resources
 #  8 - Create quay secret
-#  9 - Link secret to pipeline account `oc secrets link pipeline quay --for=pull,mount` in hello-tomcat namespace
+#  9 - Link secret to pipeline account `oc secrets link pipeline <secretname> --for=pull,mount` in hello-tomcat namespace
 # 10 - Launch the hello-tomcat pipeline and enjoy the attestation and signature inside OCP internal registry
 # 11 - Start hello-tomcat-publish pipeline to export the image, attestation and signature to a remote registry
 # 12 - Verify the signature and attestation:
@@ -48,11 +48,11 @@
 #
 # [1] - https://docs.openshift.com/container-platform/4.13/cicd/pipelines/using-tekton-chains-for-openshift-pipelines-supply-chain-security.html#signing-secrets-in-tekton-chains_using-tekton-chains-for-openshift-pipelines-supply-chain-security
 #
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: hello-tomcat
----
+#apiVersion: v1
+#kind: Namespace
+#metadata:
+#  name: hello-tomcat
+#---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:

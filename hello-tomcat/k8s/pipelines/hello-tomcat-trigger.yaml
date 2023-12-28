@@ -26,9 +26,32 @@ spec:
         name: hello-tomcat
       serviceAccountName: pipeline
       workspaces:
-        - name: template
-          configmap:
-            name: deploy-template
+        - name: src
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+              storageClassName: ocs-external-storagecluster-ceph-rbd
+              volumeMode: Filesystem
+            status: {}
+        - emptyDir: {}
+          name: env
+        - emptyDir: {}
+          name: secureenv
+        - name: artifacts
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+              storageClassName: ocs-external-storagecluster-ceph-rbd
+              volumeMode: Filesystem
+            status: {}
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
