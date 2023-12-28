@@ -1,0 +1,222 @@
+---
+- name: Deploy postgresql in OpenShift cluster
+  hosts: localhost
+  vars:
+    project: "myproject"
+    application_name: "postgresql"
+    secret_name: "secret_name"
+    dockerconfigjson: "placehere"
+    volume_capacity: "200Mi"
+    postgresql_database: "dbuser"
+    postgresql_user: "dbuser"
+    postgresql_password: "dbpassword"
+  tasks:
+    - name: Create Project
+      kubernetes.core.k8s:
+        name: "{{ project }}"
+        api_version: project.openshift.io/v1
+        kind: Project
+        state: present
+#    - name: Create Secret
+#      kubernetes.core.k8s:
+#        state: present
+#        definition:
+#          apiVersion: v1
+#          kind: Secret
+#          metadata:
+#            name: "{{ secret_name }}"
+#            namespace: "{{ project }}"
+#          data:
+#            .dockerconfigjson: "{{ dockerconfigjson }}"
+#          type: kubernetes.io/dockerconfigjson
+#    - name: Link secret to default
+#      command: "oc secrets link default {{ secret_name }} --for=pull -n {{ project }}" 
+#    - name: Link secret to builder
+#      command: "oc secrets link builder {{ secret_name }} -n {{ project }}" 
+    - name: Create ImageStream
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: image.openshift.io/v1
+          kind: ImageStream
+          metadata:
+            name: postgresql-10
+            namespace: "{{ project }}"
+          spec:
+            lookupPolicy:
+              local: true
+            tags:
+              - annotations:
+                  description: Provides a PostgreSQL 10 database on RHEL 8. For more information about using this database image, including OpenShift considerations, see https://github.com/sclorg/postgresql-container/blob/master/README.md.
+                from:
+                  kind: DockerImage
+                  name: "registry.redhat.io/rhel8/postgresql-10:1-232"
+                name: 10-el8
+                referencePolicy:
+                  type: Local
+    - name: Create PersistentVolumeClaim
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: "{{ application_name }}-pvc"
+            namespace: "{{ project }}"
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: "{{ volume_capacity }}"
+    - name: Create ConfigMap
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ application_name }}"
+            namespace: "{{ project }}"
+          data:
+            postgresql-max-prepared-transactions: ''
+            postgresql-max-connections: ''
+            postgresql-shared-buffers: ''
+    - name: Create Secret
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ application_name }}"
+            namespace: "{{ project }}"
+          data:
+            postgresql-database: "{{ postgresql_database | b64encode }}"
+            postgresql-user: "{{ postgresql_user | b64encode }}"
+            postgresql-password: "{{ postgresql_password  | b64encode}}"
+    - name: Create Deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ application_name }}"
+            namespace: "{{ project }}"
+            labels:
+              app: "{{ application_name }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ application_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ application_name }}"
+                annotations:
+                  alpha.image.policy.openshift.io/resolve-names: '*'
+              spec:
+                volumes:
+                  - name: pgdata
+                    persistentVolumeClaim:
+                      claimName: "{{ application_name }}-pvc"
+                containers:
+                  - name: postgresql
+                    securityContext:
+                      runAsNonRoot: true
+                      seccompProfile:
+                        type: RuntimeDefault
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                        - ALL
+                    image: postgresql-10:10-el8
+                    ports:
+                      - containerPort: 5432
+                        protocol: TCP
+                    env:
+                      - name: POSTGRESQL_USER
+                        valueFrom:
+                          secretKeyRef:
+                            name: "{{ application_name }}"
+                            key: postgresql-user
+                      - name: POSTGRESQL_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: "{{ application_name }}"
+                            key: postgresql-password
+                      - name: POSTGRESQL_DATABASE
+                        valueFrom:
+                          secretKeyRef:
+                            name: "{{ application_name }}"
+                            key: postgresql-database
+                      - name: POSTGRESQL_MAX_CONNECTIONS
+                        valueFrom:
+                          configMapKeyRef:
+                            name: "{{ application_name }}"
+                            key: postgresql-max-connections
+                      - name: POSTGRESQL_MAX_PREPARED_TRANSACTIONS
+                        valueFrom:
+                          configMapKeyRef:
+                            name: "{{ application_name }}"
+                            key: postgresql-max-prepared-transactions
+                      - name: POSTGRESQL_SHARED_BUFFERS
+                        valueFrom:
+                          configMapKeyRef:
+                            name: "{{ application_name }}"
+                            key: postgresql-shared-buffers
+                    readinessProbe:
+                      timeoutSeconds: 10
+                      initialDelaySeconds: 90
+                      successThreshold: 1
+                      failureThreshold: 3
+                      exec:
+                        command:
+                        - "/bin/sh"
+                        - "-i"
+                        - "-c"
+                        - psql -h 127.0.0.1 -U $PGUSER -q -d $PGUSER -c 'SELECT 1'
+                    livenessProbe:
+                      timeoutSeconds: 10
+                      initialDelaySeconds: 90
+                      successThreshold: 1
+                      failureThreshold: 3
+                      tcpSocket:
+                        port: 5432
+                    volumeMounts:
+                      - mountPath: /var/lib/pgsql/data
+                        name: pgdata
+                    resources: {}
+                    imagePullPolicy: IfNotPresent
+                restartPolicy: Always
+                terminationGracePeriodSeconds: 60
+                dnsPolicy: ClusterFirst
+                securityContext: {}
+                schedulerName: default-scheduler
+            strategy:
+              type: Recreate
+            revisionHistoryLimit: 10
+            progressDeadlineSeconds: 600
+    - name: Create Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ application_name }}"
+            namespace: "{{ project }}"
+            labels:
+              app: "{{ application_name }}"
+          spec:
+            ports:
+              - name: 5432-tcp
+                protocol: TCP
+                port: 5432
+                targetPort: 5432
+            selector:
+              app: "{{ application_name }}"
+            type: ClusterIP
+            sessionAffinity: None

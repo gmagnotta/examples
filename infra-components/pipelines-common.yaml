@@ -131,7 +131,9 @@ spec:
 
         buildah rm $builder
       securityContext:
-        privileged: true
+        capabilities:
+          add:
+            - SETFCAP
     - name: push
       image: $(params.BUILDAH_IMAGE)
       script: |

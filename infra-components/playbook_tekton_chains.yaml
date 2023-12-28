@@ -1,0 +1,80 @@
+---
+#
+# Playbook to create an installation of Tekton Chain Pipelines
+#
+
+- name: Deploy Tekton Chains Pipelines
+  hosts: localhost
+  tasks:
+
+    - name: Create Subscription
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: operators.coreos.com/v1alpha1
+          kind: Subscription
+          metadata:
+            name: openshift-pipelines-operator
+            namespace: openshift-operators
+          spec:
+            channel: pipelines-1.13
+            name: openshift-pipelines-operator-rh
+            installPlanApproval: Automatic
+            source: redhat-operators
+            sourceNamespace: openshift-marketplace
+    
+    - name: Pause for Subscription Creation
+      ansible.builtin.pause:
+        minutes: 1
+
+    - name: Extract signing-secrets data
+      command: "oc get secret signing-secrets -n openshift-pipelines -o go-template --template='{{ '{{' }} .data  {{ '}}' }}'"
+      register: signing_data
+
+    - name: Extract cosign.pub
+      command: "oc get secret signing-secrets -n openshift-pipelines -o go-template --template='{{ '{{' }} index .data \"cosign.pub\"{{ '}}' }}'"
+      register: cosign_pub
+      when: signing_data.stdout != "<no value>"
+
+    - name: Generate Cosign Secrets
+      command: "cosign-linux-amd64 generate-key-pair k8s://openshift-pipelines/signing-secrets"
+      when: signing_data.stdout == "<no value>" or cosign_pub == ""
+    
+    - name: Extract chains-config
+      command: "oc get configmap chains-config -n openshift-pipelines -o go-template --template='{{ '{{' }} .data {{ '}}' }}'"
+      register: data
+    
+    - name: Read chains-config
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: ConfigMap
+        name: chains-config
+        namespace: "openshift-pipelines"
+      register: result
+      when: data.stdout != "<no value>"
+
+    - name: Enable Transparency
+      command: "oc patch configmap chains-config -n openshift-pipelines -p='{\"data\":{\"transparency.enabled\": \"true\"}}'"
+      when: data.stdout == "<no value>" or result.resources[0].data['transparency.enabled'] != 'true'
+
+    - name: Modify Taskrun Storage
+      command: "oc patch configmap chains-config -n openshift-pipelines -p='{\"data\":{\"artifacts.taskrun.storage\": \"oci\"}}'"
+      when: data.stdout == "<no value>" or result.resources[0].data['artifacts.taskrun.storage'] != 'oci'
+
+    - name: Modify Pipeline Storage
+      command: "oc patch configmap chains-config -n openshift-pipelines -p='{\"data\":{\"artifacts.pipeline.storage\": \"oci\"}}'"
+      when: data.stdout == "<no value>" or result.resources[0].data['artifacts.pipeline.storage'] != 'oci'
+
+    - name: Get Tekton Chains Controller Name
+      shell: oc get pod -n openshift-pipelines -o name | grep -i tekton-chains-controller
+      register: tekton_chains_controller 
+
+    - name: Restart Tekton Chains Controller
+      command: "oc delete {{ tekton_chains_controller.stdout }} -n openshift-pipelines"
+
+    - name: Extract cosign.pub
+      command: "oc get secret signing-secrets -n openshift-pipelines -o go-template --template='{{ '{{' }} index .data \"cosign.pub\"|base64decode{{ '}}' }}'"
+      register: cosign_pub 
+    - name: Print value
+      ansible.builtin.debug:
+        msg: "cosign pub key={{ cosign_pub.stdout }}"
