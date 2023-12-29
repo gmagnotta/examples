@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: quarkus-order-processor-ui
+  labels:
+    app: quarkus-order-processor-ui
+spec:
+  to:
+    kind: Service
+    name: quarkus-order-processor-ui
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None

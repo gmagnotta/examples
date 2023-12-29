@@ -1,0 +1,122 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: hello-tomcat-serverless
+message: This is an OpenShift template to deploy hello-tomcat as serverless.
+metadata:
+  name: hello-tomcat-serverless
+  annotations:
+    description: "hello-tomcat Template"
+objects:
+- apiVersion: serving.knative.dev/v1
+  kind: Service
+  metadata:
+    name: hello-tomcat-serverless
+  spec:
+    template:
+      metadata:
+        labels:
+          app: hello-tomcat-serverless
+        annotations:
+          autoscaling.knative.dev/min-scale: "1"
+          autoscaling.knative.dev/target: "10"
+      spec:
+        containerConcurrency: 0
+        containers:
+          - name: hello-tomcat
+            image: ${IMAGE}
+            env:
+              - name: DNS_MEMBERSHIP_SERVICE_NAME
+                value: "hello-tomcat-serverless-ping"
+              - name: ENDPOINT
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-endpoint
+              - name: ACCESSKEY
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-accesskey
+              - name: SECRETKEY
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-secretkey
+              - name: BUCKET
+                valueFrom:
+                  secretKeyRef:
+                    name: hello-tomcat
+                    key: s3-bucket
+              - name: BACKEND_URL
+                value: ${BACKEND}
+              - name: BROKER_URL
+                value: ${BROKER}
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - 'curl --noproxy ''*'' -is ''http://localhost:8080/'' | head -1 | grep -iq ''HTTP/1.1 200'''
+            livenessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep -iq ''"status": "UP"'''
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            volumeMounts:
+            - name: tomcat-users
+              mountPath: /opt/jws-5.6/tomcat/conf/tomcat-users.xml
+              subPath: tomcat-users.xml
+            - name: server
+              mountPath: /opt/jws-5.6/tomcat/conf/server.xml
+              subPath: server.xml
+        volumes:
+          - name: tomcat-users
+            configMap:
+              name: hello-tomcat
+              items:
+              - key: tomcat-users.xml
+                path: tomcat-users.xml
+          - name: server
+            configMap:
+              name: hello-tomcat
+              items:
+              - key: server.xml
+                path: server.xml
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: hello-tomcat-serverless-ping
+    labels:
+      app: hello-tomcat-serverless
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+      description: "The service for tomcat cluster membership."
+  spec:
+    publishNotReadyAddresses: false
+    clusterIP: None
+    ports:
+      - name: 8888-tcp
+        protocol: TCP
+        port: 8888
+        targetPort: 8888
+      - name: 4000-tcp
+        protocol: TCP
+        port: 4000
+        targetPort: 4000
+    selector:
+      app: hello-tomcat-serverless
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
+- description: Url of the backend
+  name: BACKEND
+  required: true
+- description: Url of the broker
+  name: BROKER
+  required: true

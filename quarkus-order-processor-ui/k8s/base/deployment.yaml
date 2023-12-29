@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarkus-order-processor-ui
+  labels:
+    app: quarkus-order-processor-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-order-processor-ui
+  template:
+    metadata:
+      labels:
+        app: quarkus-order-processor-ui
+    spec:
+      containers:
+        - name: quarkus-order-processor-ui
+          image: quarkus-order-processor-ui
+          env:
+            - name: BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-ui
+                  key: backend-url
+            - name: QUARKUS_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-ui
+                  key: quarkus-log-level
+            - name: QUARKUS_LOG_FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-ui
+                  key: quarkus-log-file-path
+          readinessProbe:
+            exec:
+              command:
+              - "/bin/bash"
+              - "-c"
+              - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep -iq ''"status": "UP"'''
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

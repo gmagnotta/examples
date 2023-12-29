@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quarkus-order-processor-ui
+data:
+  backend-url: 'http://quarkus-order-processor-api:8080'
+  quarkus-log-level: 'INFO'
+  quarkus-log-file-path: '/tmp/quarkus.log'

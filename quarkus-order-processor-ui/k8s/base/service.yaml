@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quarkus-order-processor-ui
+  labels:
+    app: quarkus-order-processor-ui
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: 8778-tcp
+      protocol: TCP
+      port: 8778
+      targetPort: 8778
+  selector:
+    app: quarkus-order-processor-ui
+  type: ClusterIP
+  sessionAffinity: None
