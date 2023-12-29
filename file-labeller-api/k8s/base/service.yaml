@@ -1,0 +1,41 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: file-labeller-api-serverless
+  labels:
+    networking.knative.dev/visibility: cluster-local
+spec:
+  template:
+    metadata:
+      labels:
+        app: file-labeller-api-serverless
+    spec:
+      containerConcurrency: 0
+      containers:
+        - name: file-labeller-api
+          image: file-labeller-api
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: file-labeller-api
+                  key: quarkus_datasource_username
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: file-labeller-api
+                  key: quarkus_datasource_password
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: file-labeller-api
+                  key: quarkus_datasource_jdbc_url
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+          ports:
+            - containerPort: 8080
+              protocol: TCP

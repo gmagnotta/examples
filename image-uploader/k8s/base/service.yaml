@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-uploader
+  labels:
+    app: image-uploader
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: 8778-tcp
+      protocol: TCP
+      port: 8778
+      targetPort: 8778
+  selector:
+    app: image-uploader
+  type: ClusterIP
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-uploader-ping
+  labels:
+    app: image-uploader
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    description: "The service for tomcat cluster membership."
+spec:
+  publishNotReadyAddresses: false
+  clusterIP: None
+  ports:
+    - name: 8888-tcp
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+    - name: 4000-tcp
+      protocol: TCP
+      port: 4000
+      targetPort: 4000
+  selector:
+    app: image-uploader

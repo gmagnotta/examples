@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: image-uploader
+  labels:
+    app: image-uploader
+spec:
+  to:
+    kind: Service
+    name: image-uploader
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
