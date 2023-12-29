@@ -72,15 +72,21 @@ You can replicate the S2I build on your laptop. You need to provision the same i
 podman run --rm -d -e AMQ_USER="amq" -e AMQ_PASSWORD="amq" -e AMQ_ROLE="admin" -e AMQ_QUEUES="getTopItemsCommand,getTopOrdersCommand,createOrderCommand,invalidMessage" -p 8161:8161 -p 61616:61616 registry.redhat.io/amq7/amq-broker-rhel8:7.8
 
 
-podman volume create postgres
-podman run -d --name postgresql_database -e POSTGRESQL_USER=jboss -e POSTGRESQL_PASSWORD=jboss -e POSTGRESQL_DATABASE=jboss -p 5432:5432 -v postgres:/var/lib/pgsql/data rhel8/postgresql-10
-PODMAN="postgresql_database"
+podman volume create jbosseap
+podman run -d --name jbosseap_database -e POSTGRESQL_USER=jboss -e POSTGRESQL_PASSWORD=jboss -e POSTGRESQL_DATABASE=jboss -p 5432:5432 -v postgres:/var/lib/pgsql/data registry.redhat.io/rhel8/postgresql-10
+PODMAN="jbosseap_database"
 #podman exec -ti $PODMAN /bin/bash -c 'psql postgres -c "create database jboss;"' && \
 #podman exec -ti $PODMAN /bin/bash -c "psql postgres -c \"create user jboss with encrypted password 'jboss';\"" && \
 #podman exec -ti $PODMAN /bin/bash -c 'psql postgres -c "grant all privileges on database jboss to jboss;"' && \
 podman exec -ti $PODMAN /bin/bash -c 'psql postgres -c "ALTER user \"jboss\" REPLICATION;"' && \
 podman exec -ti $PODMAN /bin/bash -c 'psql jboss -c "CREATE PUBLICATION dbz_publication FOR ALL TABLES;"' && \
-podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#wal_level \= replica/wal_level \= logical/g' /var/lib/pgsql/data/userdata/postgresql.conf" 
-podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#max_wal_senders \= 10/max_wal_senders \= 4/g' /var/lib/pgsql/data/userdata/postgresql.conf" 
-podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#smax_replication_slots \= 10/max_replication_slots \= 4/g' /var/lib/pgsql/data/userdata/postgresql.conf" 
-podman restart postgresql_database
+podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#wal_level \= replica/wal_level \= logical/g' /var/lib/pgsql/data/userdata/postgresql.conf" && \
+podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#max_wal_senders \= 10/max_wal_senders \= 4/g' /var/lib/pgsql/data/userdata/postgresql.conf" && \
+podman exec -ti $PODMAN /bin/bash -c "sed -i 's/\#smax_replication_slots \= 10/max_replication_slots \= 4/g' /var/lib/pgsql/data/userdata/postgresql.conf" && \
+podman restart jbosseap_database
+
+
+###
+
+https://community.oracle.com/tech/developers/discussion/1726370/preventing-direct-access-to-jsf
+https://blog.adamgamboa.dev/friendly-url-in-jsf-with-a-simple-rewriter-url/
