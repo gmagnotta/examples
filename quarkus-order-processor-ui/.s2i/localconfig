@@ -1,5 +1,0 @@
-BUILDER_IMAGE="registry.redhat.io/jboss-webserver-5/jws56-openjdk11-openshift-rhel8"
-OUTPUT_IMAGE="quarkus-order-processor-ui"
-INCREMENTAL=true
-RUNTIME_IMAGE=$BUILDER_IMAGE
-RUNTIME_ARTIFACT="/deployments/"
