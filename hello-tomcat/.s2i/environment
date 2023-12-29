@@ -1,5 +1,11 @@
+# MAVEN REPO TO PUSH ARTIFACTS
+#MAVEN_REPOS="nexus"
+#NEXUS_MAVEN_REPO_ID="nexus"
+#NEXUS_MAVEN_REPO_URL="http://nexus3:8081"
+#NEXUS_MAVEN_REPO_USERNAME="myuser"
+#NEXUS_MAVEN_REPO_PASSWORD="mypass"
+# MAVEN MIRROR
 #MAVEN_MIRRORS=dev
 #DEV_MAVEN_MIRROR_ID=nexus
-#DEV_MAVEN_MIRROR_URL=http://nexus3-giuseppe-magnotta-dev.apps.sandbox-m3.1530.p1.openshiftapps.com/repository/maven-group/
-#DEV_MAVEN_MIRROR_URL=http://192.168.237.55:8081/repository/maven-central/
-#DEV_MAVEN_MIRROR_OF=\*
+#DEV_MAVEN_MIRROR_URL=http://nexus3:8081/repository/maven-group/
+#DEV_MAVEN_MIRROR_OF=<![CDATA[*]]>

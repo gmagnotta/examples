@@ -4,6 +4,11 @@ set -e
 
 /usr/local/s2i/assemble
 
+if [ -f "/deployments/ROOT.war" ]; then
+  echo "Found /deployments/ROOT.war. Deleting"
+  rm /deployments/ROOT.war
+fi
+
 echo "Moving /deployments/hello-tomcat.war to /deployments/ROOT.war"
 mv /deployments/hello-tomcat.war /deployments/ROOT.war
 
