@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+/usr/local/s2i/assemble
+
+if [ -f "/deployments/ROOT.war" ]; then
+  echo "Found /deployments/ROOT.war. Deleting"
+  rm /deployments/ROOT.war
+fi
+
+echo "Moving /deployments/image-uploader.war to /deployments/ROOT.war"
+mv /deployments/image-uploader.war /deployments/ROOT.war
+
