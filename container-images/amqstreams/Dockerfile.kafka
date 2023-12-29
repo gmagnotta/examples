@@ -1,8 +1,0 @@
-#FROM registry.access.redhat.com/ubi8
-FROM localhost/amqstreams
-
-EXPOSE 9092/tcp
-
-USER kafka
-
-ENTRYPOINT ["/opt/kafka/bin/kafka-server-start.sh", "/opt/kafka/config/server.properties"]
