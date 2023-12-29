@@ -1,5 +1,0 @@
-BUILDER_IMAGE="registry.access.redhat.com/ubi8/openjdk-11"
-OUTPUT_IMAGE="quarkus-datagrid"
-INCREMENTAL=true
-RUNTIME_IMAGE=$BUILDER_IMAGE
-RUNTIME_ARTIFACT="/deployments/"
