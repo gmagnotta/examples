@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarkus-order-processor-api
+  labels:
+    app: quarkus-order-processor-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-order-processor-api
+  template:
+    metadata:
+      labels:
+        app: quarkus-order-processor-api
+    spec:
+      volumes:
+        - name: camel-quarkus-order-processor-api-1
+          emptyDir: {}
+      containers:
+        - name: quarkus-order-processor-api
+          image: quarkus-order-processor-api
+          env:
+            - name: QUARKUS_ARTEMIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-api
+                  key: quarkus-artemis-url
+            - name: QUARKUS_ARTEMIS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jboss-eap
+                  key: mq-username
+            - name: QUARKUS_ARTEMIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jboss-eap
+                  key: mq-password
+            - name: QUARKUS_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-api
+                  key: quarkus-log-level
+            - name: QUARKUS_LOG_FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-api
+                  key: quarkus-log-file-path
+            - name: QUARKUS_JAEGER_SAMPLER_PARAM
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-api
+                  key: quarkus-jaeger-sampler-param
+            - name: QUARKUS_JAEGER_REPORTER_LOG_SPANS
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-api
+                  key: quarkus-jaeger-reporter-log-spans
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: camel-quarkus-order-processor-api-1
+              mountPath: /opt/quarkus-app/ObjectStore
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
