@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarkus-datagrid
+  labels:
+    app: quarkus-datagrid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-datagrid
+  template:
+    metadata:
+      labels:
+        app: quarkus-datagrid
+      annotations:
+        kubernetes.io/change-cause: ${CAUSE}
+        gitcommit: ${CAUSE}
+    spec:
+      containers:
+        - name: quarkus-datagrid
+          image: ${IMAGE}
+          env:
+            - name: QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE
+              value: HASH_DISTRIBUTION_AWARE
+            - name: QUARKUS_INFINISPAN_CLIENT_USE_AUTH
+              value: 'true'
+            - name: QUARKUS_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-datagrid
+                  key: quarkus-log-level
+            - name: QUARKUS_LOG_FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-datagrid
+                  key: quarkus-log-file-path
+            - name: QUARKUS_INFINISPAN_CLIENT_SERVER_LIST
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-datagrid
+                  key: infinispan-uri
+            - name: QUARKUS_INFINISPAN_CLIENT_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-datagrid
+                  key: infinispan-username
+            - name: QUARKUS_INFINISPAN_CLIENT_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-datagrid
+                  key: infinispan-password
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-datagrid
+                  key: kafka-bootstrap-servers
+            - name: KAFKA_SECURITY_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-datagrid
+                  key: security-protocol
+            - name: KAFKA_SASL_JAAS_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-datagrid
+                  key: sasl-jaas-config
+            - name: KAFKA_SASL_MECHANISM
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-datagrid
+                  key: sasl-jaas-mechanism
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

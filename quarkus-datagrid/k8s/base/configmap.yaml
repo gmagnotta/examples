@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quarkus-datagrid
+data:
+  infinispan-uri: 'datagrid.project:11222'
+  quarkus-log-level: 'INFO'
+  quarkus-log-file-path: '/tmp/quarkus.log'
+  quarkus-artemis-url: 'amqbroker.project:61616'
+  kafka-bootstrap-servers: 'kafka.project:9092'
+  sasl-jaas-mechanism: 'PLAIN'
+  security-protocol: 'SASL_SSL'
