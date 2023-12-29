@@ -12,6 +12,9 @@ dbserver1.public.orders
 outbox.event.OrderCreated
 topItems
 topOrders
+debezium_configs
+debezium_offsets
+debezium_statuses
 
 ```
 curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d @debezium.json
