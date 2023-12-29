@@ -1,0 +1,64 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: s3-image-rekognition-serverless-text
+message: This is an OpenShift template to deploy s3-image-rekognition as serverless.
+metadata:
+  name: s3-image-rekognition-serverless-text
+  annotations:
+    description: "s3-image-rekognition Template"
+objects:
+- apiVersion: serving.knative.dev/v1
+  kind: Service
+  metadata:
+    name: s3-image-rekognition-serverless-text
+    labels:
+      networking.knative.dev/visibility: cluster-local
+  spec:
+    template:
+      metadata:
+        labels:
+          app: s3-image-rekognition-serverless-text
+      spec:
+        containerConcurrency: 0
+        containers:
+          - name: s3-image-rekognition
+            image: ${IMAGE}
+            env:
+              - name: DUMMY_MODE
+                value: 'true'
+              - name: DETECT_MODE
+                value: 'text'
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: s3-image-rekognition
+                    key: aws_access_key_id
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: s3-image-rekognition
+                    key: aws_secret_access_key
+              - name: AWS_REGION
+                valueFrom:
+                  secretKeyRef:
+                    name: s3-image-rekognition
+                    key: aws_region
+              - name: QUARKUS_REST_CLIENT_BROKER_API_URL
+                value: ${BROKER}
+            readinessProbe:
+              httpGet:
+                path: /q/health/ready
+            livenessProbe:
+              httpGet:
+                path: /q/health/live
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+parameters:
+- description: Container image to use
+  name: IMAGE
+  required: true
+- description: Url of the broker
+  name: BROKER
+  required: true
