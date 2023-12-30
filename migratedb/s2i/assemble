@@ -1,7 +1,0 @@
-#!/bin/bash
-
-echo "---> Copying SQL scripts ..."
-mv /tmp/src/* /flyway/sql/
-
-echo "Purging temporary files"
-rm -rf /tmp/src
