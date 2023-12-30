@@ -63,10 +63,10 @@ spec:
             cpu: 500m
             memory: 128Mi
         volumeMounts:
-        - mountPath: /opt/jws-5.6/tomcat/conf/tomcat-users.xml
+        - mountPath: /opt/jws-5.7/tomcat/conf/tomcat-users.xml
           name: tomcat-users
           subPath: tomcat-users.xml
-        - mountPath: /opt/jws-5.6/tomcat/conf/server.xml
+        - mountPath: /opt/jws-5.7/tomcat/conf/server.xml
           name: server
           subPath: server.xml
       dnsPolicy: ClusterFirst
