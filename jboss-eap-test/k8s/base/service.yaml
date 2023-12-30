@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-jboss
+  labels:
+    app: hello-jboss
+  annotations:
+    prometheus.io/scrape_port: '9799'
+    prometheus.io/scrape: 'true'
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: 9799-tcp
+      protocol: TCP
+      port: 9799
+      targetPort: 9799
+  selector:
+    app: hello-jboss
+  type: ClusterIP
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-hello-jboss
+  labels:
+    app: hello-jboss
+spec:
+  ports:
+    - name: 8443-tcp
+      protocol: TCP
+      port: 8443
+      targetPort: 8443
+  selector:
+    app: hello-jboss
+  type: ClusterIP
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-jboss-ping
+  labels:
+    app: hello-jboss
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    description: "The JGroups ping port for clustering"
+spec:
+  publishNotReadyAddresses: true
+  clusterIP: None
+  ports:
+    - name: 8888-tcp
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+  selector:
+    app: hello-jboss

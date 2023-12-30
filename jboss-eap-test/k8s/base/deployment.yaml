@@ -1,0 +1,324 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-jboss
+  labels:
+    app: hello-jboss
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-jboss
+  template:
+    metadata:
+      labels:
+        app: hello-jboss
+    spec:
+      serviceAccountName: default
+      volumes:
+        - name: eap-keystore-volume
+          secret:
+            secretName: eap-ssl-secret
+        - name: eap-jgroups-keystore-volume
+          secret:
+            secretName: eap-jgroup-secret
+      containers:
+        - name: jboss-eap
+          image: hello-jboss
+          env:
+            - name: HOSTNAME_HTTP
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: hostname-http
+            - name: HOSTNAME_HTTPS
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: hostname-https
+            - name: JGROUPS_PING_PROTOCOL
+              value: dns.DNS_PING
+            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+              value: hello-jboss-ping
+            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+              value: "8888"
+            - name: HTTPS_KEYSTORE_DIR
+              value: /etc/eap-secret-volume
+            - name: HTTPS_KEYSTORE
+              value: 'eapkeystore.jks'
+            - name: HTTPS_KEYSTORE_TYPE
+              value: 'JKS'
+            - name: HTTPS_NAME
+              value: 'https'
+            - name: HTTPS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: https-password
+            - name: MQ_QUEUES
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: mq-queues
+            - name: MQ_TOPICS
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: mq-topics
+            - name: JGROUPS_ENCRYPT_SECRET
+              value: 'false'
+            - name: JGROUPS_ENCRYPT_KEYSTORE_DIR
+              value: /etc/jgroups-encrypt-secret-volume
+            - name: JGROUPS_ENCRYPT_KEYSTORE
+              value: 'eapjgroups.jceks'
+            - name: JGROUPS_ENCRYPT_NAME
+              value: 'jgroups'
+            - name: JGROUPS_ENCRYPT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: jgroups-encrypt-password
+            - name: JGROUPS_CLUSTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: jgroups-cluster-password
+            - name: AUTO_DEPLOY_EXPLODED
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: auto-deploy-exploded
+            - name: DS1_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: database-name
+            - name: DS1_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: database-username
+            - name: DS1_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: database-password
+            - name: SSO_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: sso-url
+            - name: SSO_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: sso-realm
+            - name: SSO_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: sso-public-key
+            - name: SSO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: sso-username
+            - name: SSO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: sso-password
+            - name: SSO_BEARER_ONLY
+              value: "false"
+            - name: SSO_CLIENT
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: sso-client
+            - name: SSO_ENABLE_CORS
+              value: "false"
+            - name: SSO_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: sso-secret
+            - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: sso-disable-ssl-certificate-validation
+            - name: ENABLE_GENERATE_DEFAULT_DATASOURCE
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: enable-generate-default-datasource
+            - name: DB_SERVICE_PREFIX_MAPPING
+              value: ocp-postgresql=DS1
+            - name: OCP_POSTGRESQL_SERVICE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ocp-postgresql-service-host
+            - name: OCP_POSTGRESQL_SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ocp-postgresql-service-port
+            - name: DS1_CONNECTION_CHECKER
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ds1-connection-checker
+            - name: DS1_DRIVER
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ds1-driver
+            - name: DS1_EXCEPTION_SORTER
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ds1-exception-sorter
+            - name: DS1_MAX_POOL_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ds1-max-pool-size
+            - name: DS1_MIN_POOL_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ds1-min-pool-size
+            - name: DS1_NONXA
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ds1-nonxa
+            - name: AB_PROMETHEUS_ENABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ab-prometheus-enable
+            - name: MQ_SERVICE_PREFIX_MAPPING
+              value: "hello-jboss-amq7=MQ"
+            - name: MQ_JNDI
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: mq-jndi
+            - name: MQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: mq-username
+            - name: MQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: mq-password
+            - name: MQ_PROTOCOL
+              value: "tcp"
+            - name: MQ_SERIALIZABLE_PACKAGES
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: mq-serializable-packages
+            - name: JBOSS_EAP_AMQ_TCP_SERVICE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: amq-service-host
+            - name: JBOSS_EAP_AMQ_TCP_SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: amq-service-port
+          livenessProbe:
+            exec:
+              command:
+              - "/bin/bash"
+              - "-c"
+              - "/opt/eap/bin/livenessProbe.sh"
+            initialDelaySeconds: 60
+          readinessProbe:
+            exec:
+              command:
+              - "/bin/bash"
+              - "-c"
+              - "/opt/eap/bin/readinessProbe.sh"
+            initialDelaySeconds: 10
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+            - containerPort: 8888
+              protocol: TCP
+            - containerPort: 9799
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: '1G1'
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: eap-keystore-volume
+              mountPath: /etc/eap-secret-volume
+              readOnly: true
+            - name: eap-jgroups-keystore-volume
+              mountPath: /etc/jgroups-encrypt-secret-volume
+              readOnly: true
+      initContainers:
+        - name: hello-jboss-wait-migration
+          image: hello-jboss-migration
+          env:
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: database-username
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: database-password
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: database-name
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ocp-postgresql-service-host
+            - name: DATABASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-jboss
+                  key: ocp-postgresql-service-port
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://$(DATABASE_HOST):$(DATABASE_PORT)/$(DATABASE_NAME)
+            - name: FLYWAY_PARAMS
+              value: 'validate'
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 75
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
