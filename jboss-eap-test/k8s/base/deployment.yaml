@@ -8,6 +8,9 @@ spec:
     matchLabels:
       app: hello-jboss
   template:
+    metadata:
+      labels:
+        app: hello-jboss
     spec:
       volumes:
         - name: eap-keystore-volume
