@@ -2,19 +2,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-jboss
-  labels:
-    app: hello-jboss
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: hello-jboss
   template:
-    metadata:
-      labels:
-        app: hello-jboss
     spec:
-      serviceAccountName: default
       volumes:
         - name: eap-keystore-volume
           secret:
@@ -23,7 +17,7 @@ spec:
           secret:
             secretName: eap-jgroup-secret
       containers:
-        - name: jboss-eap
+        - name: hello-jboss
           image: hello-jboss
           env:
             - name: HOSTNAME_HTTP
