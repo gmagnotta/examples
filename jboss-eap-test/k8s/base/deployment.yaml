@@ -220,12 +220,12 @@ spec:
                 configMapKeyRef:
                   name: hello-jboss
                   key: mq-serializable-packages
-            - name: JBOSS_EAP_AMQ_TCP_SERVICE_HOST
+            - name: HELLO_JBOSS_AMQ_TCP_SERVICE_HOST
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: amq-service-host
-            - name: JBOSS_EAP_AMQ_TCP_SERVICE_PORT
+            - name: HELLO_JBOSS_AMQ_TCP_SERVICE_PORT
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
