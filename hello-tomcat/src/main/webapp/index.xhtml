@@ -12,13 +12,14 @@
 <h:body>
 	<h1>#{messages.hello}</h1>
 
+	<h2><h:outputText id="out" value="#{messages.session_content}" /> <h:outputText id="content" value="#{sessionBean.toString()}" /></h2>
+	
 	<h:form prependId="false">
-		#{messages.insert_name} <h:inputText value="#{userBean.name}" id="name" required="true" />
+		#{messages.insert_value} <h:inputText value="#{sessionBean.value}" id="name" required="true" />
 		<h:commandButton value="#{messages.send}" action="index?faces-redirect=true" />
 
 	</h:form>
 	
-	<h2><h:outputText id="out" value="#{userBean.greeting}" /></h2>
 
 	<a href="/secured/secured.xhtml">#{messages.secure_resource}</a>
 </h:body>
