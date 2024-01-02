@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+echo "Downloading Posgresql driver 42.3.3"
+curl -L -o /tmp/src/extensions/modules/org/postgresql/main/postgresql-42.3.3.jar "https://jdbc.postgresql.org/download/postgresql-42.3.3.jar"
+
+/usr/local/s2i/assemble
