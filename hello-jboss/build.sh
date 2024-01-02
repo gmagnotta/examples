@@ -3,7 +3,7 @@
 set -e
 
 export BUILDER_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8"
-export OUTPUT_IMAGE="jboss-test"
+export OUTPUT_IMAGE="hello-jboss"
 export INCREMENTAL=true
 export RUNTIME_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-runtime-openshift-rhel8"
 export RUNTIME_ARTIFACT="/s2i-output/server/"

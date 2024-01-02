@@ -30,4 +30,4 @@ podman run --rm -ti -p 8080:8080 \
 -e TEST_AMQ_TCP_SERVICE_PORT="61616" \
 -e MQ_SERIALIZABLE_PACKAGES="" \
 -e MQ_JNDI="java:jboss/DefaultJMSConnectionFactory" \
-localhost/jboss-test
+localhost/hello-jboss
