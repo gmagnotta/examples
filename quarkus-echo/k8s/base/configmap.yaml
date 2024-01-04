@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quarkus-echo
+data:
+  quarkus-log-level: 'INFO'
+  quarkus-log-file-path: '/tmp/quarkus.log'
+  oidc-auth-server-url: https://localhost/realms/realm
+  oidc-tls-verification: none

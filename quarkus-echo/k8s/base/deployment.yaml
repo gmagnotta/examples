@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarkus-echo
+  labels:
+    app: quarkus-echo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-echo
+  template:
+    metadata:
+      labels:
+        app: quarkus-echo
+    spec:
+      containers:
+        - name: quarkus-echo
+          image: ${IMAGE}
+          env:
+            - name: QUARKUS_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-echo
+                  key: quarkus-log-level
+            - name: QUARKUS_LOG_FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-echo
+                  key: quarkus-log-file-path
+            - name: QUARKUS_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-echo
+                  key: oidc-client-id
+            - name: QUARKUS_OIDC_CREDENTIALS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-echo
+                  key: oidc-credentials-secret
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-echo
+                  key: oidc-auth-server-url
+            - name: QUARKUS_OIDC_TLS_VERIFICATION
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-echo
+                  key: oidc-tls-verification
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
