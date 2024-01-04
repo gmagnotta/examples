@@ -21,10 +21,19 @@ public class EchoResource {
     SecurityIdentity securityIdentity;
 
     @GET
-    @Path("/echo")
+    @Path("/hello")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String hello() {
+
+        return "Hello world!";
+
+    }
+
+    @GET
+    @Path("/user")
     @RolesAllowed("user")
     @Produces(MediaType.APPLICATION_JSON)
-    public User echo() {
+    public User user() {
 
         return new User(securityIdentity);
 
