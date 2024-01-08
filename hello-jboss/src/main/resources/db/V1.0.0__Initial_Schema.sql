@@ -32,17 +32,6 @@ CREATE TABLE line_items
       ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
-CREATE TABLE outboxevent
-(
-  id uuid NOT NULL,
-  aggregatetype character varying(255) NOT NULL,
-  aggregateid character varying(255) NOT NULL,
-  type_value character varying(255) NOT NULL,
-  creation_date timestamp without time zone, 
-  payload bytea NOT NULL
-);
-
-
 CREATE SEQUENCE hibernate_sequence
   START 1;
   
