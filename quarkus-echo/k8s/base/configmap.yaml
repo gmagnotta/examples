@@ -5,5 +5,5 @@ metadata:
 data:
   quarkus-log-level: 'INFO'
   quarkus-log-file-path: '/tmp/quarkus.log'
-  oidc-auth-server-url: https://localhost/realms/realm
+  oidc-auth-server-url: https://sso-ingress.localdomain/realms/realm
   oidc-tls-verification: none

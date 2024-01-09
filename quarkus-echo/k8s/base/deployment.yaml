@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: quarkus-echo
-          image: ${IMAGE}
+          image: quay.io/gmagnotta/quarkus-echo
           env:
             - name: QUARKUS_LOG_LEVEL
               valueFrom:
