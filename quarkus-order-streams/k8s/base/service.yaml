@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quarkus-order-streams
+  labels:
+    app: quarkus-order-streams
+  annotations:
+    prometheus.io/scrape_port: '8080'
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/q/metrics/'
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: quarkus-order-streams
+  type: ClusterIP
+  sessionAffinity: None

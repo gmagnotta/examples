@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: quarkus-order-streams
+  labels:
+    app: quarkus-order-streams
+spec:
+  to:
+    kind: Service
+    name: quarkus-order-streams
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
