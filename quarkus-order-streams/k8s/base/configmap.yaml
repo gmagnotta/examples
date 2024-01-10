@@ -1,0 +1,8 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: quarkus-order-streams
+data:
+  kafka-bootstrap-servers: kafkabroker:9093
+  kafka-ssl-truststore-location: /opt/certs/ca.p12
+  kafka-ssl-keystore-location: /opt/certs/user.p12

@@ -48,6 +48,8 @@ import org.gmagnotta.model.connect.OrderCollector;
 import org.gmagnotta.serde.QuarkusOrderStreamsSerdes;
 import org.jboss.logging.Logger;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import com.google.protobuf.ByteString;
 
 @ApplicationScoped
@@ -56,18 +58,30 @@ public class OrderStreams {
     @Inject
     Logger logger;
 
+    @ConfigProperty(name = "items.topic")
+    String itemsTopic;
+
+    @ConfigProperty(name = "lineitems.topic")
+    String lineItemsTopic;
+
+    @ConfigProperty(name = "orders.topic")
+    String ordersTopic;
+
+    @ConfigProperty(name = "ordercreated.topic")
+    String orderCreatedTopic;
+
     @Produces
     public Topology getTopology() {
 
         StreamsBuilder builder = new StreamsBuilder();
 
         // Creates a Global KTable containing all items
-        GlobalKTable<String, Item> itemsTable = builder.globalTable("dbserver1.public.items",
+        GlobalKTable<String, Item> itemsTable = builder.globalTable(itemsTopic,
              Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Item(), null, AutoOffsetReset.EARLIEST));
 
         // Creates line items Stream
         KStream<Long, LineItem> lineItemsStream = builder
-                .stream("dbserver1.public.line_items",
+                .stream(lineItemsTopic,
                         Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.LineItem(), null, AutoOffsetReset.EARLIEST))
 
                 // replace the original Key created by debezium with the ord id (Long)
@@ -111,7 +125,7 @@ public class OrderStreams {
 
         // Build orders Stream
         KStream<Long, Order> ordersStream = builder
-                .stream("dbserver1.public.orders",
+                .stream(ordersTopic,
                         Consumed.with(Serdes.String(), QuarkusOrderStreamsSerdes.Order(), null, AutoOffsetReset.EARLIEST))
 
                 // replace the original Key created by debezium with the order id (Long)
@@ -201,7 +215,7 @@ public class OrderStreams {
         
         // we'll materialize the Stream to the topic "outbox.event.OrderCreated"
         // so other clients can process the Aggregate
-        protoOrders.to("outbox.event.OrderCreated", Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
+        protoOrders.to(orderCreatedTopic, Produced.with(Serdes.String(), QuarkusOrderStreamsSerdes.Orders()));
 
         
         // Extract items id and quantities from line_items

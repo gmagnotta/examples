@@ -1,0 +1,94 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: quarkus-order-streams
+  labels:
+    app: quarkus-order-streams
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quarkus-order-streams
+  template:
+    metadata:
+      labels:
+        app: quarkus-order-streams
+    spec:
+      containers:
+        - resources: {}
+          name: quarkus-order-streams
+          securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+          env:
+            - name: QUARKUS_LOG_LEVEL
+              value: INFO
+            - name: QUARKUS_LOG_FILE_PATH
+              value: /tmp/quarkus.log
+            - name: QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-streams
+                  key: kafka-bootstrap-servers
+            - name: QUARKUS_KAFKA_STREAMS_SSL_TRUSTSTORE_LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-streams
+                  key: kafka-ssl-truststore-location
+            - name: QUARKUS_KAFKA_STREAMS_SSL_TRUSTSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-streams
+                  key: kafka-ssl-truststore-password
+            - name: QUARKUS_KAFKA_STREAMS_SSL_KEYSTORE_LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-streams
+                  key: kafka-ssl-keystore-location
+            - name: QUARKUS_KAFKA_STREAMS_SSL_KEYSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-streams
+                  key: kafka-ssl-keystore-password
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          imagePullPolicy: Always
+          image: quay.io/gmagnotta/quarkus-order-streams
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+          volumeMounts:
+            - mountPath: /opt/certs/
+              name: certs
+              readOnly: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+      volumes:
+        - name: certs
+          secret:
+            secretName: quarkus-order-streams-certs
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
