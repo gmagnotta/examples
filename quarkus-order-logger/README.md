@@ -9,3 +9,9 @@ Reset offsets
 ./kafka-consumer-groups.sh --bootstrap-server kafka:9092 --group quarkus-order-logger  --describe
 
 ./kafka-consumer-groups.sh --bootstrap-server kafka:9092 --group quarkus-order-logger --topic outbox.event.OrderCreated --reset-offsets --to-earliest --execute
+
+## Create required secrets in K8s
+
+`oc create secret generic quarkus-order-logger-certs --from-file=ca.p12=/mypath/ca.p12 --from-file=user.p12=/mypath/user.p12`
+
+The files and the password should be extracted from KafkaUser created by Strimzi

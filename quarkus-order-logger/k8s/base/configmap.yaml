@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: quarkus-order-logger
 data:
-  kafka-bootstrap-servers: kafka.giuseppe-shared:9092
-  sasl-jaas-mechanism: PLAIN
-  security-protocol: SASL_SSL
+  kafka-bootstrap-servers: kafkabroker:9093
+  kafka-ssl-truststore-location: /opt/certs/ca.p12
+  kafka-ssl-keystore-location: /opt/certs/user.p12
   telegram-enabled: 'false'

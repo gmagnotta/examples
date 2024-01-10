@@ -36,7 +36,7 @@ public class OrderReceiver {
 
 		} else {
 
-			LOGGER.info("Received order id " + protoOrder.getId() + " from Kafka");
+			LOGGER.info("Received order id " + protoOrder.getId() + " from Kafka " + protoOrder.toString());
 
 			if (telegramEnabled) {
 				producerTemplate.sendBody(protoOrder);

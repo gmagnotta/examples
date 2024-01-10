@@ -50,21 +50,26 @@ spec:
                 configMapKeyRef:
                   name: quarkus-order-logger
                   key: kafka-bootstrap-servers
-            - name: KAFKA_SECURITY_PROTOCOL
+            - name: KAFKA_SSL_TRUSTSTORE_LOCATION
               valueFrom:
                 configMapKeyRef:
                   name: quarkus-order-logger
-                  key: security-protocol
-            - name: KAFKA_SASL_JAAS_CONFIG
+                  key: kafka-ssl-truststore-location
+            - name: KAFKA_SSL_TRUSTSTORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: quarkus-order-logger
-                  key: sasl-jaas-config
-            - name: KAFKA_SASL_MECHANISM
+                  key: kafka-ssl-truststore-password
+            - name: KAFKA_SSL_KEYSTORE_LOCATION
               valueFrom:
                 configMapKeyRef:
                   name: quarkus-order-logger
-                  key: sasl-jaas-mechanism
+                  key: kafka-ssl-keystore-location
+            - name: KAFKA_SSL_KEYSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quarkus-order-logger
+                  key: kafka-ssl-keystore-password
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -82,11 +87,19 @@ spec:
             httpGet:
               path: /q/health/ready
               port: 8080
+          volumeMounts:
+            - mountPath: /opt/certs/
+              name: certs
+              readOnly: true
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
       securityContext: {}
       schedulerName: default-scheduler
+      volumes:
+        - name: certs
+          secret:
+            secretName: quarkus-order-logger-certs
   strategy:
     type: RollingUpdate
     rollingUpdate:
