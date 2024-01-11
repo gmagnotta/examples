@@ -33,6 +33,6 @@ To check that debezium is populating correctly the topics, use the following com
 
 ## Create required secrets in K8s
 
-oc create secret generic quarkus-order-streams-certs --from-file=ca.p12=/tmp/ca.p12 --from-file=user.p12=/tmp/user.p12
+oc create secret generic quarkus-order-streams-certs -n project --from-file=ca.p12=/tmp/ca.p12 --from-file=user.p12=/tmp/streams.p12
 
 The files and the password should be extracted from KafkaUser created by Strimzi
