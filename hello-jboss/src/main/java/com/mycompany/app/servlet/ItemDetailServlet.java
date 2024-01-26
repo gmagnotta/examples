@@ -24,7 +24,7 @@ public class ItemDetailServlet extends HttpServlet {
 		Item item;
 		
 		if (itemId != null) {
-			item = itemService.getItem(Integer.valueOf(itemId));
+			item = itemService.getItemById(Integer.valueOf(itemId));
 		} else {
 			throw new ServletException("Itemid " + itemId + "not found!");
 		}

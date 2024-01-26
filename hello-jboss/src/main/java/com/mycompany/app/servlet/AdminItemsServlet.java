@@ -37,7 +37,7 @@ public class AdminItemsServlet extends ItemsServlet {
 			String price = request.getParameter("price");
 			String itemId = request.getParameter("itemId");
 			
-			Item item = itemService.getItem(Integer.valueOf(itemId));
+			Item item = itemService.getItemById(Integer.valueOf(itemId));
 			
 			item.setDescription(description);
 			item.setPrice(new BigDecimal(price));
@@ -48,7 +48,7 @@ public class AdminItemsServlet extends ItemsServlet {
 			
 			String itemId = request.getParameter("itemId");
 			
-			Item item = itemService.getItem(Integer.valueOf(itemId));
+			Item item = itemService.getItemById(Integer.valueOf(itemId));
 			
 			itemService.deleteItem(item);
 		}

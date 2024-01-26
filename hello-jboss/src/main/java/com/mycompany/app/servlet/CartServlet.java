@@ -41,7 +41,7 @@ public class CartServlet extends HttpServlet {
 			String id = request.getParameter("itemId");
 			String quantity = request.getParameter("quantity");
 			
-			Item item = itemService.getItem(Integer.valueOf(id));
+			Item item = itemService.getItemById(Integer.valueOf(id));
 			
 			if (item == null) {
 				throw new ServletException("Invalid item with id " + id);
@@ -59,7 +59,7 @@ public class CartServlet extends HttpServlet {
 			
 			String quantity = request.getParameter("quantity");
 			
-			Item item = itemService.getItem(Integer.valueOf(id));
+			Item item = itemService.getItemById(Integer.valueOf(id));
 			
 			if (item == null) {
 				throw new ServletException("Invalid item with id " + id);

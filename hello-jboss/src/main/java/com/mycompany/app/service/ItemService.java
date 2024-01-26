@@ -37,7 +37,7 @@ public class ItemService {
         return query.getResultList();
     }
 
-    public Item getItem(int id) {
+    public Item getItemById(int id) {
 
         return entityManager.find(Item.class, id);
 

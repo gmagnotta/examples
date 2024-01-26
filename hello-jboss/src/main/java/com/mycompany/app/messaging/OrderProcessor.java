@@ -97,7 +97,7 @@ public class OrderProcessor implements MessageListener {
 
 			Item i = l.getItem();
 
-			com.mycompany.model.Item jpaItem = itemService.getItem(i.getId());
+			com.mycompany.model.Item jpaItem = itemService.getItemById(i.getId());
 
 			com.mycompany.model.LineItem jpaLineItem = new com.mycompany.model.LineItem();
 			jpaLineItem.setItem(jpaItem);

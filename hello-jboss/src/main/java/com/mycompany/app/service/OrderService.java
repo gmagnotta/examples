@@ -14,9 +14,6 @@ import javax.transaction.Transactional;
 import com.mycompany.model.LineItem;
 import com.mycompany.model.Order;
 
-/**
- * Hello world!
- */
 @Stateless
 public class OrderService {
     @PersistenceContext(unitName = "store")

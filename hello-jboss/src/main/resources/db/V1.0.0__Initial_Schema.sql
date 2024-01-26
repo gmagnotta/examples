@@ -33,11 +33,11 @@ CREATE TABLE line_items
 );
 
 CREATE SEQUENCE hibernate_sequence
-  START 1;
+  START 100;
   
-INSERT INTO items(id, description, price) VALUES (0, 'Bacon King', 1.0);
-INSERT INTO items(id, description, price) VALUES (1, 'Whopper', 2.0);
-INSERT INTO items(id, description, price) VALUES (2, 'Hamburger', 3.0);
-INSERT INTO items(id, description, price) VALUES (3, 'Cheeseburger', 4.0);
-INSERT INTO items(id, description, price) VALUES (4, 'Double Cheeseburger', 5.0);
-INSERT INTO items(id, description, price) VALUES (5, 'Double Whopper', 6.0);
+INSERT INTO items(id, description, price) VALUES (1, 'Bacon King', 1.0);
+INSERT INTO items(id, description, price) VALUES (2, 'Whopper', 2.0);
+INSERT INTO items(id, description, price) VALUES (3, 'Hamburger', 3.0);
+INSERT INTO items(id, description, price) VALUES (4, 'Cheeseburger', 4.0);
+INSERT INTO items(id, description, price) VALUES (5, 'Double Cheeseburger', 5.0);
+INSERT INTO items(id, description, price) VALUES (6, 'Double Whopper', 6.0);
