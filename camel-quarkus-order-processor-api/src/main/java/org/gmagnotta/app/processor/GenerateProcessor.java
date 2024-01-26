@@ -4,6 +4,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
@@ -59,7 +60,7 @@ public class GenerateProcessor implements Processor {
             
             for (int j = 0; j < randomLineItems; j++) {
             
-            	int randomid = random.nextInt(5);
+            	int randomid = ThreadLocalRandom.current().nextInt(1, 5);
             	int randomqty = random.nextInt(100 - 1) + 1;
 
             	Lineitemtype lineItemtype = new Lineitemtype();

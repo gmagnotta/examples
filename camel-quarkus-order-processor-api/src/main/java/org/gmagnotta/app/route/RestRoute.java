@@ -6,10 +6,9 @@ import javax.inject.Inject;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jsonb.JsonbDataFormat;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
-import org.gmagnotta.jaxb.TopItemsResponse;
-import org.gmagnotta.jaxb.TopOrdersResponse;
 import org.jboss.logging.Logger;
 
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -30,18 +29,22 @@ public class RestRoute extends RouteBuilder {
 
       JaxbDataFormat jaxbDataFormat = new JaxbDataFormat("org.gmagnotta.jaxb");
 
+      JsonbDataFormat jsonDataFormat = new JsonbDataFormat();
+
     	restConfiguration()
         .component("platform-http")
         .bindingMode(RestBindingMode.auto)
         .contextPath("/api");
    	
         rest("/topOrders")
-        .get().outType(TopOrdersResponse.class)
+        .get().produces("application/json")
         .route()
          .circuitBreaker()
           .to("bean://queryutils?method=prepareGetTopOrders")
           .marshal(jaxbDataFormat)
           .to("activemq:queue:getTopOrdersCommand?jmsMessageType=Text")
+          .unmarshal(jaxbDataFormat)
+          .marshal(jsonDataFormat)
          .onFallback()
            .setBody(constant("Dependant service not available"))
            .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
@@ -50,12 +53,14 @@ public class RestRoute extends RouteBuilder {
         .endRest();
        
        rest("/topItems")
-        .get().outType(TopItemsResponse.class)
+        .get().produces("application/json")
         .route()
          .circuitBreaker()
           .to("bean://queryutils?method=prepareGetTopItems")
           .marshal(jaxbDataFormat)
           .to("activemq:queue:getTopItemsCommand?jmsMessageType=Text")
+          .unmarshal(jaxbDataFormat)
+          .marshal(jsonDataFormat)
          .onFallback()
            .setBody(constant("Dependant service not available"))
            .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
