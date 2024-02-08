@@ -10,17 +10,11 @@ podman run -d --rm --name jbossdb --net dev \
 
 podman run --name jboss --net dev \
  -e OIDC_PROVIDER_NAME="rh-sso" \
+ -e OIDC_CLIENT_ID="jboss" \
  -e OIDC_PROVIDER_URL="http://keycloak:8081/realms/jboss" \
- -e OIDC_SECURE_DEPLOYMENT_SECRET="5UizIb7RwBv7H9QtV17HbwuWrEApoxnA" \
+ -e OIDC_CLIENT_SECRET="N1lbWGMFEIQ8lWfWpE3iQxASqb1qlqYE" \
  -e OIDC_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
  -e OIDC_HOSTNAME_HTTP="localhost" \
- -e OIDC_USER_NAME="jboss" \
- -e AAAA_SSO_URL="http://keycloak:8081/" \
- -e AAAA_SSO_REALM="jboss" \
- -e AAAA_SSO_SECRET="5UizIb7RwBv7H9QtV17HbwuWrEApoxnA" \
- -e AAAA_SSO_CLIENT="jboss" \
- -e AAAA_HOSTNAME_HTTP="localhost" \
- -e AAAA_SSO_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
  -e POSTGRESQL_SERVICE_HOST="jbossdb" \
  -e POSTGRESQL_SERVICE_PORT="5432" \
  -e POSTGRESQL_USER="jboss" \

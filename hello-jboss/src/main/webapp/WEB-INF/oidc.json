@@ -1,8 +1,8 @@
 {
-    "client-id" : "jboss",
-    "provider-url" : "http://keycloak:8081/realms/jboss",
+    "client-id" : "${env.OIDC_CLIENT_ID}",
+    "provider-url" : "${env.OIDC_PROVIDER_URL}",
     "ssl-required" : "external",
      "credentials" : {
-        "secret" : "cA8dUQPD3fIVyc9ZFyJIt3Ik33uMYPRb"
+        "secret" : "${env.OIDC_CLIENT_SECRET}"
      }
   }
