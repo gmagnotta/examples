@@ -1,0 +1,8 @@
+{
+    "client-id" : "jboss",
+    "provider-url" : "http://keycloak:8081/realms/jboss",
+    "ssl-required" : "external",
+     "credentials" : {
+        "secret" : "cA8dUQPD3fIVyc9ZFyJIt3Ik33uMYPRb"
+     }
+  }

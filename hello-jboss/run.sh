@@ -2,34 +2,31 @@
 
 podman network create --ignore dev
 
-podman run -d --name jbossdb --net dev \
+podman run -d --rm --name jbossdb --net dev \
  -e POSTGRESQL_USER="jboss" \
  -e POSTGRESQL_PASSWORD="jboss" \
  -e POSTGRESQL_DATABASE="jboss" \
  localhost/hello-jbossdb
 
 podman run --name jboss --net dev \
- -e SSO_URL="http://keycloak:8081/" \
- -e SSO_REALM="jboss" \
- -e SSO_SECRET="h301iicLztkcTeuIxOHyNtk8VViCrGp4" \
- -e SSO_CLIENT="jboss" \
- -e HOSTNAME_HTTP="localhost" \
- -e SSO_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
- -e DB_SERVICE_PREFIX_MAPPING="ocp-postgresql=DS1" \
- -e OCP_POSTGRESQL_SERVICE_HOST="jbossdb" \
- -e OCP_POSTGRESQL_SERVICE_PORT="5432" \
- -e DS1_CONNECTION_CHECKER="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker" \
- -e DS1_DATABASE="jboss" \
- -e DS1_DRIVER="postgresql" \
- -e DS1_EXCEPTION_SORTER="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter" \
- -e DS1_USERNAME="jboss" \
- -e DS1_PASSWORD="jboss" \
- -e DS1_MAX_POOL_SIZE="20" \
- -e DS1_MIN_POOL_SIZE="20" \
- -e DS1_NONXA="true" \
- -e DS1_DATABASE="jboss" \
- -e DS1_USERNAME="jboss" \
- -e DS1_PASSWORD="jboss" \
+ -e OIDC_PROVIDER_NAME="rh-sso" \
+ -e OIDC_PROVIDER_URL="http://keycloak:8081/realms/jboss" \
+ -e OIDC_SECURE_DEPLOYMENT_SECRET="5UizIb7RwBv7H9QtV17HbwuWrEApoxnA" \
+ -e OIDC_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
+ -e OIDC_HOSTNAME_HTTP="localhost" \
+ -e OIDC_USER_NAME="jboss" \
+ -e AAAA_SSO_URL="http://keycloak:8081/" \
+ -e AAAA_SSO_REALM="jboss" \
+ -e AAAA_SSO_SECRET="5UizIb7RwBv7H9QtV17HbwuWrEApoxnA" \
+ -e AAAA_SSO_CLIENT="jboss" \
+ -e AAAA_HOSTNAME_HTTP="localhost" \
+ -e AAAA_SSO_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
+ -e POSTGRESQL_SERVICE_HOST="jbossdb" \
+ -e POSTGRESQL_SERVICE_PORT="5432" \
+ -e POSTGRESQL_USER="jboss" \
+ -e POSTGRESQL_PASSWORD="jboss" \
+ -e POSTGRESQL_DATABASE="jboss" \
+ -e POSTGRESQL_DATASOURCE="ocp_postgresql" \
  -e ENABLE_GENERATE_DEFAULT_DATASOURCE="" \
  -e MQ_USERNAME="amq" \
  -e MQ_PASSWORD="amq" \
