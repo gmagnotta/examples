@@ -8,6 +8,8 @@ podman run -d --rm --name jbossdb --net dev \
  -e POSTGRESQL_DATABASE="jboss" \
  localhost/hello-jbossdb
 
+sleep 30
+
 podman run --name jboss --net dev \
  -e OIDC_PROVIDER_NAME="rh-sso" \
  -e OIDC_CLIENT_ID="jboss" \
