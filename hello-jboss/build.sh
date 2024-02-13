@@ -3,13 +3,17 @@
 set -e
 
 export BUILDER_IMAGE="registry.redhat.io/jboss-eap-8/eap8-openjdk17-builder-openshift-rhel8:1.0.0.GA"
-export OUTPUT_IMAGE="hello-jboss"
+export OUTPUT_IMAGE="hello-jboss-artifacts"
 export INCREMENTAL=true
+
+buildah_s2i.sh
+
 export RUNTIME_IMAGE="registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel8:1.0.0.GA"
+export OUTPUT_IMAGE="hello-jboss"
+export SOURCE_IMAGE="hello-jboss-artifacts"
 export SRC_ARTIFACT="/opt/server"
 export DESTINATION_URL="/opt/server"
 
-buildah_s2i.sh
 buildah_s2i_runtime.sh
 
 cat <<EOF > initdb.sh

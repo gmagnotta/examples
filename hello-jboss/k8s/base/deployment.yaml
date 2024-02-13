@@ -23,12 +23,12 @@ spec:
         - name: hello-jboss
           image: hello-jboss
           env:
-            - name: HOSTNAME_HTTP
+            - name: OIDC_HOSTNAME_HTTP
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: hostname-http
-            - name: HOSTNAME_HTTPS
+            - name: OIDC_HOSTNAME_HTTPS
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
@@ -85,61 +85,36 @@ spec:
                 configMapKeyRef:
                   name: hello-jboss
                   key: auto-deploy-exploded
-            - name: DS1_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: database-name
-            - name: DS1_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: database-username
-            - name: DS1_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: database-password
-            - name: SSO_URL
+            - name: OIDC_PROVIDER_URL
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: sso-url
-            - name: SSO_REALM
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: sso-realm
-            - name: SSO_PUBLIC_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: sso-public-key
-            - name: SSO_USERNAME
+            - name: OIDC_USER_NAME
               valueFrom:
                 secretKeyRef:
                   name: hello-jboss
                   key: sso-username
-            - name: SSO_PASSWORD
+            - name: OIDC_USER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: hello-jboss
                   key: sso-password
-            - name: SSO_BEARER_ONLY
+            - name: OIDC_SECURE_DEPLOYMENT_BEARER_ONLY
               value: "false"
-            - name: SSO_CLIENT
+            - name: OIDC_CLIENT_ID
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: sso-client
-            - name: SSO_ENABLE_CORS
+            - name: OIDC_SECURE_DEPLOYMENT_ENABLE_CORS
               value: "false"
-            - name: SSO_SECRET
+            - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: hello-jboss
                   key: sso-secret
-            - name: SSO_DISABLE_SSL_CERTIFICATE_VALIDATION
+            - name: OIDC_DISABLE_SSL_CERTIFICATE_VALIDATION
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
@@ -149,48 +124,33 @@ spec:
                 configMapKeyRef:
                   name: hello-jboss
                   key: enable-generate-default-datasource
-            - name: DB_SERVICE_PREFIX_MAPPING
-              value: ocp-postgresql=DS1
-            - name: OCP_POSTGRESQL_SERVICE_HOST
+            - name: POSTGRESQL_SERVICE_HOST
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: ocp-postgresql-service-host
-            - name: OCP_POSTGRESQL_SERVICE_PORT
+            - name: POSTGRESQL_SERVICE_PORT
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: ocp-postgresql-service-port
-            - name: DS1_CONNECTION_CHECKER
+            - name: POSTGRESQL_USER
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: hello-jboss
-                  key: ds1-connection-checker
-            - name: DS1_DRIVER
+                  key: database-username
+            - name: POSTGRESQL_PASSWORD
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: hello-jboss
-                  key: ds1-driver
-            - name: DS1_EXCEPTION_SORTER
+                  key: database-password
+            - name: POSTGRESQL_DATABASE
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: hello-jboss
-                  key: ds1-exception-sorter
-            - name: DS1_MAX_POOL_SIZE
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: ds1-max-pool-size
-            - name: DS1_MIN_POOL_SIZE
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: ds1-min-pool-size
-            - name: DS1_NONXA
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: ds1-nonxa
+                  key: database-name
+            - name: POSTGRESQL_DATASOURCE
+              value: ocp_postgresql
             - name: AB_PROMETHEUS_ENABLE
               valueFrom:
                 configMapKeyRef:
