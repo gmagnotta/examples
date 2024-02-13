@@ -62,8 +62,8 @@ spec:
                 configMapKeyRef:
                   name: hello-jboss
                   key: mq-topics
-            - name: JGROUPS_ENCRYPT_SECRET
-              value: 'false'
+            - name: JGROUPS_ENCRYPT_PROTOCOL
+              value: SYM_ENCRYPT 
             - name: JGROUPS_ENCRYPT_KEYSTORE_DIR
               value: /etc/jgroups-encrypt-secret-volume
             - name: JGROUPS_ENCRYPT_KEYSTORE
@@ -151,11 +151,6 @@ spec:
                   key: database-name
             - name: POSTGRESQL_DATASOURCE
               value: ocp_postgresql
-            - name: AB_PROMETHEUS_ENABLE
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: ab-prometheus-enable
             - name: MQ_SERVICE_PREFIX_MAPPING
               value: "hello-jboss-amq7=MQ"
             - name: MQ_JNDI
