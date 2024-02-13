@@ -186,30 +186,38 @@ spec:
                   name: hello-jboss
                   key: amq-service-port
           livenessProbe:
-            exec:
-              command:
-              - "/bin/bash"
-              - "-c"
-              - "/opt/eap/bin/livenessProbe.sh"
+            httpGet:
+              path: /health/live
+              port: admin
             initialDelaySeconds: 60
           readinessProbe:
-            exec:
-              command:
-              - "/bin/bash"
-              - "-c"
-              - "/opt/eap/bin/readinessProbe.sh"
+            httpGet:
+              path: /health/ready
+              port: admin
             initialDelaySeconds: 10
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: admin
+            initialDelaySeconds: 60
           ports:
             - containerPort: 8080
               protocol: TCP
+              name: http
             - containerPort: 8443
               protocol: TCP
+              name: https
             - containerPort: 8778
               protocol: TCP
+              name: jolokia
             - containerPort: 8888
               protocol: TCP
+              name: ping
             - containerPort: 9799
               protocol: TCP
+            - containerPort: 9990
+              protocol: TCP
+              name: admin
           resources:
             requests:
               cpu: "500m"
