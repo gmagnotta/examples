@@ -26,14 +26,22 @@ spec:
         - name: hello-jboss
           image: hello-jboss
           env:
+            - name: OIDC_PROVIDER_SSL_REQUIRED
+              value: 'all'
             - name: OIDC_PROVIDER_TRUSTSTORE_DIR
               value: /etc/sso-secret-volume
             - name: OIDC_PROVIDER_TRUSTSTORE
-              value: sso-keystore-volume
+              value: sso.jks
             - name: OIDC_PROVIDER_TRUSTSTORE_PASSWORD
               value: 'ssopassword'
             - name: OIDC_PROVIDER_TRUSTSTORE_CERTIFICATE_ALIAS
               value: sso
+            - name: OIDC_USER_NAME
+              value: demo
+            - name: OIDC_USER_PASSWORD
+              value: demo
+            - name: OIDC_SECURE_DEPLOYMENT_SECRET
+              value: demo
             - name: OIDC_PROVIDER_NAME
               value: rh-sso
             - name: OIDC_HOSTNAME_HTTP
