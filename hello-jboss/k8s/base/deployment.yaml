@@ -23,6 +23,8 @@ spec:
         - name: hello-jboss
           image: hello-jboss
           env:
+            - name: OIDC_PROVIDER_NAME
+              value: rh-sso
             - name: OIDC_HOSTNAME_HTTP
               valueFrom:
                 configMapKeyRef:
@@ -90,16 +92,6 @@ spec:
                 configMapKeyRef:
                   name: hello-jboss
                   key: sso-url
-            - name: OIDC_USER_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: sso-username
-            - name: OIDC_USER_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: sso-password
             - name: OIDC_SECURE_DEPLOYMENT_BEARER_ONLY
               value: "false"
             - name: OIDC_CLIENT_ID
