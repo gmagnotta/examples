@@ -19,10 +19,21 @@ spec:
         - name: eap-jgroups-keystore-volume
           secret:
             secretName: eap-jgroup-secret
+        - name: sso-keystore-volume
+          secret:
+            secretName: sso-ssl-secret
       containers:
         - name: hello-jboss
           image: hello-jboss
           env:
+            - name: OIDC_PROVIDER_TRUSTSTORE_DIR
+              value: /etc/sso-secret-volume
+            - name: OIDC_PROVIDER_TRUSTSTORE
+              value: sso-keystore-volume
+            - name: OIDC_PROVIDER_TRUSTSTORE_PASSWORD
+              value: 'ssopassword'
+            - name: OIDC_PROVIDER_TRUSTSTORE_CERTIFICATE_ALIAS
+              value: sso
             - name: OIDC_PROVIDER_NAME
               value: rh-sso
             - name: OIDC_HOSTNAME_HTTP
@@ -224,6 +235,9 @@ spec:
               readOnly: true
             - name: eap-jgroups-keystore-volume
               mountPath: /etc/jgroups-encrypt-secret-volume
+              readOnly: true
+            - name: sso-keystore-volume
+              mountPath: /etc/sso-secret-volume
               readOnly: true
       initContainers:
         - name: hello-jboss-wait-migration
