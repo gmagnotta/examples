@@ -8,15 +8,15 @@ podman run -d --rm --name jbossdb --net dev \
  -e POSTGRESQL_DATABASE="jboss" \
  localhost/hello-jbossdb
 
-sleep 30
+sleep 15
 
 podman run --name jboss --net dev \
- -e OIDC_PROVIDER_NAME="rh-sso" \
- -e OIDC_CLIENT_ID="jboss" \
- -e OIDC_PROVIDER_URL="http://keycloak:8081/realms/jboss" \
- -e OIDC_CLIENT_SECRET="N1lbWGMFEIQ8lWfWpE3iQxASqb1qlqYE" \
- -e OIDC_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
- -e OIDC_HOSTNAME_HTTP="localhost" \
+ -v ./sso.jks:/etc/sso-secret-volume/sso.jks:z \
+ -e KEYCLOAK_PROVIDER_URL="https://keycloak:8443/realms/jboss" \
+ -e KEYCLOAK_TRUSTSTORE="/etc/sso-secret-volume/sso.jks" \
+ -e KEYCLOAK_TRUSTSTORE_PASSWORD="ssopassword" \
+ -e KEYCLOAK_CLIENTID="hello" \
+ -e KEYCLOAK_SECRET="g1aP3w9uvS6yQWfxnvTgKynZYylwF8uZ" \
  -e POSTGRESQL_SERVICE_HOST="jbossdb" \
  -e POSTGRESQL_SERVICE_PORT="5432" \
  -e POSTGRESQL_USER="jboss" \
