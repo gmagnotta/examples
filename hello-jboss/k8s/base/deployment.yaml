@@ -113,18 +113,8 @@ spec:
                   key: sso-url
             - name: OIDC_SECURE_DEPLOYMENT_BEARER_ONLY
               value: "false"
-            - name: OIDC_CLIENT_ID
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: sso-client
             - name: OIDC_SECURE_DEPLOYMENT_ENABLE_CORS
               value: "false"
-            - name: OIDC_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: hello-jboss
-                  key: sso-secret
             - name: OIDC_DISABLE_SSL_CERTIFICATE_VALIDATION
               valueFrom:
                 configMapKeyRef:
