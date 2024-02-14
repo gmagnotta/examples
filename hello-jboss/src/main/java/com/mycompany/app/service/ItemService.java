@@ -5,10 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+import jakarta.ejb.Stateless;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 
 import com.mycompany.model.Item;
 
@@ -24,6 +24,7 @@ public class ItemService {
 
     }
 
+    @SuppressWarnings("unchecked")
     public List<Item> getAllItems() {
         Query query = entityManager.createNamedQuery("getAllItems", Item.class);
 

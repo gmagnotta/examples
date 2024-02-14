@@ -2,7 +2,7 @@
 <%@ page import="org.gmagnotta.app.*"%>
 <%@ page import="com.mycompany.app.service.*"%>
 <%@ page import="com.mycompany.app.servlet.*"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head>

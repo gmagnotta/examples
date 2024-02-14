@@ -3,16 +3,16 @@ package com.mycompany.app.messaging;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.annotation.Resource;
-import javax.ejb.ActivationConfigProperty;
-import javax.ejb.MessageDriven;
-import javax.inject.Inject;
-import javax.jms.JMSContext;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Queue;
-import javax.jms.TextMessage;
-import javax.transaction.Transactional;
+import jakarta.annotation.Resource;
+import jakarta.ejb.ActivationConfigProperty;
+import jakarta.ejb.MessageDriven;
+import jakarta.inject.Inject;
+import jakarta.jms.JMSContext;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.Queue;
+import jakarta.jms.TextMessage;
+import jakarta.transaction.Transactional;
 
 import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
@@ -26,7 +26,7 @@ import com.mycompany.model.Order;
 
 @MessageDriven(name = "OrderProcessor", activationConfig = {
 		@ActivationConfigProperty(propertyName = "destinationLookup", propertyValue = "java:global/remoteContext/createOrderCommand"),
-		@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue")
+		@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "jakarta.jms.Queue")
 })
 public class OrderProcessor implements MessageListener {
 

@@ -1,2 +1,4 @@
-CUSTOM_INSTALL_DIRECTORIES=extensions
-#GALLEON_PROVISION_DEFAULT_FAT_SERVER=true
+GALLEON_PROVISION_FEATURE_PACKS=org.jboss.eap:wildfly-ee-galleon-pack,org.jboss.eap.cloud:eap-cloud-galleon-pack,org.jboss.eap:eap-datasources-galleon-pack
+GALLEON_PROVISION_LAYERS=cloud-default-config,elytron-oidc-client,postgresql-datasource
+GALLEON_PROVISION_CHANNELS=org.jboss.eap.channels:eap-8.0
+POSTGRESQL_DRIVER_VERSION=42.5.1

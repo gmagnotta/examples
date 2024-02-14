@@ -2,34 +2,27 @@
 
 podman network create --ignore dev
 
-podman run -d --name jbossdb --net dev \
+podman run -d --rm --name jbossdb --net dev \
  -e POSTGRESQL_USER="jboss" \
  -e POSTGRESQL_PASSWORD="jboss" \
  -e POSTGRESQL_DATABASE="jboss" \
  localhost/hello-jbossdb
 
+sleep 15
+
 podman run --name jboss --net dev \
- -e SSO_URL="http://keycloak:8081/" \
- -e SSO_REALM="jboss" \
- -e SSO_SECRET="h301iicLztkcTeuIxOHyNtk8VViCrGp4" \
- -e SSO_CLIENT="jboss" \
- -e HOSTNAME_HTTP="localhost" \
- -e SSO_DISABLE_SSL_CERTIFICATE_VALIDATION="true" \
- -e DB_SERVICE_PREFIX_MAPPING="ocp-postgresql=DS1" \
- -e OCP_POSTGRESQL_SERVICE_HOST="jbossdb" \
- -e OCP_POSTGRESQL_SERVICE_PORT="5432" \
- -e DS1_CONNECTION_CHECKER="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker" \
- -e DS1_DATABASE="jboss" \
- -e DS1_DRIVER="postgresql" \
- -e DS1_EXCEPTION_SORTER="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter" \
- -e DS1_USERNAME="jboss" \
- -e DS1_PASSWORD="jboss" \
- -e DS1_MAX_POOL_SIZE="20" \
- -e DS1_MIN_POOL_SIZE="20" \
- -e DS1_NONXA="true" \
- -e DS1_DATABASE="jboss" \
- -e DS1_USERNAME="jboss" \
- -e DS1_PASSWORD="jboss" \
+ -v ./sso.jks:/etc/sso-secret-volume/sso.jks:z \
+ -e KEYCLOAK_PROVIDER_URL="https://keycloak:8443/realms/jboss" \
+ -e KEYCLOAK_TRUSTSTORE="/etc/sso-secret-volume/sso.jks" \
+ -e KEYCLOAK_TRUSTSTORE_PASSWORD="ssopassword" \
+ -e KEYCLOAK_CLIENTID="hello" \
+ -e KEYCLOAK_SECRET="g1aP3w9uvS6yQWfxnvTgKynZYylwF8uZ" \
+ -e POSTGRESQL_SERVICE_HOST="jbossdb" \
+ -e POSTGRESQL_SERVICE_PORT="5432" \
+ -e POSTGRESQL_USER="jboss" \
+ -e POSTGRESQL_PASSWORD="jboss" \
+ -e POSTGRESQL_DATABASE="jboss" \
+ -e POSTGRESQL_DATASOURCE="ocp_postgresql" \
  -e ENABLE_GENERATE_DEFAULT_DATASOURCE="" \
  -e MQ_USERNAME="amq" \
  -e MQ_PASSWORD="amq" \

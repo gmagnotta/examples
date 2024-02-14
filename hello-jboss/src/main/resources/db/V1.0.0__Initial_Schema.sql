@@ -33,7 +33,16 @@ CREATE TABLE line_items
 );
 
 CREATE SEQUENCE hibernate_sequence
-  START 100;
+  START 100 INCREMENT BY 50;
+
+CREATE SEQUENCE orders_seq
+  START 100 INCREMENT BY 50;
+
+CREATE SEQUENCE line_items_seq
+  START 100 INCREMENT BY 50;
+
+CREATE SEQUENCE items_seq
+  START 100 INCREMENT BY 50;
   
 INSERT INTO items(id, description, price) VALUES (1, 'Bacon King', 1.0);
 INSERT INTO items(id, description, price) VALUES (2, 'Whopper', 2.0);

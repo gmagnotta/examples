@@ -2,28 +2,38 @@
 
 set -e
 
-export BUILDER_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-openshift-rhel8@sha256:df517fcc8c950f2abefa2106917f3a1a5eba335072cd3e88e99268f2500e5e8f"
-export OUTPUT_IMAGE="hello-jboss"
+export BUILDER_IMAGE="registry.redhat.io/jboss-eap-8/eap8-openjdk17-builder-openshift-rhel8:1.0.0.GA"
+export OUTPUT_IMAGE="hello-jboss-artifacts"
 export INCREMENTAL=true
-export RUNTIME_IMAGE="registry.redhat.io/jboss-eap-7/eap74-openjdk11-runtime-openshift-rhel8"
-export RUNTIME_ARTIFACT="/s2i-output/server/"
-export DESTINATION_URL="/opt/eap"
-export RUNTIME_CMD="/opt/eap/bin/openshift-launch.sh"
 
 buildah_s2i.sh
-#buildah_s2i_runtime.sh
+
+export RUNTIME_IMAGE="registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel8:1.0.0.GA"
+export OUTPUT_IMAGE="hello-jboss"
+export SOURCE_IMAGE="hello-jboss-artifacts"
+export SRC_ARTIFACT="/opt/server"
+export DESTINATION_URL="/opt/server"
+
+buildah_s2i_runtime.sh
 
 cat <<EOF > initdb.sh
-#!/bin/sh
-
-psql -f /opt/app-root/src/postgresql-start/V1.0.0__Initial_Schema.sql $POSTGRESQL_DATABASE
+#!/bin/bash
+psql -U \${POSTGRESQL_USER} -d \${POSTGRESQL_DATABASE} -f /opt/app-root/src/postgresql-start/V1.0.0__Initial_Schema.sql
 EOF
 
 cat <<EOF > Containerfile
 FROM registry.redhat.io/rhel8/postgresql-10:1-232
 
-COPY src/main/resources/db/ /opt/app-root/src/postgresql-start/
-COPY initdb.sh /opt/app-root/src/postgresql-start/
+USER root
+
+RUN mkdir -p /tmp/src/postgresql-init
+
+COPY --chown=26:0 src/main/resources/db/V1.0.0__Initial_Schema.sql /tmp/src/postgresql-start/V1.0.0__Initial_Schema.sql
+COPY --chown=26:0 initdb.sh /tmp/src/postgresql-start/initdb.sh
+
+RUN /usr/libexec/s2i/assemble
+
+USER 26
 EOF
 
 podman build -f Containerfile . -t hello-jbossdb
