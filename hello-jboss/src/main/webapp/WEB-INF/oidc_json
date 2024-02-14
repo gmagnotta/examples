@@ -1,7 +1,7 @@
 {
     "client-id" : "${env.OIDC_CLIENT_ID}",
     "provider-url" : "${env.OIDC_PROVIDER_URL}",
-    "ssl-required" : "external",
+    "ssl-required" : "all",
      "credentials" : {
         "secret" : "${env.OIDC_CLIENT_SECRET}"
      }
