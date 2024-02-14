@@ -1,0 +1,11 @@
+{
+    "provider-url": "${env.KEYCLOAK_PROVIDER_URL}",
+    "ssl-required": "external",
+    "truststore": "${env.KEYCLOAK_TRUSTSTORE}",
+    "truststore-password": "${env.KEYCLOAK_TRUSTSTORE_PASSWORD}",
+    "resource": "${env.KEYCLOAK_CLIENTID}",
+    "credentials": {
+      "secret": "${env.KEYCLOAK_SECRET}"
+    },
+    "confidential-port": 0
+}

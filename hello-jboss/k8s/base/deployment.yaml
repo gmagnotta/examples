@@ -26,34 +26,6 @@ spec:
         - name: hello-jboss
           image: hello-jboss
           env:
-            - name: OIDC_PROVIDER_SSL_REQUIRED
-              value: 'all'
-            - name: OIDC_PROVIDER_TRUSTSTORE_DIR
-              value: /etc/sso-secret-volume
-            - name: OIDC_PROVIDER_TRUSTSTORE
-              value: sso.jks
-            - name: OIDC_PROVIDER_TRUSTSTORE_PASSWORD
-              value: 'ssopassword'
-            - name: OIDC_PROVIDER_TRUSTSTORE_CERTIFICATE_ALIAS
-              value: sso
-            - name: OIDC_USER_NAME
-              value: demo
-            - name: OIDC_USER_PASSWORD
-              value: demo
-            - name: OIDC_SECURE_DEPLOYMENT_SECRET
-              value: demo
-            - name: OIDC_PROVIDER_NAME
-              value: rh-sso
-            - name: OIDC_HOSTNAME_HTTP
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: hostname-http
-            - name: OIDC_HOSTNAME_HTTPS
-              valueFrom:
-                configMapKeyRef:
-                  name: hello-jboss
-                  key: hostname-https
             - name: JGROUPS_PING_PROTOCOL
               value: dns.DNS_PING
             - name: OPENSHIFT_DNS_PING_SERVICE_NAME
@@ -106,20 +78,28 @@ spec:
                 configMapKeyRef:
                   name: hello-jboss
                   key: auto-deploy-exploded
-            - name: OIDC_PROVIDER_URL
+            - name: KEYCLOAK_PROVIDER_URL
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
                   key: sso-url
-            - name: OIDC_SECURE_DEPLOYMENT_BEARER_ONLY
-              value: "false"
-            - name: OIDC_SECURE_DEPLOYMENT_ENABLE_CORS
-              value: "false"
-            - name: OIDC_DISABLE_SSL_CERTIFICATE_VALIDATION
+            - name: KEYCLOAK_TRUSTSTORE
+              value: /etc/sso-secret-volume/sso.jks
+            - name: KEYCLOAK_TRUSTSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: sso-truststore-password
+            - name: KEYCLOAK_CLIENTID
               valueFrom:
                 configMapKeyRef:
                   name: hello-jboss
-                  key: sso-disable-ssl-certificate-validation
+                  key: sso-client
+            - name: KEYCLOAK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hello-jboss
+                  key: sso-secret
             - name: ENABLE_GENERATE_DEFAULT_DATASOURCE
               valueFrom:
                 configMapKeyRef:
