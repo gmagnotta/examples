@@ -1,6 +1,5 @@
 package com.mycompany.app.service;
 
-import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,7 @@ public class ItemService {
         for (Object[] a : queryResult) {
 
             Integer item = (Integer) a[0];
-            BigInteger qty = (BigInteger) a[1];
+            Long qty = (Long) a[1];
 
             values.put(item, Integer.valueOf(qty.intValue()));
         }
