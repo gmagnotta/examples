@@ -1,7 +1,7 @@
 package com.gmagnotta.hello_tomcat;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.annotation.FacesConfig;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.annotation.FacesConfig;
 
 @FacesConfig
 @ApplicationScoped

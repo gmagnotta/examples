@@ -3,9 +3,9 @@ package com.gmagnotta.hello_tomcat;
 import java.io.Serializable;
 import java.util.ResourceBundle;
 
-import javax.enterprise.context.SessionScoped;
-import javax.faces.context.FacesContext;
-import javax.inject.Named;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Named;
 
 @Named
 @SessionScoped
