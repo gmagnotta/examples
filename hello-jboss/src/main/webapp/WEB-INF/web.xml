@@ -48,6 +48,11 @@
     <servlet-class>com.mycompany.app.servlet.TopOrdersServlet</servlet-class>
   </servlet>
 
+  <servlet>
+    <servlet-name>SoapResource</servlet-name>
+    <servlet-class>com.mycompany.app.resource.SoapResource</servlet-class>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>ItemServlet</servlet-name>
     <url-pattern>/itemcontroller</url-pattern>
@@ -91,6 +96,11 @@
   <servlet-mapping>
     <servlet-name>LogoutServlet</servlet-name>
     <url-pattern>/logoutcontroller</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>SoapResource</servlet-name>
+    <url-pattern>/soap</url-pattern>
   </servlet-mapping>
 
   <distributable />

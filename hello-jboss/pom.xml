@@ -90,6 +90,13 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>jakarta.xml.ws</groupId>
+			<artifactId>jakarta.xml.ws-api</artifactId>
+			<version>4.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -120,8 +127,7 @@
 					<!-- The package of your generated sources -->
 					<packageName>org.gmagnotta.jaxb</packageName>
 					<sources>
-						<source>src/main/resources/ordercommandrequest.xsd</source>
-						<source>src/main/resources/ordercommandresponse.xsd</source>
+						<source>src/main/resources/order.xsd</source>
 					</sources>
 				</configuration>
 			</plugin>
