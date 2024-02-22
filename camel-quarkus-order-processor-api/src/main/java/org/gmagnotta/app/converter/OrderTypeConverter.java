@@ -10,12 +10,11 @@ import java.util.Date;
 import org.apache.camel.Exchange;
 import org.apache.camel.TypeConversionException;
 import org.apache.camel.support.TypeConverterSupport;
-import org.gmagnotta.jaxb.Order;
-import org.gmagnotta.jaxb.Ordertype;
-import org.jboss.logging.Logger;
-import org.gmagnotta.jaxb.Item;
 import org.gmagnotta.jaxb.LineItem;
-import org.gmagnotta.jaxb.Lineitemtype;
+import org.gmagnotta.jaxb.Order;
+import org.jboss.logging.Logger;
+
+import resource.app.mycompany.com.soapresource.CreateOrder;
 
 public class OrderTypeConverter extends TypeConverterSupport {
 
@@ -24,35 +23,35 @@ public class OrderTypeConverter extends TypeConverterSupport {
 	@Override
 	public <T> T convertTo(Class<T> toType, Exchange exchange, Object value) throws TypeConversionException {
 
-		if (toType.equals(Order.class) && value instanceof Ordertype) {
-			Order order = new Order();
+		if (toType.equals(CreateOrder.class) && value instanceof Order) {
+			
+			Order srcOrder = (Order) value;
 
-			Ordertype ordertype = (Ordertype) value;
-
-			order.setExternalOrderId(ordertype.getOrderid());
-
-			for (Lineitemtype xmlLineItem : ordertype.getLineitem()) {
-
-				Item i = new Item();
-				i.setId(Integer.valueOf(xmlLineItem.getItemid()));
-
-				LineItem lineItem = new LineItem();
-				order.getLineItem().add(lineItem);
-
-				lineItem.setItem(i);
-
-				lineItem.setQuantity(xmlLineItem.getQuantity().intValue());
+			org.gmagnotta.commontypes.Order dstOrder = new org.gmagnotta.commontypes.Order();
+			
+			dstOrder.setExternalOrderId(srcOrder.getExternalOrderId());
+			
+			for (LineItem l : srcOrder.getLineItem()) {
+				
+				org.gmagnotta.commontypes.LineItem lineItem = new org.gmagnotta.commontypes.LineItem();
+				dstOrder.getLineItem().add(lineItem);
+				
+				lineItem.setItemId(Integer.valueOf(l.getItemId()));
+				lineItem.setQuantity(l.getQuantity());
 
 			}
+			
+			CreateOrder request = new CreateOrder();
+			request.setArg0(dstOrder);
 
 			try {
 
 				GregorianCalendar c = new GregorianCalendar();
 				c.setTime(new Date());
 				XMLGregorianCalendar date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-				order.setCreationDate(date2);
+				dstOrder.setCreationDate(date2);
 
-				return (T) order;
+				return (T) request;
 
 			} catch (DatatypeConfigurationException ex) {
 

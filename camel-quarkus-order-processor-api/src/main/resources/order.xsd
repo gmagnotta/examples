@@ -1,33 +1,25 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://gmagnotta.org/Order"
+	targetNamespace="http://gmagnotta.org/Order" version="1.0">
 
-<xs:simpleType name="stringtype">
-  <xs:restriction base="xs:string"/>
-</xs:simpleType>
+	<xs:element name="order" type="tns:Order" />
 
-<xs:simpleType name="inttype">
-  <xs:restriction base="xs:positiveInteger"/>
-</xs:simpleType>
+	<xs:complexType name="Order">
+		<xs:sequence>
+			<xs:element name="creationDate" type="xs:dateTime" minOccurs="1" />
+			<xs:element name="externalOrderId" type="xs:string"	minOccurs="1" />
+			<xs:element name="lineItem" type="tns:lineItem" minOccurs="1"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
 
-<xs:simpleType name="orderidtype">
-  <xs:restriction base="xs:string" />
-</xs:simpleType>
-
-<xs:complexType name="lineitemtype">
-  <xs:sequence>
-    <xs:element name="itemid" type="stringtype" minOccurs="1"/>
-    <xs:element name="note" type="stringtype" minOccurs="0"/>
-    <xs:element name="quantity" type="inttype" minOccurs="1"/>
-  </xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="ordertype">
-  <xs:sequence>
-    <xs:element name="lineitem" minOccurs="1" maxOccurs="unbounded" type="lineitemtype"/>
-  </xs:sequence>
-  <xs:attribute name="orderid" type="orderidtype" use="required"/>
-</xs:complexType>
-
-<xs:element name="order" type="ordertype"/>
+	<xs:complexType name="lineItem">
+		<xs:sequence>
+			<xs:element name="itemId" type="xs:int" minOccurs="1" />
+			<xs:element name="quantity" type="xs:int" minOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
 
 </xs:schema>

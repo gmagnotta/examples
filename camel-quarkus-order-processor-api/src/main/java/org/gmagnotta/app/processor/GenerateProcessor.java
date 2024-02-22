@@ -1,7 +1,6 @@
 package org.gmagnotta.app.processor;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,9 +13,9 @@ import javax.xml.bind.Marshaller;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.gmagnotta.jaxb.Lineitemtype;
+import org.gmagnotta.jaxb.LineItem;
 import org.gmagnotta.jaxb.ObjectFactory;
-import org.gmagnotta.jaxb.Ordertype;
+import org.gmagnotta.jaxb.Order;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -46,15 +45,17 @@ public class GenerateProcessor implements Processor {
 
         LOG.info("Generating " + iterations + " orders in " + outputDir);
 
-        JAXBContext jaxbContext = JAXBContext.newInstance(Ordertype.class);
+        org.gmagnotta.jaxb.ObjectFactory objectFactory = new org.gmagnotta.jaxb.ObjectFactory();
+
+        JAXBContext jaxbContext = JAXBContext.newInstance("org.gmagnotta.jaxb");
         Marshaller mar = jaxbContext.createMarshaller();
 
         for (int i = 0; i < iterations; i++) {
 
         	UUID uuid = UUID.randomUUID();
 
-            Ordertype ordertype = new Ordertype();
-            ordertype.setOrderid(uuid.toString());
+            Order ordertype = objectFactory.createOrder();
+            ordertype.setExternalOrderId(uuid.toString());
 
             int randomLineItems = random.nextInt(10 - 1) + 1;
             
@@ -63,12 +64,11 @@ public class GenerateProcessor implements Processor {
             	int randomid = ThreadLocalRandom.current().nextInt(1, 5);
             	int randomqty = random.nextInt(100 - 1) + 1;
 
-            	Lineitemtype lineItemtype = new Lineitemtype();
-	            lineItemtype.setItemid(String.valueOf(randomid));
-	            lineItemtype.setNote("none");
-	            lineItemtype.setQuantity(BigInteger.valueOf(randomqty));
+            	LineItem lineItemtype = new LineItem();
+	            lineItemtype.setItemId(randomid);
+	            lineItemtype.setQuantity(randomqty);
 	
-	            ordertype.getLineitem().add(lineItemtype);
+	            ordertype.getLineItem().add(lineItemtype);
             
             }
 

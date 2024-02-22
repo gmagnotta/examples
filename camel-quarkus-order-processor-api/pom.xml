@@ -15,9 +15,10 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>com.redhat.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>2.7.6.Final-redhat-00006</quarkus.platform.version>
+		<quarkus.platform.version>2.13.9.Final-redhat-00004</quarkus.platform.version>
 		<skipITs>true</skipITs>
-		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+		<surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
+		<cxf.version>3.5.3.redhat-00033</cxf.version>
 	  </properties>
 
 	<dependencyManagement>
@@ -84,10 +85,10 @@
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-direct</artifactId>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-activemq</artifactId>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-rest</artifactId>
@@ -99,6 +100,10 @@
 		<dependency>
 			<groupId>org.apache.camel.quarkus</groupId>
 			<artifactId>camel-quarkus-microprofile-fault-tolerance</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.quarkus</groupId>
+			<artifactId>camel-quarkus-cxf-soap</artifactId>
 		</dependency>
 
 		<!-- Test -->
@@ -216,11 +221,30 @@
 					<packageName>org.gmagnotta.jaxb</packageName>
 					<sources>
 					  <source>src/main/resources/order.xsd</source>
-					  <source>src/main/resources/aggregated.xsd</source>
-					  <source>src/main/resources/ordercommandrequest.xsd</source>
-					  <source>src/main/resources/ordercommandresponse.xsd</source>
 					</sources>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.cxf</groupId>
+				<artifactId>cxf-codegen-plugin</artifactId>
+				<version>${cxf.version}</version>
+				<executions>
+					<execution>
+						<id>generate-sources</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
+							<wsdlOptions>
+								<wsdlOption>
+									<wsdl>${basedir}/src/main/resources/wsdl/soapresource.wsdl</wsdl>
+								</wsdlOption>
+							</wsdlOptions>
+						</configuration>
+						<goals>
+							<goal>wsdl2java</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
