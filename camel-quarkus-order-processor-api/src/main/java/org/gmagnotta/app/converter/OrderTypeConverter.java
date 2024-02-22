@@ -12,9 +12,11 @@ import org.apache.camel.TypeConversionException;
 import org.apache.camel.support.TypeConverterSupport;
 import org.gmagnotta.jaxb.LineItem;
 import org.gmagnotta.jaxb.Order;
+import org.gmagnotta.order.ObjectFactory;
 import org.jboss.logging.Logger;
 
 import resource.app.mycompany.com.soapresource.CreateOrder;
+
 
 public class OrderTypeConverter extends TypeConverterSupport {
 
@@ -27,13 +29,15 @@ public class OrderTypeConverter extends TypeConverterSupport {
 			
 			Order srcOrder = (Order) value;
 
-			org.gmagnotta.commontypes.Order dstOrder = new org.gmagnotta.commontypes.Order();
+			ObjectFactory objectFactory = new ObjectFactory();
+
+			org.gmagnotta.order.Order dstOrder = objectFactory.createOrder();
 			
 			dstOrder.setExternalOrderId(srcOrder.getExternalOrderId());
 			
 			for (LineItem l : srcOrder.getLineItem()) {
 				
-				org.gmagnotta.commontypes.LineItem lineItem = new org.gmagnotta.commontypes.LineItem();
+				org.gmagnotta.order.LineItem lineItem = objectFactory.createLineItem();
 				dstOrder.getLineItem().add(lineItem);
 				
 				lineItem.setItemId(Integer.valueOf(l.getItemId()));

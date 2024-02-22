@@ -8,4 +8,4 @@ export INCREMENTAL=true
 export RUNTIME_ARTIFACT="/deployments/"
 
 buildah_s2i.sh
-buildah_s2i_runtime.sh
+#buildah_s2i_runtime.sh

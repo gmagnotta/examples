@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://com.mycompany.app.resource/SoapResource" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http" name="SoapResourceService" targetNamespace="http://com.mycompany.app.resource/SoapResource">
   <wsdl:types>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://gmagnotta.org/CommonTypes" targetNamespace="http://gmagnotta.org/CommonTypes" version="1.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://gmagnotta.org/Order" targetNamespace="http://gmagnotta.org/Order" version="1.0">
+
+  <xs:element name="order" type="tns:Order"/>
 
   <xs:complexType name="topElements">
     <xs:sequence>
@@ -15,7 +17,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="order">
+  <xs:complexType name="Order">
     <xs:sequence>
       <xs:element name="creationDate" type="xs:dateTime"/>
       <xs:element name="externalOrderId" type="xs:string"/>
@@ -31,8 +33,8 @@
   </xs:complexType>
 
 </xs:schema>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://com.mycompany.app.resource/SoapResource" xmlns:ns1="http://gmagnotta.org/CommonTypes" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://com.mycompany.app.resource/SoapResource" version="1.0">
-  <xs:import namespace="http://gmagnotta.org/CommonTypes"/>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://com.mycompany.app.resource/SoapResource" xmlns:ns1="http://gmagnotta.org/Order" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://com.mycompany.app.resource/SoapResource" version="1.0">
+  <xs:import namespace="http://gmagnotta.org/Order"/>
   <xs:element name="createOrder" type="tns:createOrder"/>
   <xs:element name="createOrderResponse" type="tns:createOrderResponse"/>
   <xs:element name="getItems" type="tns:getItems"/>
@@ -66,7 +68,7 @@
   </xs:complexType>
   <xs:complexType name="createOrder">
     <xs:sequence>
-      <xs:element minOccurs="0" name="arg0" type="ns1:order"/>
+      <xs:element minOccurs="0" name="arg0" type="ns1:Order"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="createOrderResponse">
