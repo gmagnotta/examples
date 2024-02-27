@@ -56,6 +56,11 @@ spec:
                 configMapKeyRef:
                   name: quarkus-order-processor-api
                   key: quarkus-jaeger-reporter-log-spans
+            - name: APP_WEBSERVICE_SOAP_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: quarkus-order-processor-api
+                  key: app-webservice-soap-url
           ports:
             - containerPort: 8080
               protocol: TCP
