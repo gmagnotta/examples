@@ -8,4 +8,4 @@ data:
   quarkus-log-file-path: '/tmp/quarkus.log'
   quarkus-jaeger-sampler-param: '0'
   quarkus-jaeger-reporter-log-spans: 'false'
-  app-webservice-soap-url: 'http://jboss.namespace:8080/soap'
+  app-webservice-soap-url: 'http://hello-jboss.namespace:8080/soap'

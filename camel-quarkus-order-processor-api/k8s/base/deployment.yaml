@@ -19,7 +19,7 @@ spec:
           emptyDir: {}
       containers:
         - name: quarkus-order-processor-api
-          image: quarkus-order-processor-api
+          image: quay.io/gmagnotta/camel-quarkus-order-processor-api
           env:
             - name: QUARKUS_ARTEMIS_URL
               valueFrom:
@@ -29,12 +29,12 @@ spec:
             - name: QUARKUS_ARTEMIS_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: jboss-eap
+                  name: quarkus-order-processor-api
                   key: mq-username
             - name: QUARKUS_ARTEMIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: jboss-eap
+                  name: quarkus-order-processor-api
                   key: mq-password
             - name: QUARKUS_LOG_LEVEL
               valueFrom:
