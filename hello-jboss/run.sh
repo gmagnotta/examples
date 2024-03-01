@@ -39,7 +39,7 @@ podman run --rm --name jboss --net dev \
  -e ENABLE_GENERATE_DEFAULT_DATASOURCE="" \
  -e MQ_USERNAME="amq" \
  -e MQ_PASSWORD="amq" \
- -e MQ_QUEUES="getTopItemsCommand,getTopOrdersCommand,createOrderCommand,invalidMessage" \
+ -e MQ_QUEUES="pingCommand,invalidMessage" \
  -e MQ_TOPICS="" \
  -e MQ_SERVICE_PREFIX_MAPPING="test-amq7=MQ" \
  -e MQ_PROTOCOL="tcp" \
