@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: quarkus-order-processor-api
 data:
-  quarkus-artemis-url: 'tcp://amqbroker.namespace:61616'
+  quarkus-artemis-url: 'tcp://ex–aao-ss-0:61616'
   quarkus-log-level: 'INFO'
   quarkus-log-file-path: '/tmp/quarkus.log'
   quarkus-jaeger-sampler-param: '0'
