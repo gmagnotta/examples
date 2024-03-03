@@ -1,8 +1,0 @@
-# camel-quarkus-order-processor-api
-
-Example Camel Quarkus application that:
-
-* produces xml files representing orders (see src/main/resources/order.xsd)
-* process incoming xml files representing orders in xml format and calling SOAP
-  web services
-* exposes REST APIs to interact via a backend that exposes SOAP web services
