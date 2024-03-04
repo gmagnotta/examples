@@ -43,8 +43,8 @@ spec:
             - name: QUARKUS_KAFKA_STREAMS_SSL_TRUSTSTORE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: quarkus-order-streams
-                  key: kafka-ssl-truststore-password
+                  name: quarkus-order-streams-password
+                  key: ca.password
             - name: QUARKUS_KAFKA_STREAMS_SSL_KEYSTORE_LOCATION
               valueFrom:
                 configMapKeyRef:
@@ -53,8 +53,8 @@ spec:
             - name: QUARKUS_KAFKA_STREAMS_SSL_KEYSTORE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: quarkus-order-streams
-                  key: kafka-ssl-keystore-password
+                  name: quarkus-order-streams-password
+                  key: streams.password
           ports:
             - containerPort: 8080
               protocol: TCP
