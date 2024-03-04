@@ -11,10 +11,10 @@ import org.gmagnotta.jaxb.Order;
 
 import resource.app.mycompany.com.soapresource.CreateOrder;
 
-@ApplicationScoped
 /**
  * Camel Route to parse incoming xml files
  */
+@ApplicationScoped
 public class XmlFileRoute extends RouteBuilder {
 
     @ConfigProperty(name = "orders.dir")
@@ -48,7 +48,6 @@ public class XmlFileRoute extends RouteBuilder {
           .unmarshal(jaxbDataFormat)
           .convertBodyTo(CreateOrder.class)
           .marshal(soapDataFormat)
-          //.to("activemq:queue:createOrderCommand?jmsMessageType=Text")
           .toD("cxf:" + soapurl + "?exchangePattern=InOut&dataFormat=PAYLOAD")
           .log("done processing order ${headers.OrderEntity.id}");
         
