@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: quarkus-order-logger
 data:
-  kafka-bootstrap-servers: kafkabroker:9093
+  kafka-bootstrap-servers: my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9093
   kafka-ssl-truststore-location: /opt/certs/ca.p12
   kafka-ssl-keystore-location: /opt/certs/user.p12
   telegram-enabled: 'false'
