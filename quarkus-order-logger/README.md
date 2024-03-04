@@ -14,4 +14,6 @@ Reset offsets
 
 `oc create secret generic quarkus-order-logger-certs --from-file=ca.p12=/tmp/ca.p12 --from-file=user.p12=/tmp/consumer.p12`
 
+oc create secret generic quarkus-order-logger-password -n project --from-file=ca.password=/tmp/ca.password --from-file=consumer.password=/tmp/consumer.password
+
 The files and the password should be extracted from KafkaUser created by Strimzi
