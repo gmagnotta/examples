@@ -46,7 +46,7 @@
     </pluginRepositories>
 
     <build>
-        <finalName>hello-tomcat</finalName>
+        <finalName>hello-websphere</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

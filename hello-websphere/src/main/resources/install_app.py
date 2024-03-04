@@ -78,7 +78,7 @@ server = getName(getServerId(""))
 parms = "-appname Application"
 parms += " -node " + node + " -server " + server
 parms += " -nouseMetaDataFromBinary"
-app = AdminApp.install("/work/config/hello-tomcat.war", [parms])
+app = AdminApp.install("/work/config/hello-websphere.war", [parms])
 
 AdminTask.setGenericJVMArguments('[-nodeName ' + node + ' -serverName ' + server + ' -genericJvmArguments "-Xnoloa"]')
 
