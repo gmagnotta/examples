@@ -58,8 +58,8 @@ spec:
             - name: KAFKA_SSL_TRUSTSTORE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: quarkus-order-logger
-                  key: kafka-ssl-truststore-password
+                  name: quarkus-order-logger-password
+                  key: ca.password
             - name: KAFKA_SSL_KEYSTORE_LOCATION
               valueFrom:
                 configMapKeyRef:
@@ -68,8 +68,8 @@ spec:
             - name: KAFKA_SSL_KEYSTORE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: quarkus-order-logger
-                  key: kafka-ssl-keystore-password
+                  name: quarkus-order-logger-password
+                  key: consumer.password
           ports:
             - containerPort: 8080
               protocol: TCP

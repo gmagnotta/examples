@@ -2,9 +2,7 @@
 
 Example application to show kafka streams running on Quarkus.
 
-Setup kafka connect and then use the configuration in "debezium.json" as example:
-
-Create the following topics
+This application requires the following Kafka topics
 
 dbserver1.public.items
 dbserver1.public.line_items
@@ -31,8 +29,12 @@ To check that debezium is populating correctly the topics, use the following com
 ```
 
 
-## Create required secrets in K8s
+## Deploy in K8s
+
+To make it working in K8s the following secrets are needed:
 
 oc create secret generic quarkus-order-streams-certs -n project --from-file=ca.p12=/tmp/ca.p12 --from-file=user.p12=/tmp/streams.p12
+
+oc create secret generic quarkus-order-streams-password -n project --from-file=ca.password=/tmp/ca.password --from-file=streams.password=/tmp/streams.password
 
 The files and the password should be extracted from KafkaUser created by Strimzi
