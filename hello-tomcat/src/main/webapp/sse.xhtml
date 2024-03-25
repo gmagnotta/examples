@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+<h:head>
+	<meta charset="UTF-8" />
+	<title>Secured resource!</title>
+	<script>
+		function test() {
+			var source = new EventSource('sse');
+			source.onopen = function(event) {
+				console.log("eventsource opened!");
+			};
+
+			source.onmessage = function(event) {
+				var data = event.data;
+				console.log(data);
+				document.getElementById('sse').innerHTML += event.data + "<br />";
+			};
+		}
+		window.addEventListener("load", test);
+	</script>
+</h:head>
+
+<h:body>
+	<h1>Server Sent Event</h1>
+
+	<h:form>
+		<h:commandButton value="Start SSE" action="#{sSEBean.startSSE()}" />
+		<h:commandButton value="Stop SSE" action="#{sSEBean.stopSSE()}" />
+	</h:form>
+
+	<div id="sse"></div>
+
+</h:body>
+
+</html>
