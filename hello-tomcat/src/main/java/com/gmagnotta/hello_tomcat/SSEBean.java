@@ -60,9 +60,9 @@ public class SSEBean {
                 while (true) {
                     Random random = new Random();
 
-                    double a = random.nextDouble(100D);
-                    double b = random.nextDouble(100D);
-                    double c = random.nextDouble(100D);
+                    double a = random.nextDouble();
+                    double b = random.nextDouble();
+                    double c = random.nextDouble();
 
                     listener.notify(System.currentTimeMillis() + ";" + a + ";" + b + ";" + c);
                     Thread.sleep(1000);
