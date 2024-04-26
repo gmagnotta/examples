@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Demo</title>
+</head>
+<body>
+    <a href="http://jquery.com/">Click Here to see updated coordinates!</a>
+    <script src="jquery-3.7.1.js"></script>
+    <script>
+ 
+ $(document).ready(function() {
+
+  $("a").click(function(e) {
+    e.preventDefault();
+    $.ajax({
+      type: "GET",
+      url: "/api/location",
+      dataType : "JSON",
+
+      success: function(result) {
+
+        var message = "Altitude: " + result.altitude + "; Latitude: " + result.latitude +
+         "; Longitude: " + result.longitude;
+
+        var link = "http://www.openstreetmap.org/?mlat=" + result.latitude +
+        "&mlon=" + result.longitude + "&zoom=12";
+
+        $('body').append($('<a href="'+link+'">'+message+'</a>'));
+      },
+
+      error: function(result) {
+        alert(result);
+      }
+    });
+  });
+
+});
+ 
+    </script>
+
+</body>
+</html>

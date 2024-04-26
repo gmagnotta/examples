@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: quarkus-echo
+  labels:
+    app: quarkus-echo
+spec:
+  to:
+    kind: Service
+    name: quarkus-echo
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
