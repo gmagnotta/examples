@@ -1,8 +1,9 @@
 package org.gmagnotta.resource;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.gmagnotta.model.Battalion;
+import org.gmagnotta.model.Equipment;
 import org.gmagnotta.service.Cache;
 
 import jakarta.inject.Inject;
@@ -20,7 +21,14 @@ public class EquipmentCacheResource {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Battalion> getAll() {
-        return (List) List.of(cache.equipmentHashMap.values());
+    public List<Equipment> getAll() {
+        List<Equipment> retVal = new ArrayList<>();
+
+        for (Equipment equipment : cache.equipmentHashMap.values()) {
+
+            retVal.add(equipment);
+        }
+
+        return retVal;
     }
 }

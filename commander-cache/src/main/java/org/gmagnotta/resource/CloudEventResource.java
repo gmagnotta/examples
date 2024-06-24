@@ -1,8 +1,8 @@
 package org.gmagnotta.resource;
 
-import org.gmagnotta.model.Battalion;
 import org.gmagnotta.model.Equipment;
 import org.gmagnotta.model.Member;
+import org.gmagnotta.model.Battalion;
 import org.gmagnotta.service.Cache;
 import org.jboss.logging.Logger;
 import org.json.JSONObject;
@@ -62,7 +62,7 @@ public class CloudEventResource {
                 logger.info("Read equipment " + equipment);
 
                 cache.equipmentHashMap.put(equipment.id, equipment);
-            
+
             } else if ("member".equals(table)) {
             
                 Member member = jsonb.fromJson(content.toString(), Member.class);
@@ -79,9 +79,6 @@ public class CloudEventResource {
             return Response.status(Response.Status.BAD_REQUEST).build();
 
         }
-
-
- 
 
         return Response.accepted().build();
     }

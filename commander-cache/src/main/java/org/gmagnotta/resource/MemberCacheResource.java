@@ -1,5 +1,6 @@
 package org.gmagnotta.resource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.gmagnotta.model.Member;
@@ -22,7 +23,13 @@ public class MemberCacheResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Member> getAll() {
 
-        return (List) List.of(cache.memberHashMap.values());
+        List<Member> retVal = new ArrayList<>();
+
+        for (Member member : cache.memberHashMap.values()) {
+            retVal.add(member);
+        }
+
+        return retVal;
     }
 
 

@@ -2,9 +2,9 @@ package org.gmagnotta.service;
 
 import java.util.HashMap;
 
-import org.gmagnotta.model.Battalion;
 import org.gmagnotta.model.Equipment;
 import org.gmagnotta.model.Member;
+import org.gmagnotta.model.Battalion;
 
 import jakarta.enterprise.context.ApplicationScoped;
 

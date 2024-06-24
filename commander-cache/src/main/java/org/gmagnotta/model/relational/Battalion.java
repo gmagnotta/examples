@@ -1,6 +1,16 @@
-package org.gmagnotta.model;
+package org.gmagnotta.model.relational;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.gmagnotta.model.Equipment;
+import org.gmagnotta.model.Member;
 
 public class Battalion {
+    public static String STATIC = "static";
+    public static String DEPLOYED = "deployed";
+    public static String MOBILE = "mobile";
+    public static String DISMOUNT = "dismount";
 
     public Long id;
 
@@ -11,6 +21,15 @@ public class Battalion {
     private double altitude;
     private double longitude;
     private double latitude;
+
+    private Set<Member> members;
+
+    private Set<Equipment> equipments;
+
+    public Battalion() {
+        this.members = new HashSet<>();
+        this.equipments = new HashSet<>();
+    }
 
     public double getAltitude() {
         return altitude;
@@ -36,6 +55,18 @@ public class Battalion {
         this.latitude = latitude;
     }
 
+    public Set<Member> getMembers() {
+        return members;
+    }
+    public Set<Equipment> getEquipments() {
+        return equipments;
+    }
+    public void setMembers(Set<Member> members) {
+        this.members = members;
+    }
+    public void setEquipments(Set<Equipment> equipments) {
+        this.equipments = equipments;
+    }
     public String getDescription() {
         return description;
     }
