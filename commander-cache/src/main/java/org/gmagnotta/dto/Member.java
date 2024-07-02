@@ -1,5 +1,7 @@
 
-package org.gmagnotta.model;
+ package org.gmagnotta.dto;
+
+import jakarta.json.bind.annotation.JsonbTransient;
 
 public class Member {
 
@@ -9,7 +11,8 @@ public class Member {
     private String email;
     private String rank;
 
-    public Long battalion;
+    @JsonbTransient
+    private Battalion battalion;
 
     public Long getId() {
         return id;
@@ -43,12 +46,14 @@ public class Member {
         this.rank = rank;
     }
 
-    public Long getBattalion() {
+    public Battalion getBattalion() {
         return battalion;
     }
 
-    public void setBattalion(Long battalion) {
+    public void setBattalion(Battalion battalion) {
         this.battalion = battalion;
     }
+
+    
 
 }

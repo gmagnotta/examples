@@ -2,7 +2,7 @@ package org.gmagnotta.model;
 
 public class Battalion {
 
-    public Long id;
+    private Long id;
 
     private String name;
     private String description;
@@ -11,6 +11,14 @@ public class Battalion {
     private double altitude;
     private double longitude;
     private double latitude;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public double getAltitude() {
         return altitude;

@@ -1,10 +1,7 @@
-package org.gmagnotta.model.relational;
+package org.gmagnotta.dto;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.gmagnotta.model.Equipment;
-import org.gmagnotta.model.Member;
 
 public class Battalion {
     public static String STATIC = "static";
@@ -12,7 +9,7 @@ public class Battalion {
     public static String MOBILE = "mobile";
     public static String DISMOUNT = "dismount";
 
-    public Long id;
+    private Long id;
 
     private String name;
     private String description;
@@ -29,6 +26,14 @@ public class Battalion {
     public Battalion() {
         this.members = new HashSet<>();
         this.equipments = new HashSet<>();
+    }
+    
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public double getAltitude() {

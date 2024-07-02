@@ -1,4 +1,6 @@
-package org.gmagnotta.model;
+package org.gmagnotta.dto;
+
+import jakarta.json.bind.annotation.JsonbTransient;
 
 public class Equipment {
     
@@ -9,7 +11,8 @@ public class Equipment {
     private String code;
     private String status;
 
-    private Long battalion;
+    @JsonbTransient
+    private Battalion battalion;
 
     public Long getId() {
         return id;
@@ -51,11 +54,11 @@ public class Equipment {
         this.status = status;
     }
 
-    public Long getBattalion() {
+    public Battalion getBattalion() {
         return battalion;
     }
 
-    public void setBattalion(Long battalion) {
+    public void setBattalion(Battalion battalion) {
         this.battalion = battalion;
     }
 

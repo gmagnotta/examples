@@ -6,9 +6,9 @@ import org.gmagnotta.model.Equipment;
 import org.gmagnotta.model.Member;
 import org.gmagnotta.model.Battalion;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
-@ApplicationScoped
+@Singleton
 public class Cache {
 
     public HashMap<Long, Member> memberHashMap = new HashMap<>();
