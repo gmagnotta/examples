@@ -1,0 +1,17 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app: commander
+  name: commander
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - from:
+      kind: DockerImage
+      name: quay.io/gmagnotta/commander:latest
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: "Local"

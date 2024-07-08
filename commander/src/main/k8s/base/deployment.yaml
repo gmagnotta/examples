@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: commander
+  name: commander
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: commander
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        deployment: commander
+      annotations:
+        alpha.image.policy.openshift.io/resolve-names: '*'
+    spec:
+      containers:
+      - image: commander
+        name: commander
+        env:
+          - name: QUARKUS_PROFILE
+            valueFrom:
+              configMapKeyRef:
+                name: commander
+                key: quarkus-profile
+          - name: QUARKUS_DATASOURCE_DB_KIND
+            valueFrom:
+              configMapKeyRef:
+                name: commander
+                key: quarkus-datasource-db-kind
+          - name: QUARKUS_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: commander
+                key: quarkus-datasource-username
+          - name: QUARKUS_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: commander
+                key: quarkus-datasource-password
+          - name: QUARKUS_DATASOURCE_JDBC_URL
+            valueFrom:
+              secretKeyRef:
+                name: commander
+                key: quarkus-datasource-jdbc-url
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}

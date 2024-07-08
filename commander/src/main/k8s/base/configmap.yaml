@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: commander
+data:
+  quarkus-profile: 'dev'
+  quarkus-datasource-db-kind: 'postgresql'
