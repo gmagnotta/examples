@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commander
+spec:
+  template:
+    spec:
+      containers:
+      - image: quay.io/gmagnotta/commander:latest
+        name: commander
