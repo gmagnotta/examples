@@ -1,0 +1,55 @@
+schemaVersion: 2.2.2
+metadata:
+  name: hello-jboss
+  version: 1.0.0
+components:
+  - name: jboss-webserver-6
+    container:
+      image: registry.redhat.io/jboss-webserver-6/jws60-openjdk17-openshift-rhel8@sha256:8ff2a1c968d3cca627e31e2cb9c336dafa651fe2d29cb64827f6cf6e877b6ab3
+      mountSources: true
+      endpoints:
+        - name: http
+          targetPort: 8080
+          protocol: http
+      env:
+        - name: AN_ENV_VARIABLE
+          value: 'THE_CONTENT'
+      volumeMounts:
+        - name: deployments
+          path: /deployments
+        - name: m2
+          path: /tmp/m2
+  - name: deployments
+    volume:
+      size: 1Gi
+  - name: m2
+    volume:
+      size: 1Gi
+commands:
+  - id: compile
+    exec:
+      component: jboss-webserver-6
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: 'mvn clean package -Dmaven.repo.local=/tmp/m2'
+  - id: copyresources
+    exec:
+      component: jboss-webserver-6
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: 'cp $PROJECT_SOURCE/target/ROOT.war /deployments/'
+  - id: compileandcopy
+    composite:
+      commands:
+        - compile
+        - copyresources
+      parallel: false
+      group:
+        kind: build
+        isDefault: true
+  - id: run
+    exec:
+      component: jboss-webserver-6
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: '/usr/local/s2i/run'
+      group:
+        kind: run
+        isDefault: true
