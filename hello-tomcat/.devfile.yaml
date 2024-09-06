@@ -24,13 +24,13 @@ components:
           name: kubedock
           protocol: tcp
           targetPort: 2475
-        - exposure: public
-          name: http-booster
-          protocol: http
-          targetPort: 8080
-          attributes:
-            discoverable: true
-            urlRewriteSupported: true
+        # - exposure: public
+        #   name: http-booster
+        #   protocol: http
+        #   targetPort: 8080
+        #   attributes:
+        #     discoverable: true
+        #     urlRewriteSupported: true
         - exposure: internal
           name: debug
           protocol: http
