@@ -1,5 +1,5 @@
 #FROM registry.redhat.io/jboss-webserver-6/jws60-openjdk17-openshift-rhel8@sha256:8ff2a1c968d3cca627e31e2cb9c336dafa651fe2d29cb64827f6cf6e877b6ab3
-FROM jws60-openjdk17-openshift-rhel8
+FROM image-registry.openshift-image-registry.svc:5000/openshift/jws60-openjdk17-openshift-rhel8
 
 LABEL "io.k8s.description"="/tmp" \
       "io.openshift.s2i.build.image"="registry.redhat.io/jboss-webserver-6/jws60-openjdk17-openshift-rhel8@sha256:8ff2a1c968d3cca627e31e2cb9c336dafa651fe2d29cb64827f6cf6e877b6ab3" \
