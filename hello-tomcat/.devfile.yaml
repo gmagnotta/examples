@@ -1,14 +1,47 @@
-schemaVersion: 2.2.2
+schemaVersion: 2.2.0
 metadata:
   name: hello-jboss
   version: 1.0.0
 components:
+  - name: tools
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi8-latest
+      mountSources: true
+      env:
+        - name: KUBEDOCK_ENABLED
+          value: "true"
+        - name: USE_JAVA17
+          value: "true"
+        - name: CONTAINER_HOST
+          value: "tcp://127.0.0.1:2475"
+      volumeMounts:
+        - name: deployments
+          path: /deployments
+        - name: m2
+          path: /tmp/m2
+      endpoints:
+        - exposure: none
+          name: kubedock
+          protocol: tcp
+          targetPort: 2475
+        - exposure: public
+          name: http-booster
+          protocol: http
+          targetPort: 8080
+          attributes:
+            discoverable: true
+            urlRewriteSupported: true
+        - exposure: internal
+          name: debug
+          protocol: http
+          targetPort: 5005
   - name: jboss-webserver-6
     container:
-      image: registry.redhat.io/jboss-webserver-6/jws60-openjdk17-openshift-rhel8@sha256:8ff2a1c968d3cca627e31e2cb9c336dafa651fe2d29cb64827f6cf6e877b6ab3
+      image: registry.redhat.io/jboss-webserver-6/jws60-openjdk17-openshift-rhel8
       mountSources: true
       endpoints:
         - name: http
+          exposure: public
           targetPort: 8080
           protocol: http
       env:
@@ -17,8 +50,6 @@ components:
       volumeMounts:
         - name: deployments
           path: /deployments
-        - name: m2
-          path: /tmp/m2
   - name: deployments
     volume:
       size: 1Gi
@@ -28,12 +59,12 @@ components:
 commands:
   - id: compile
     exec:
-      component: jboss-webserver-6
+      component: tools
       workingDir: ${PROJECT_SOURCE}
-      commandLine: 'mvn clean package -Dmaven.repo.local=/tmp/m2'
+      commandLine: 'mvn -Dmaven.repo.local=/tmp/m2 clean package'
   - id: copyresources
     exec:
-      component: jboss-webserver-6
+      component: tools
       workingDir: ${PROJECT_SOURCE}
       commandLine: 'cp $PROJECT_SOURCE/target/ROOT.war /deployments/'
   - id: compileandcopy
