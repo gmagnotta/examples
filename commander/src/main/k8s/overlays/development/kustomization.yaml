@@ -4,3 +4,4 @@ resources:
 patches:
 - deployment.yaml
 - configmap.yaml
+- is.yaml
