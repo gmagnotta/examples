@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: commander-cache
+  name: commander-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: commander-cache
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        deployment: commander-cache
+      annotations:
+        alpha.image.policy.openshift.io/resolve-names: '*'
+    spec:
+      containers:
+      - image: commander-cache
+        name: commander-cache
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
