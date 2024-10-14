@@ -1,7 +1,20 @@
+## How to do demo
+
+1. show empty data
+/member
+
+/member/{id}
+
+/equipment
+/equipment/{id}
+
+/battalion
+/battalion/{id}
+
 curl -v --header "Content-Type: application/json" \
   --request POST \
   --data '{"email":"gmagnott@redhat.com","name":"Giuseppe", "rank":"colonel", "battalion": 1}' \
-  http://localhost:8080/member/1
+  http://commander-commander.apps.rosa-sf8pk.s52v.p1.openshiftapps.com/member/1
 
 
 curl -v --header "Content-Type: application/cloudevents+json" \
