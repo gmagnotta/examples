@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webapp-image-detection
+    template: webapp-image-detection
+    app.kubernetes.io/name: webapp-image-detection
+    app.kubernetes.io/part-of: webapp-image-detection
+  name: webapp-image-detection
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: webapp-image-detection
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        gitcommit: first deploy
+        kubernetes.io/change-cause: first deploy
+      labels:
+        app: webapp-image-detection
+    spec:
+      containers:
+      - env:
+        - name: DNS_MEMBERSHIP_SERVICE_NAME
+          value: webapp-image-detection-ping
+        image: quay.io/gmagnotta/webapp-image-detection:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - 'curl --noproxy ''*'' -is ''http://localhost:8080/health'' | grep -iq ''"status": "UP"'''
+        name: webapp-image-detection
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8778
+          protocol: TCP
+        - containerPort: 8888
+          protocol: TCP
+        - containerPort: 4000
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - curl --noproxy '*' -is 'http://localhost:8080/' | head -1 | grep -iq 'HTTP/1.1 200'
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 128Mi
+        securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+        volumeMounts:
+        - mountPath: /opt/jws-6.0/tomcat/conf/tomcat-users.xml
+          name: tomcat-users
+          subPath: tomcat-users.xml
+        - mountPath: /opt/jws-6.0/tomcat/conf/server.xml
+          name: server
+          subPath: server.xml
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - configMap:
+          items:
+          - key: tomcat-users.xml
+            path: tomcat-users.xml
+          name: webapp-image-detection
+        name: tomcat-users
+      - configMap:
+          items:
+          - key: server.xml
+            path: server.xml
+          name: webapp-image-detection
+        name: server

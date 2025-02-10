@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -e
+
+echo "Downloading models"
+mkdir -p /tmp/src/src/main/protobuf
+curl -L -o /tmp/src/src/main/protobuf/string_int_label_map.proto "https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/protos/string_int_label_map.proto"
+
+echo "Downloading labels"
+mkdir -p /tmp/src/src/main/resources/labels
+curl -L -o /tmp/src/src/main/resources/labels/mscoco_label_map.pbtxt "https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/data/mscoco_label_map.pbtxt"
+curl -L -o /tmp/src/src/main/resources/labels/oid_bbox_trainable_label_map.pbtxt "https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/data/oid_bbox_trainable_label_map.pbtxt"
+
+echo "Downloading models"
+mkdir -p /tmp/src/src/models
+curl -L \
+http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2017_11_17.tar.gz \
+| tar -xz -C /tmp/src/src/models/
+
+echo "invoking assemble"
+/usr/local/s2i/assemble
+
+mv /deployments/image-uploader.war /deployments/ROOT.war
+
+echo "Copying models data"
+
+#mkdir -m 0775 /opt/jws-5.6/tomcat/models/
+#mkdir -m 0775 /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/
+
+cp -r /tmp/src/src/models /opt/jws-5.6/tomcat/
+
+#chown -R jboss:root /tmp/src/models
+chmod 0775 /opt/jws-5.6/tomcat/models/
+chmod 0775 /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/
+chmod 0775 /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/saved_model/
+chmod 0775 /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/saved_model/variables
+
+#ls -lha /opt/jws-5.6/tomcat/
+#ls -lha /opt/jws-5.6/tomcat/models
+#ls -lha /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/
+#ls -lha /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/saved_model/
+#ls -lha /opt/jws-5.6/tomcat/models/ssd_inception_v2_coco_2017_11_17/saved_model/variables
+
+#find /opt/jws-5.6/tomcat/models

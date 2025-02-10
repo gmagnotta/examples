@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:jsf="http://xmlns.jcp.org/jsf" xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+	<meta charset="UTF-8" />
+	<title>#{messages.title}</title>
+</h:head>
+
+<h:body>
+	
+    <h1>#{messages.hello}</h1>
+
+	<h2>This application performs image detection with an embedded Tensorflow engine and COCO dataset.</h2>
+
+	<h2>Upload an image to try!</h2>
+
+	<h:form enctype="multipart/form-data">
+		<h:inputFile value="#{uploadFileBean.uploadedFile}" />
+		<h:commandButton value="Upload File" action="#{uploadFileBean.action}" />
+	</h:form>
+
+</h:body>
+
+</html>
